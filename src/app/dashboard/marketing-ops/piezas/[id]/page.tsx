@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import MarketingOpsPiezaDetalleClient from "../../components/MarketingOpsPiezaDetalleClient";
 
 export default async function MarketingOpsPiezaDetallePage({ params }: { params: Promise<{ id: string }> }) {

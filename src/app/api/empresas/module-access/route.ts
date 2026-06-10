@@ -98,6 +98,32 @@ export async function GET(request: Request) {
       modulos: modulos.map((m) => ({ id: m.id, nombre: m.nombre, slug: m.slug })),
     });
   } catch (err: unknown) {
+    /**
+     * Fallback monocliente: si el catálogo de módulos (public.modulos / empresa_modulos)
+     * no está disponible en la DB de esta instancia, devolver una lista hardcodeada
+     * de slugs visibles para evitar bloquear al usuario. Solo activo en single_client.
+     */
+    const strictAllowlist =
+      (process.env.NEURA_INSTANCE_MODE ?? "").trim().toLowerCase() === "single_client";
+    if (strictAllowlist) {
+      const fallbackSlugs = [
+        "dashboard",
+        "ventas",
+        "clientes",
+        "proyectos",
+        "compras",
+        "inventario",
+        "contabilidad",
+        "rrhh",
+      ];
+      return NextResponse.json({
+        superAdmin: false,
+        slugs: fallbackSlugs,
+        inactiveSlugs: [],
+        strictAllowlist,
+        modulos: fallbackSlugs.map((slug) => ({ id: slug, nombre: slug, slug })),
+      });
+    }
     const msg = err instanceof Error ? err.message : "Error";
     return NextResponse.json({ error: msg }, { status: 500 });
   }

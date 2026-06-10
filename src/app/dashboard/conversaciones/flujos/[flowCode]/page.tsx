@@ -1,5 +1,7 @@
 "use client";
 
+
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { GripVertical, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";

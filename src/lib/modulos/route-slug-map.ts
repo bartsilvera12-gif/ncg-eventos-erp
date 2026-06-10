@@ -6,21 +6,27 @@
 /** Orden del menú lateral (misma idea que Sidebar): primera entrada accesible = “home” sin dashboard. */
 const SIDEBAR_SLUG_HREF_ORDER: { slug: string; href: string }[] = [
   { slug: "dashboard", href: "/" },
+  { slug: "ventas", href: "/ventas" },
+  { slug: "proyectos", href: "/dashboard/proyectos" },
+  { slug: "compras", href: "/compras" },
+  { slug: "inventario", href: "/inventario" },
+  { slug: "contabilidad", href: "/finanzas" },
+  { slug: "rrhh", href: "/rrhh" },
+  // Slugs ocultos del sidebar pero accesibles por URL (admin/operativos).
+  { slug: "clientes", href: "/clientes" },
+  { slug: "gastos", href: "/gastos" },
+  { slug: "pagos", href: "/pagos" },
+  { slug: "notas_credito", href: "/notas-credito" },
+  { slug: "reportes", href: "/reportes" },
+  { slug: "usuarios", href: "/usuarios" },
+  { slug: "configuracion", href: "/configuracion" },
+  // Legacy (no aplican a NCG, pero mantenidos por compatibilidad de código).
   { slug: "conversaciones", href: "/dashboard/conversaciones" },
   { slug: "historial-omnicanal", href: "/dashboard/historial-omnicanal" },
   { slug: "conversaciones-finalizadas", href: "/dashboard/conversaciones-finalizadas" },
   { slug: "monitoreo", href: "/dashboard/monitoreo" },
-  { slug: "ventas", href: "/ventas" },
   { slug: "recetas", href: "/dashboard/recetas" },
-  { slug: "inventario", href: "/inventario" },
-  { slug: "clientes", href: "/clientes" },
-  { slug: "compras", href: "/compras" },
-  { slug: "gastos", href: "/gastos" },
-  { slug: "pagos", href: "/pagos" },
   { slug: "comisiones", href: "/comisiones" },
-  { slug: "notas_credito", href: "/notas-credito" },
-  { slug: "usuarios", href: "/usuarios" },
-  { slug: "configuracion", href: "/configuracion" },
   { slug: "planes", href: "/planes" },
   { slug: "gestion-clientes", href: "/gestion-clientes" },
   { slug: "crm", href: "/crm" },
@@ -28,7 +34,6 @@ const SIDEBAR_SLUG_HREF_ORDER: { slug: string; href: string }[] = [
   { slug: "marketing_ops", href: "/dashboard/marketing-ops" },
   { slug: "sorteos", href: "/sorteos" },
   { slug: "campanas", href: "/dashboard/campanas" },
-  { slug: "proyectos", href: "/dashboard/proyectos" },
 ];
 
 const OMNICANAL_DASHBOARD_SLUGS = [
@@ -133,6 +138,8 @@ export function pathRequiresModuleSlug(pathname: string): string | null {
     return "conversaciones";
   }
   if (p.startsWith("/notas-credito")) return "notas_credito";
+  if (p.startsWith("/finanzas")) return "contabilidad";
+  if (p.startsWith("/rrhh")) return "rrhh";
   if (p.startsWith("/ventas")) return "ventas";
   if (p.startsWith("/inventario")) return "inventario";
   if (p.startsWith("/clientes")) return "clientes";

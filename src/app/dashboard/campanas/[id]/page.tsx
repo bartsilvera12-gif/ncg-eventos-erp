@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import CampanasDetailClient from "./CampanasDetailClient";
 
 type PageProps = { params: Promise<{ id: string }> };

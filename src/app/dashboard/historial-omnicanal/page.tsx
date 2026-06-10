@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { getCurrentUserDisplayNameServer } from "@/lib/auth/get-current-user-display-name-server";
 import { getChatDataSchemaForCurrentUser } from "@/lib/chat/empresa-chat-schema-server";

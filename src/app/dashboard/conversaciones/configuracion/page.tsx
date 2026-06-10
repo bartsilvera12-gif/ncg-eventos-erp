@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 
 /** Compatibilidad: la gestión de canales vive solo en /configuracion/canales */
