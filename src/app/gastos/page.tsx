@@ -1,0 +1,146 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getGastos, deleteGasto } from "@/lib/gastos/actions";
+import type { Gasto } from "@/lib/gastos/actions";
+import PageHeader from "@/components/ui/PageHeader";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import EmptyState from "@/components/ui/EmptyState";
+import Badge from "@/components/ui/Badge";
+
+function formatGs(valor: number) {
+  return `${valor.toLocaleString("es-PY")} ₲`;
+}
+
+function formatFecha(fecha: string) {
+  try {
+    const d = new Date(fecha);
+    return d.toLocaleDateString("es-PY", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return fecha;
+  }
+}
+
+export default function GastosPage() {
+  const router = useRouter();
+  const [gastos, setGastos] = useState<Gasto[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [eliminando, setEliminando] = useState<string | null>(null);
+
+  useEffect(() => {
+    getGastos()
+      .then(setGastos)
+      .catch(() => setGastos([]))
+      .finally(() => setCargando(false));
+  }, []);
+
+  async function handleEliminar(g: Gasto) {
+    if (!confirm(`¿Eliminar el gasto "${g.descripcion || g.categoria || "sin descripción"}"?`)) return;
+    setEliminando(g.id);
+    try {
+      await deleteGasto(g.id);
+      setGastos((prev) => prev.filter((x) => x.id !== g.id));
+    } catch {
+      setEliminando(null);
+    } finally {
+      setEliminando(null);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="San Antonio · Egresos"
+        title="Gastos operativos"
+        description="Registro de gastos de la empresa"
+        actions={
+          <Button href="/gastos/nuevo" size="sm">
+            <span aria-hidden>+</span> Nuevo gasto
+          </Button>
+        }
+      />
+
+      <Card padded={false} className="overflow-hidden">
+        {cargando ? (
+          <div className="py-16 text-center text-gray-400 text-sm animate-pulse">Cargando gastos…</div>
+        ) : gastos.length === 0 ? (
+          <EmptyState
+            icon="📋"
+            title="No hay gastos registrados"
+            description="Registrá tu primer gasto operativo para empezar a llevar el control."
+            action={
+              <Button href="/gastos/nuevo" variant="secondary" size="sm">
+                Registrar primer gasto
+              </Button>
+            }
+          />
+        ) : (
+          /* overflow-x-auto + min-w fuerza scroll horizontal en mobile;
+              Categoria + Tipo se ocultan en pantallas chicas. */
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] sm:min-w-0">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Fecha</th>
+                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3 hidden md:table-cell">Categoría</th>
+                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Descripción</th>
+                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Monto</th>
+                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3 hidden md:table-cell">Tipo</th>
+                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {gastos.map((g) => (
+                <tr key={g.id} className="hover:bg-[#4FAEB2]/[0.04] transition-colors">
+                  <td className="px-5 py-3.5 text-sm text-gray-600">{formatFecha(g.fecha)}</td>
+                  <td className="px-5 py-3.5 text-sm font-medium text-gray-800 hidden md:table-cell">{g.categoria || "—"}</td>
+                  <td className="px-5 py-3.5 text-sm text-gray-600 max-w-[200px] truncate">
+                    {g.descripcion || "—"}
+                  </td>
+                  <td className="px-5 py-3.5 text-sm font-semibold text-gray-800 tabular-nums">
+                    {formatGs(g.monto)}
+                  </td>
+                  <td className="px-5 py-3.5 hidden md:table-cell">
+                    <Badge tone={g.tipo === "fijo" ? "info" : "neutral"}>{g.tipo}</Badge>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/gastos/${g.id}/editar`}
+                        className="inline-flex items-center min-h-[40px] text-xs text-gray-500 hover:text-gray-800 underline"
+                      >
+                        Editar
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleEliminar(g)}
+                        disabled={eliminando === g.id}
+                        className="inline-flex items-center min-h-[40px] text-xs text-red-500 hover:text-red-700 underline disabled:opacity-50"
+                      >
+                        {eliminando === g.id ? "…" : "Eliminar"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          </div>
+        )}
+      </Card>
+
+      {gastos.length > 0 && (
+        <p className="text-sm text-gray-500">
+          <span className="font-semibold text-gray-800">{gastos.length}</span> gastos
+        </p>
+      )}
+    </div>
+  );
+}

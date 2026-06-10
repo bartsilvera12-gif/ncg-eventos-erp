@@ -1,0 +1,66 @@
+"use client";
+
+import PageHeader from "@/components/ui/PageHeader";
+import { ReportCard } from "@/components/reportes/ReportCard";
+import { Wallet, ShoppingCart, Package, Truck, ArrowLeftRight } from "lucide-react";
+
+/** Hub de reportería operativa: cards estilo Configuración Global. */
+export default function ReportesPage() {
+  return (
+    <div className="space-y-8">
+      <PageHeader
+        eyebrow="San Antonio · Análisis"
+        title="Reportes"
+        description="Panel de análisis y reportería operativa"
+      />
+
+      <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
+        <li>
+          <ReportCard
+            title="Estado de cuenta"
+            subtitle="Saldos, movimientos y situación financiera"
+            icon={Wallet}
+            description="Resumen de cuentas, ventas, compras, pagos y saldos del período."
+            href="/reportes/estado-cuenta"
+          />
+        </li>
+        <li>
+          <ReportCard
+            title="Ventas"
+            subtitle="Facturación y operaciones comerciales"
+            icon={ShoppingCart}
+            description="Ventas del mes, tipos de precio, productos vendidos y totales."
+            href="/reportes/ventas"
+          />
+        </li>
+        <li>
+          <ReportCard
+            title="Compras"
+            subtitle="Adquisiciones y costos"
+            icon={Package}
+            description="Compras del mes, proveedores, productos adquiridos y montos."
+            href="/reportes/compras"
+          />
+        </li>
+        <li>
+          <ReportCard
+            title="Proveedores"
+            subtitle="Abastecimiento y relación comercial"
+            icon={Truck}
+            description="Resumen de proveedores, compras por proveedor y actividad del mes."
+            href="/reportes/proveedores"
+          />
+        </li>
+        <li>
+          <ReportCard
+            title="Conciliación entre cuentas"
+            subtitle="Transferencias y tarjetas"
+            icon={ArrowLeftRight}
+            description="Cobros por transferencia y tarjeta: banco, titular, monto y comprobante del período."
+            href="/reportes/conciliacion"
+          />
+        </li>
+      </ul>
+    </div>
+  );
+}

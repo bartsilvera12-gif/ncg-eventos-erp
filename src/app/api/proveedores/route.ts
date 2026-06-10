@@ -1,0 +1,182 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getTenantSupabaseFromAuth } from "@/lib/supabase/tenant-api";
+import { fetchDataSchemaForEmpresaId } from "@/lib/supabase/empresa-data-schema";
+import { successResponse, errorResponse } from "@/lib/api/response";
+import { API_ERRORS } from "@/lib/api/errors";
+import type { ProveedorCategoria } from "@/lib/proveedores/types";
+import {
+  insertProveedor,
+  findProveedorByRuc,
+  listCategoriasMin,
+  replaceRelacionesProveedor,
+  deleteProveedor,
+} from "@/lib/proveedores/server/proveedores-pg";
+import {
+  mapProveedorRow,
+  getProveedoresConCategorias,
+} from "@/lib/proveedores/server/proveedores-service";
+import { normalizeUpperText, normalizeUpperNullable } from "@/lib/text/normalize";
+
+/**
+ * GET /api/proveedores — lista con categorías resueltas (PG directo).
+ * La lógica vive en `getProveedoresConCategorias` (compartida con el Server
+ * Component de la página /proveedores).
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const ctx = await getTenantSupabaseFromAuth(request);
+    if (!ctx) return NextResponse.json(errorResponse(API_ERRORS.UNAUTHORIZED), { status: 401 });
+    const schema = await fetchDataSchemaForEmpresaId(ctx.auth.empresa_id);
+    const empresaId = ctx.auth.empresa_id;
+
+    const proveedores = await getProveedoresConCategorias(schema, empresaId);
+
+    return NextResponse.json(successResponse({ proveedores }));
+  } catch (err) {
+    console.error("[/api/proveedores GET]", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      errorResponse("No se pudieron cargar los proveedores."),
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST /api/proveedores — alta con categorías opcionales (PG directo).
+ *
+ * Normalizacion: nombre/razon_social/RUC/direccion/contacto/observaciones se
+ * guardan en mayusculas. Email queda tal cual (lowercased).
+ *
+ * El campo principal del proveedor en el modelo es `nombre`. Si el usuario
+ * solo envia `razon_social` y no `nombre`, copiamos razon_social → nombre
+ * para mantener compatibilidad con listados / selectors.
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const ctx = await getTenantSupabaseFromAuth(request);
+    if (!ctx) return NextResponse.json(errorResponse(API_ERRORS.UNAUTHORIZED), { status: 401 });
+    const schema = await fetchDataSchemaForEmpresaId(ctx.auth.empresa_id);
+    const empresaId = ctx.auth.empresa_id;
+
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+
+    // Campo principal: aceptar nombre o razon_social, lo que haya.
+    const nombreInput = normalizeUpperText(body.nombre);
+    const razonSocialInput = normalizeUpperNullable(body.razon_social);
+    const nombre = nombreInput || razonSocialInput || "";
+    if (!nombre) {
+      return NextResponse.json(
+        errorResponse("La razón social / nombre del proveedor es obligatoria."),
+        { status: 400 }
+      );
+    }
+    // Si el usuario no cargo razon_social y solo cargo nombre, copiar para que
+    // facturacion/SIFEN tenga ese campo poblado.
+    const razonSocial = razonSocialInput ?? nombre;
+    const nombreComercial = normalizeUpperNullable(body.nombre_comercial);
+
+    const ruc = normalizeUpperNullable(body.ruc);
+    const telefono = body.telefono == null ? null : String(body.telefono).trim() || null;
+    const email = body.email == null ? null : String(body.email).trim().toLowerCase() || null;
+    const direccion = normalizeUpperNullable(body.direccion);
+    const contacto = normalizeUpperNullable(body.contacto);
+    const observaciones = normalizeUpperNullable(body.observaciones);
+    const estado = body.estado === "inactivo" ? "inactivo" : "activo";
+    const condicion_pago =
+      body.condicion_pago === "contado" ||
+      body.condicion_pago === "credito" ||
+      body.condicion_pago === "mixto"
+        ? (body.condicion_pago as "contado" | "credito" | "mixto")
+        : null;
+    const plazo_pago_dias =
+      body.plazo_pago_dias != null && String(body.plazo_pago_dias).trim() !== ""
+        ? parseInt(String(body.plazo_pago_dias), 10) || null
+        : null;
+    const moneda_preferida = body.moneda_preferida === "USD" || body.moneda_preferida === "GS"
+      ? (body.moneda_preferida as "USD" | "GS")
+      : null;
+
+    const categoriaIds = Array.isArray(body.categoria_ids)
+      ? (body.categoria_ids as unknown[]).map((x) => String(x)).filter(Boolean)
+      : [];
+
+    // Duplicado por RUC
+    if (ruc) {
+      try {
+        const dup = await findProveedorByRuc(schema, empresaId, ruc);
+        if (dup) {
+          return NextResponse.json(
+            errorResponse(`Ya existe un proveedor con el mismo RUC ("${dup.nombre}").`),
+            { status: 409 }
+          );
+        }
+      } catch (e) {
+        console.error("[/api/proveedores POST] findProveedorByRuc", { schema, empresaId, msg: e instanceof Error ? e.message : e });
+      }
+    }
+
+    try {
+      const row = await insertProveedor(schema, empresaId, {
+        nombre,
+        nombre_comercial: nombreComercial,
+        razon_social: razonSocial,
+        ruc,
+        telefono,
+        email,
+        direccion,
+        contacto,
+        estado,
+        condicion_pago,
+        plazo_pago_dias,
+        moneda_preferida,
+        observaciones,
+      });
+
+      // Relaciones categorias (opcional)
+      if (categoriaIds.length > 0) {
+        try {
+          await replaceRelacionesProveedor(schema, empresaId, row.id, categoriaIds);
+        } catch (relErr) {
+          // Rollback manual: borrar proveedor recien creado.
+          await deleteProveedor(schema, empresaId, row.id).catch(() => null);
+          throw relErr;
+        }
+      }
+
+      // Cargar categorias para devolver al cliente.
+      let categorias: ProveedorCategoria[] = [];
+      if (categoriaIds.length > 0) {
+        const allCats = await listCategoriasMin(schema, empresaId);
+        const map = new Map(allCats.map((c) => [c.id, c]));
+        categorias = categoriaIds
+          .map((id) => map.get(id))
+          .filter((c): c is { id: string; nombre: string; activo: boolean } => !!c)
+          .map((c) => ({ id: c.id, nombre: c.nombre, descripcion: null, activo: c.activo }));
+      }
+
+      const prov = mapProveedorRow(row);
+      prov.categorias = categorias.map((c) => ({ id: c.id, nombre: c.nombre, activo: c.activo }));
+      return NextResponse.json(successResponse({ proveedor: prov }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      const code = (e as { code?: string })?.code;
+      if (code === "23505" || /unique|duplicate/i.test(msg)) {
+        return NextResponse.json(
+          errorResponse("Ya existe un proveedor con datos únicos en conflicto (RUC/nombre)."),
+          { status: 409 }
+        );
+      }
+      console.error("[/api/proveedores POST]", { schema, empresaId, msg, code });
+      return NextResponse.json(
+        errorResponse("No se pudo guardar el proveedor. Revisá los datos e intentá nuevamente."),
+        { status: 500 }
+      );
+    }
+  } catch (err) {
+    console.error("[/api/proveedores POST] outer", err instanceof Error ? err.message : err);
+    return NextResponse.json(
+      errorResponse("No se pudo guardar el proveedor."),
+      { status: 500 }
+    );
+  }
+}
