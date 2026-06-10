@@ -6,7 +6,7 @@
  * Override opcional vÃ­a NEURA_CLIENT_SCHEMA si se reusa el repo para otro cliente.
  */
 export const NEURA_CLIENT_SCHEMA: string =
-  (typeof process !== "undefined" && process.env.NEURA_CLIENT_SCHEMA?.trim()) || "sanantonio";
+  (typeof process !== "undefined" && process.env.NEURA_CLIENT_SCHEMA?.trim()) || "ncgconstructora";
 
 /**
  * Schema Postgres principal de la app.
