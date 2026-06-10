@@ -58,7 +58,7 @@ export default function ProveedorDetallePage() {
   if (cargando) {
     return (
       <div className="space-y-8">
-        <PageHeader eyebrow="San Antonio · Adquisiciones" title="Detalle de proveedor" backHref="/proveedores" backLabel="Proveedores" />
+        <PageHeader eyebrow="NCG · Adquisiciones" title="Detalle de proveedor" backHref="/proveedores" backLabel="Proveedores" />
         <p className="text-slate-500 animate-pulse">Cargando…</p>
       </div>
     );
@@ -67,7 +67,7 @@ export default function ProveedorDetallePage() {
   if (!proveedor) {
     return (
       <div className="space-y-8">
-        <PageHeader eyebrow="San Antonio · Adquisiciones" title="Detalle de proveedor" backHref="/proveedores" backLabel="Proveedores" />
+        <PageHeader eyebrow="NCG · Adquisiciones" title="Detalle de proveedor" backHref="/proveedores" backLabel="Proveedores" />
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 text-slate-500">
           No se encontró el proveedor solicitado.
         </div>
@@ -80,7 +80,7 @@ export default function ProveedorDetallePage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Adquisiciones"
+        eyebrow="NCG · Adquisiciones"
         title={proveedor.nombre}
         backHref="/proveedores"
         backLabel="Proveedores"

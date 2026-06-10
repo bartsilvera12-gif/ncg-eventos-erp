@@ -85,7 +85,7 @@ export default function NuevoMovimientoPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="San Antonio · Stock"
+        eyebrow="NCG · Stock"
         title="Nuevo movimiento"
         description="Registra una entrada, salida o ajuste de stock"
         backHref="/inventario/movimientos"

@@ -59,7 +59,7 @@ export default function EditarGastoPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Egresos"
+        eyebrow="NCG · Egresos"
         title="Editar gasto"
         description={gasto.categoria || gasto.descripcion || "Gasto"}
         backHref="/gastos"

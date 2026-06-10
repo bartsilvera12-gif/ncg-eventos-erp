@@ -36,7 +36,7 @@ export default function VentasReportePage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Reportes"
+        eyebrow="NCG · Reportes"
         title="Ventas"
         description="Facturación y operaciones comerciales del período"
         backHref="/reportes"

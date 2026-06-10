@@ -219,7 +219,7 @@ export default function InventarioPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="San Antonio · Stock"
+        eyebrow="NCG · Stock"
         title="Inventario"
         description="Gestión de productos y control de stock"
         actions={

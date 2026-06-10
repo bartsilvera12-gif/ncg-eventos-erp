@@ -45,7 +45,7 @@ export default function ConciliacionReportePage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Reportes"
+        eyebrow="NCG · Reportes"
         title="Conciliación entre cuentas"
         description="Transferencias y tarjetas registradas al cobrar ventas del período"
         backHref="/reportes"

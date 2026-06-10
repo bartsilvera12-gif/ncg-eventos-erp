@@ -57,7 +57,7 @@ export default function GastosPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="San Antonio · Egresos"
+        eyebrow="NCG · Egresos"
         title="Gastos operativos"
         description="Registro de gastos de la empresa"
         actions={

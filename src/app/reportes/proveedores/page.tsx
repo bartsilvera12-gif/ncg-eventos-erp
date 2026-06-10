@@ -38,7 +38,7 @@ export default function ProveedoresReportePage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Reportes"
+        eyebrow="NCG · Reportes"
         title="Proveedores"
         description="Abastecimiento y relación comercial del período"
         backHref="/reportes"

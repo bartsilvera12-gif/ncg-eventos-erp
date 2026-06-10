@@ -193,7 +193,7 @@ export default function VentasPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="San Antonio · Operaciones"
+        eyebrow="NCG · Operaciones"
         title="Ventas"
         description="Registro de ventas y salidas de inventario"
         actions={

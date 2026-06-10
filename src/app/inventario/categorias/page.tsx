@@ -89,7 +89,7 @@ export default function CategoriasProductosPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Stock"
+        eyebrow="NCG · Stock"
         title="Categorías de productos"
         description="Clasificá tus productos para reportes y búsqueda."
         backHref="/inventario"

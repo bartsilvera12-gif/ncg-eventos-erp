@@ -51,7 +51,7 @@ export default function RecetasListPage() {
     <div className="p-6 max-w-5xl mx-auto">
       <div className="mb-6">
         <PageHeader
-          eyebrow="San Antonio · Cocina"
+          eyebrow="NCG · Cocina"
           title="Recetas"
           description="Recetario de productos preparados por el local."
           actions={

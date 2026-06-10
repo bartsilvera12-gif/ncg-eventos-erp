@@ -387,7 +387,7 @@ export default function EditarProductoPage() {
     return (
       <div className="space-y-8">
         <PageHeader
-          eyebrow="San Antonio · Stock"
+          eyebrow="NCG · Stock"
           title="Editar producto"
           backHref="/inventario"
           backLabel="Inventario"
@@ -404,7 +404,7 @@ export default function EditarProductoPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Stock"
+        eyebrow="NCG · Stock"
         title="Editar producto"
         description="Modifica los datos del producto"
         backHref="/inventario"

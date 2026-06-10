@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Distribuidora San Antonio",
-  description: "Sistema de gestión — Distribuidora San Antonio",
+  title: "NCG Cubiertas de Estructura Ligera",
+  description: "Sistema de gestión — NCG Cubiertas de Estructura Ligera",
 };
 
 export default function RootLayout({

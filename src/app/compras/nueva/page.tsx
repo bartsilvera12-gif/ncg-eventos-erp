@@ -346,7 +346,7 @@ export default function NuevaCompraPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Adquisiciones"
+        eyebrow="NCG · Adquisiciones"
         title="Nueva compra"
         description="Cargá uno o varios productos del mismo proveedor. Al guardar impacta el inventario."
         backHref="/compras"

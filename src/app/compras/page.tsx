@@ -97,7 +97,7 @@ export default function ComprasPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="San Antonio · Adquisiciones"
+        eyebrow="NCG · Adquisiciones"
         title="Compras"
         description="Registro de órdenes de compra a proveedores"
         actions={

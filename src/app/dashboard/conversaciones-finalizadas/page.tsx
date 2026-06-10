@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { loadFinalizedFilterOptions } from "@/lib/chat/finalized-closures-actions";
 import FinalizedClosuresClient from "./FinalizedClosuresClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function ConversacionesFinalizadasPage() {
   const filterOptions = await loadFinalizedFilterOptions();
   return (

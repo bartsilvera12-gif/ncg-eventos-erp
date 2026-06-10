@@ -18,7 +18,7 @@ export default function PageHeader({
   backHref,
   backLabel = "Volver",
 }: {
-  /** Texto pequeño en mayúsculas sobre el título (ej. "San Antonio · Operaciones"). */
+  /** Texto pequeño en mayúsculas sobre el título (ej. "NCG · Operaciones"). */
   eyebrow?: string;
   title: string;
   description?: string;

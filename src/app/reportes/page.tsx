@@ -9,7 +9,7 @@ export default function ReportesPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Análisis"
+        eyebrow="NCG · Análisis"
         title="Reportes"
         description="Panel de análisis y reportería operativa"
       />

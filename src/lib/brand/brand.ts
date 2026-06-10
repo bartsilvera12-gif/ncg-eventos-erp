@@ -8,11 +8,11 @@
  */
 export const BRAND = {
   /** Nombre completo — títulos, `alt` de logo, white-label de cara al cliente. */
-  name: "Distribuidora San Antonio",
-  /** Forma corta para los eyebrows de sección ("San Antonio · Operaciones"). */
-  shortName: "San Antonio",
+  name: "NCG Cubiertas de Estructura Ligera",
+  /** Forma corta para los eyebrows de sección ("NCG · Operaciones"). */
+  shortName: "NCG",
   /** Inicial para el mark cuadrado del dashboard. */
-  initial: "S",
+  initial: "N",
   /** Logo oficial de la marca (archivo en /public). */
   logo: "/brand/sanantonio-logo.png",
 } as const;

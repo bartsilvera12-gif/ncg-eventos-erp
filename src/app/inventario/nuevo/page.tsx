@@ -439,7 +439,7 @@ export default function NuevoProductoPage() {
     return (
       <div className="space-y-8">
         <PageHeader
-          eyebrow="San Antonio · Stock"
+          eyebrow="NCG · Stock"
           title="Nuevo producto"
           description="¿Qué tipo de producto vas a cargar?"
           backHref="/inventario"
@@ -506,7 +506,7 @@ export default function NuevoProductoPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="San Antonio · Stock"
+        eyebrow="NCG · Stock"
         title="Nuevo producto"
         backHref="/inventario"
         backLabel="Inventario"

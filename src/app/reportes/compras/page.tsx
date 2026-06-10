@@ -37,7 +37,7 @@ export default function ComprasReportePage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Reportes"
+        eyebrow="NCG · Reportes"
         title="Compras"
         description="Adquisiciones y costos del período"
         backHref="/reportes"

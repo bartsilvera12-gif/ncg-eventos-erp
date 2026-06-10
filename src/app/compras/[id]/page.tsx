@@ -76,7 +76,7 @@ export default function CompraDetallePage() {
   if (cargando) {
     return (
       <div className="space-y-8">
-        <PageHeader eyebrow="San Antonio · Adquisiciones" title="Detalle de compra" backHref="/compras" backLabel="Compras" />
+        <PageHeader eyebrow="NCG · Adquisiciones" title="Detalle de compra" backHref="/compras" backLabel="Compras" />
         <p className="text-slate-500 animate-pulse">Cargando…</p>
       </div>
     );
@@ -85,7 +85,7 @@ export default function CompraDetallePage() {
   if (noEncontrada || !data) {
     return (
       <div className="space-y-8">
-        <PageHeader eyebrow="San Antonio · Adquisiciones" title="Detalle de compra" backHref="/compras" backLabel="Compras" />
+        <PageHeader eyebrow="NCG · Adquisiciones" title="Detalle de compra" backHref="/compras" backLabel="Compras" />
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 text-slate-500">
           No se encontró la compra solicitada.
         </div>
@@ -117,7 +117,7 @@ export default function CompraDetallePage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Adquisiciones"
+        eyebrow="NCG · Adquisiciones"
         title={`Compra ${compra.numero_control}`}
         backHref="/compras"
         backLabel="Compras"

@@ -467,7 +467,7 @@ export default function ProyectosKanbanClient() {
   return (
     <div className="mx-auto max-w-[1800px] space-y-4 p-4 md:p-6">
       <PageHeader
-        eyebrow="San Antonio · Cocina"
+        eyebrow="NCG · Cocina"
         title="Pedidos"
         description="Tablero de cocina — pedidos por modalidad y estado."
         actions={

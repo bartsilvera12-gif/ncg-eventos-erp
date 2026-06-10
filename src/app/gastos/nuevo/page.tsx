@@ -7,7 +7,7 @@ export default function NuevoGastoPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Egresos"
+        eyebrow="NCG · Egresos"
         title="Nuevo gasto"
         description="Registrar un gasto operativo"
         backHref="/gastos"

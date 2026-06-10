@@ -401,7 +401,7 @@ export default function ClientesPage() {
       )}
 
       <PageHeader
-        eyebrow="San Antonio · Base"
+        eyebrow="NCG · Base"
         title="Clientes"
         description="Base de clientes activos de la empresa"
         actions={

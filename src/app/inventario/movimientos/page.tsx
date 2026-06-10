@@ -82,7 +82,7 @@ export default function MovimientosPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="San Antonio · Stock"
+        eyebrow="NCG · Stock"
         title="Movimientos de inventario"
         description="Registro de entradas, salidas y ajustes de stock"
         actions={

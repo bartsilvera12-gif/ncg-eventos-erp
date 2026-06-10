@@ -253,7 +253,7 @@ export default function NuevaVentaPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="San Antonio · Operaciones"
+        eyebrow="NCG · Operaciones"
         title="Nueva venta"
         backHref="/ventas"
         backLabel="Ventas"

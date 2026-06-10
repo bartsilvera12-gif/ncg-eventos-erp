@@ -386,7 +386,7 @@ function NuevoClienteForm() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="San Antonio · Base"
+        eyebrow="NCG · Base"
         title="Nuevo cliente"
         description="Registrá un cliente en la base de datos"
         backHref="/clientes"

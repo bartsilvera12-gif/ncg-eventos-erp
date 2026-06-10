@@ -92,7 +92,7 @@ export default function NuevaRecetaPage() {
     <div className="p-6 max-w-2xl mx-auto">
       <div className="mb-6">
         <PageHeader
-          eyebrow="San Antonio · Cocina"
+          eyebrow="NCG · Cocina"
           title="Nueva receta"
           backHref="/dashboard/recetas"
           backLabel="Recetas"

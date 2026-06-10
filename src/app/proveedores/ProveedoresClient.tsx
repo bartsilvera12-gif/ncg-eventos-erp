@@ -96,7 +96,7 @@ export default function ProveedoresClient({
   return (
     <div className="space-y-8">
       <PageHeader
-        eyebrow="San Antonio · Adquisiciones"
+        eyebrow="NCG · Adquisiciones"
         title="Proveedores"
         description="Maestro de abastecimiento: categorías, condiciones de pago y vínculo con compras."
         actions={

@@ -2135,7 +2135,6 @@ export default function DashboardPage() {
       >
         <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-4">
-            <ZentraMark />
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: Z.accent }}>
                 Zentra
@@ -2191,7 +2190,6 @@ export default function DashboardPage() {
     >
       <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-4">
-          <ZentraMark />
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: Z.accent }}>
               {BRAND.shortName}
