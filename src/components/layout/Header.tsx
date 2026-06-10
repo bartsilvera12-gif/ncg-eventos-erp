@@ -6,6 +6,7 @@ import { Bell, ChevronDown, LogOut, Menu } from "lucide-react";
 import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
 import { signOut } from "@/lib/auth";
 import { useBoot } from "@/components/BootContext";
+import { BRAND } from "@/lib/brand/brand";
 
 type HeaderUsuario = {
   nombre: string | null;
@@ -130,7 +131,7 @@ export default function Header() {
                   ya está pre-optimizado por sharp (256x256). */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/brand/sanantonio-logo.png"
+                src={BRAND.logo}
                 alt={displayName}
                 className="h-full w-full object-cover"
               />

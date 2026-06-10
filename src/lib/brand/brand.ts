@@ -14,5 +14,5 @@ export const BRAND = {
   /** Inicial para el mark cuadrado del dashboard. */
   initial: "N",
   /** Logo oficial de la marca (archivo en /public). */
-  logo: "/brand/sanantonio-logo.png",
+  logo: "/brand/ncg-logo.jpg",
 } as const;
