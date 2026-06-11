@@ -86,96 +86,46 @@ function adminEmpresasMatchesQuery(queryRaw: string): boolean {
   return label.includes(q) || normalizeMenuSearch("empresas").includes(q);
 }
 
+// Ítems planos del sidebar. Sin children → sin acordeones ni flechas.
+// Labels cortos. Integran funcionalidad implícita (Ventas incluye Presupuestos,
+// Pagos incluye Cobros, Productos incluye Materiales, Proyectos incluye Obras).
 const MENU_STRUCTURE: MenuItem[] = [
-  { key: "dashboard", slug: "dashboard", label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { key: "dashboard",        slug: "dashboard",     label: "Dashboard",        href: "/",                       icon: LayoutDashboard },
 
-  {
-    key: "ventas",
-    slug: "ventas",
-    label: "Ventas y Presupuestos",
-    href: "/ventas",
-    icon: ShoppingCart,
-    children: [
-      { label: "Clientes",              href: "/clientes" },
-      { label: "Presupuestos / Ventas", href: "/ventas" },
-      { label: "Facturación",           href: "/ventas" },
-    ],
-  },
+  { key: "clientes",         slug: "clientes",      label: "Clientes",         href: "/clientes",               icon: Users },
+  { key: "ventas",           slug: "ventas",        label: "Ventas",           href: "/ventas",                 icon: ShoppingCart },
 
-  {
-    key: "proyectos",
-    slug: "proyectos",
-    label: "Obras / Proyectos",
-    href: "/dashboard/proyectos",
-    icon: FolderKanban,
-    children: [
-      { label: "Obras",              href: "/dashboard/proyectos" },
-      { label: "Resumen de costos",  href: "/dashboard/proyectos" },
-      { label: "Rentabilidad",       href: "/dashboard/proyectos" },
-    ],
-  },
+  { key: "proyectos",        slug: "proyectos",     label: "Proyectos",        href: "/dashboard/proyectos",    icon: FolderKanban },
 
-  {
-    key: "compras",
-    slug: "compras",
-    label: "Compras y Proveedores",
-    href: "/compras",
-    icon: Package,
-    children: [
-      { label: "Compras / Órdenes",   href: "/compras" },
-      { label: "Proveedores",         href: "/proveedores" },
-      { label: "Facturas recibidas",  href: "/compras" },
-    ],
-  },
+  { key: "compras",          slug: "compras",       label: "Compras",          href: "/compras",                icon: Package },
+  { key: "proveedores",      slug: "compras",       label: "Proveedores",      href: "/proveedores",            icon: Building2 },
 
-  {
-    key: "inventario",
-    slug: "inventario",
-    label: "Inventario / Almacenes",
-    href: "/inventario",
-    icon: Package,
-    children: [
-      { label: "Productos / Materiales", href: "/inventario" },
-      { label: "Movimientos",            href: "/inventario/movimientos" },
-      { label: "Categorías",             href: "/inventario/categorias" },
-      { label: "Stock mínimo",           href: "/inventario" },
-    ],
-  },
+  { key: "productos",        slug: "inventario",    label: "Productos",        href: "/inventario",             icon: Package },
+  { key: "movimientos",      slug: "inventario",    label: "Movimientos",      href: "/inventario/movimientos", icon: ListChecks },
+  { key: "categorias",       slug: "inventario",    label: "Categorías",       href: "/inventario/categorias",  icon: ScrollText },
 
-  {
-    key: "contabilidad",
-    slug: "contabilidad",
-    label: "Finanzas y Contabilidad",
-    href: "/finanzas",
-    icon: BarChart3,
-    children: [
-      { label: "Pagos / Cobros",    href: "/pagos" },
-      { label: "Gastos",            href: "/gastos" },
-      { label: "Notas de crédito",  href: "/notas-credito" },
-      { label: "Reportes",          href: "/reportes" },
-      { label: "Panel financiero",  href: "/finanzas" },
-    ],
-  },
+  { key: "pagos",            slug: "pagos",         label: "Pagos",            href: "/pagos",                  icon: Receipt },
+  { key: "gastos",           slug: "gastos",        label: "Gastos",           href: "/gastos",                 icon: Receipt },
+  { key: "notas_credito",    slug: "notas_credito", label: "Notas de crédito", href: "/notas-credito",          icon: ScrollText },
+  { key: "reportes",         slug: "reportes",      label: "Reportes",         href: "/reportes",               icon: BarChart3 },
+  { key: "panel_financiero", slug: "contabilidad",  label: "Panel financiero", href: "/finanzas",               icon: BarChart3 },
 
-  {
-    key: "rrhh",
-    slug: "rrhh",
-    label: "Recursos Humanos",
-    href: "/rrhh",
-    icon: Users,
-    children: [
-      { label: "Panel RRHH", href: "/rrhh" },
-    ],
-  },
+  { key: "rrhh",             slug: "rrhh",          label: "Recursos Humanos", href: "/rrhh",                   icon: Users },
 
-  // Visible solo si rol ∈ {admin, administrador, super_admin}. Gateado en mainItemsFiltered.
-  {
-    key: "configuracion",
-    slug: "configuracion",
-    label: "Configuración",
-    href: "/configuracion",
-    icon: Settings,
-  },
+  // Solo rol admin/administrador/super_admin. Gateado en mainItemsFiltered.
+  { key: "configuracion",    slug: "configuracion", label: "Configuración",    href: "/configuracion",          icon: Settings },
+];
+
+// Agrupación visual en secciones (header pequeño en uppercase + ítems debajo).
+const MENU_SECTIONS: { label: string; keys: string[] }[] = [
+  { label: "General",    keys: ["dashboard"] },
+  { label: "Comercial",  keys: ["clientes", "ventas"] },
+  { label: "Obras",      keys: ["proyectos"] },
+  { label: "Compras",    keys: ["compras", "proveedores"] },
+  { label: "Inventario", keys: ["productos", "movimientos", "categorias"] },
+  { label: "Finanzas",   keys: ["pagos", "gastos", "notas_credito", "reportes", "panel_financiero"] },
+  { label: "RRHH",       keys: ["rrhh"] },
+  { label: "Admin",      keys: ["configuracion"] },
 ];
 
 function modulosSyntheticFromMenu(): ModuloEmpresa[] {
@@ -633,29 +583,41 @@ export default function Sidebar() {
             si todavía no llegó la respuesta del API, mostramos el menú filtrado
             con lo que tengamos (cache de sessionStorage o estado anterior).
             Cargando=true solo afecta si NO hay items para mostrar. */}
-        <div className="space-y-0.5">
-          {!collapsed && mainItemsFiltered.length > 0 && (
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">General</p>
-          )}
-          {mainItemsFiltered.length > 0 ? (
-            mainItemsFiltered.map((item) => (
-              <NavItem
-                key={item.key}
-                item={item}
-                itemId={slugToId(item.slug)}
-                isActive={isActive(item.slug, item.href)}
-                isFavorito={favoritos.includes(slugToId(item.slug))}
-                onToggleFavorito={handleToggleFavorito}
-                hasAccess={hasAccess(item.slug)}
-                collapsed={collapsed}
-                expanded={expandedItems[item.key] ?? false}
-                onToggleExpand={() => toggleExpand(item.key)}
-              />
-            ))
-          ) : cargando ? (
-            <div className="px-3 py-2 text-sm text-slate-500 animate-pulse">Cargando…</div>
-          ) : null}
-        </div>
+        {mainItemsFiltered.length > 0 ? (
+          MENU_SECTIONS.map((section) => {
+            const itemsVisibles = section.keys
+              .map((k) => mainItemsFiltered.find((m) => m.key === k))
+              .filter((i): i is MenuItem => Boolean(i));
+            if (itemsVisibles.length === 0) return null;
+            return (
+              <div key={section.label} className="mb-3">
+                {!collapsed && (
+                  <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                    {section.label}
+                  </p>
+                )}
+                <div className="space-y-0.5">
+                  {itemsVisibles.map((item) => (
+                    <NavItem
+                      key={item.key}
+                      item={item}
+                      itemId={slugToId(item.slug)}
+                      isActive={isActive(item.slug, item.href)}
+                      isFavorito={favoritos.includes(slugToId(item.slug))}
+                      onToggleFavorito={handleToggleFavorito}
+                      hasAccess={hasAccess(item.slug)}
+                      collapsed={collapsed}
+                      expanded={expandedItems[item.key] ?? false}
+                      onToggleExpand={() => toggleExpand(item.key)}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        ) : cargando ? (
+          <div className="px-3 py-2 text-sm text-slate-500 animate-pulse">Cargando…</div>
+        ) : null}
 
         {/* Admin */}
         {esSuperAdmin && adminEmpresasMatchesQuery(menuSearchQuery) && (
