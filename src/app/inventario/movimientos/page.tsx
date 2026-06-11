@@ -179,6 +179,7 @@ export default function MovimientosPage() {
                 <th className="py-3 pr-4 font-medium text-right">Cantidad</th>
                 <th className="py-3 pr-4 font-medium text-right hidden lg:table-cell">Costo unit.</th>
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">Origen</th>
+                <th className="py-3 pr-4 font-medium hidden lg:table-cell">Obra</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">Usuario</th>
                 <th className="py-3 font-medium">Fecha</th>
               </tr>
@@ -186,7 +187,7 @@ export default function MovimientosPage() {
             <tbody>
               {filtrados.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-gray-400">
+                  <td colSpan={9} className="py-12 text-center text-gray-400">
                     {todos.length === 0
                       ? "No hay movimientos registrados"
                       : "Ningún movimiento coincide con los filtros"}
@@ -222,6 +223,9 @@ export default function MovimientosPage() {
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${origenBadge[m.origen]}`}>
                           {origenLabel[m.origen]}
                         </span>
+                      </td>
+                      <td className="py-4 pr-4 text-gray-700 text-xs hidden lg:table-cell">
+                        {m.proyecto_titulo ?? <span className="text-gray-300">—</span>}
                       </td>
                       <td className="py-4 pr-4 text-gray-600 text-xs hidden lg:table-cell">
                         {m.usuario_nombre ?? <span className="text-gray-300">—</span>}

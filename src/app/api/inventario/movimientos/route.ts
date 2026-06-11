@@ -15,14 +15,21 @@ export async function GET(request: NextRequest) {
     const { data, error } = await ctx.supabase
       .from("movimientos_inventario")
       .select(
-        "id, empresa_id, producto_id, producto_nombre, producto_sku, tipo, cantidad, costo_unitario, origen, referencia, fecha, created_at, updated_at, created_by, usuario_nombre"
+        "id, empresa_id, producto_id, producto_nombre, producto_sku, tipo, cantidad, costo_unitario, origen, referencia, fecha, created_at, updated_at, created_by, usuario_nombre, proyecto_id, proyectos:proyecto_id(titulo)"
       )
       .eq("empresa_id", empresaId)
       .order("fecha", { ascending: false })
       .limit(500);
     if (error) throw new Error(error.message);
 
-    return NextResponse.json(successResponse({ movimientos: data ?? [] }));
+    /** Aplana el join PostgREST {proyectos: {titulo}} → proyecto_titulo. */
+    const movimientos = (data ?? []).map((row: Record<string, unknown>) => {
+      const proyectos = row.proyectos as { titulo?: string } | { titulo?: string }[] | null | undefined;
+      const titulo = Array.isArray(proyectos) ? proyectos[0]?.titulo : proyectos?.titulo;
+      return { ...row, proyecto_titulo: titulo ?? null, proyectos: undefined };
+    });
+
+    return NextResponse.json(successResponse({ movimientos }));
   } catch (err) {
     console.error("[/api/inventario/movimientos GET]", err instanceof Error ? err.message : err);
     return NextResponse.json(errorResponse("No se pudieron cargar los movimientos."), { status: 500 });

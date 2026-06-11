@@ -7,9 +7,12 @@ import PageHeader from "@/components/ui/PageHeader";
 import { getProductos, saveMovimiento } from "@/lib/inventario/storage";
 import type { Producto, TipoMovimiento, OrigenMovimiento } from "@/lib/inventario/types";
 
+type ProyectoLite = { id: string; titulo: string };
+
 export default function NuevoMovimientoPage() {
   const router = useRouter();
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [proyectos, setProyectos] = useState<ProyectoLite[]>([]);
 
   const [form, setForm] = useState({
     producto_id: "",
@@ -17,6 +20,7 @@ export default function NuevoMovimientoPage() {
     cantidad: "",
     costo_unitario: "",
     origen: "compra" as OrigenMovimiento,
+    proyecto_id: "",
   });
 
   useEffect(() => {
@@ -24,6 +28,15 @@ export default function NuevoMovimientoPage() {
     getProductos().then((data) => {
       if (!cancelled) setProductos(data);
     });
+    // Cargar obras activas para el selector. Si falla, el campo queda vacío y opcional.
+    fetch("/api/proyectos", { credentials: "include", cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: { id: string; titulo: string }[] }) => {
+        if (!cancelled && j.success && Array.isArray(j.data)) {
+          setProyectos(j.data.map((p) => ({ id: p.id, titulo: p.titulo })));
+        }
+      })
+      .catch(() => { /* sin proyectos: el select queda vacío */ });
     return () => { cancelled = true; };
   }, []);
 
@@ -70,6 +83,7 @@ export default function NuevoMovimientoPage() {
       costo_unitario: parseFloat(form.costo_unitario) || 0,
       origen: form.origen,
       fecha: new Date().toISOString(),
+      proyecto_id: form.proyecto_id || null,
     });
 
     if (guardado) router.push("/inventario/movimientos");
@@ -143,6 +157,30 @@ export default function NuevoMovimientoPage() {
                 <option value="ajuste_manual">Ajuste manual</option>
               </select>
             </div>
+          </div>
+
+          {/* Obra / Proyecto al que se imputa el movimiento (opcional, recomendado
+              en SALIDAS para que el costo y materiales se sumen por obra). */}
+          <div>
+            <label className={labelClass}>
+              Obra / Proyecto
+              {form.tipo === "SALIDA" && (
+                <span className="ml-2 text-xs text-amber-600 font-normal">
+                  (recomendado para imputar materiales a la obra)
+                </span>
+              )}
+            </label>
+            <select
+              name="proyecto_id"
+              value={form.proyecto_id}
+              onChange={handleChange}
+              className={inputClass}
+            >
+              <option value="">Sin obra asociada</option>
+              {proyectos.map((p) => (
+                <option key={p.id} value={p.id}>{p.titulo}</option>
+              ))}
+            </select>
           </div>
 
           {/* Cantidad + Costo unitario */}

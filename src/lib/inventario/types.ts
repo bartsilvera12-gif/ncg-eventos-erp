@@ -61,4 +61,8 @@ export interface MovimientoInventario {
   referencia?: string; // ej: "COMP-000001"
   created_by?: string | null;
   usuario_nombre?: string | null;
+  /** Obra/Proyecto al que se imputa el movimiento (opcional, requerido para SALIDAS de materiales). */
+  proyecto_id?: string | null;
+  /** Nombre denormalizado del proyecto, lo llena el endpoint para mostrar en la lista. */
+  proyecto_titulo?: string | null;
 }

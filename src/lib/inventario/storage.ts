@@ -60,6 +60,8 @@ interface MovimientoRow {
   updated_at: string;
   created_by?: string | null;
   usuario_nombre?: string | null;
+  proyecto_id?: string | null;
+  proyecto_titulo?: string | null;
 }
 
 // ─── Mapeo fila → tipo ────────────────────────────────────────────────────────
@@ -122,6 +124,8 @@ function rowToMovimiento(row: MovimientoRow): MovimientoInventario {
     fecha: row.fecha,
     created_by: row.created_by ?? null,
     usuario_nombre: row.usuario_nombre ?? null,
+    proyecto_id: row.proyecto_id ?? null,
+    proyecto_titulo: row.proyecto_titulo ?? null,
   };
 }
 
@@ -386,6 +390,8 @@ export async function saveMovimiento(
     // Atribución del movimiento (columna "Usuario" en Movimientos).
     created_by: usuario.id ?? null,
     usuario_nombre: usuario.nombre ?? usuario.email ?? null,
+    // Obra a la que se imputa el material (opcional). Habilita trazabilidad por obra.
+    proyecto_id: mov.proyecto_id ?? null,
   };
 
   const { data: movData, error: movError } = await supabase
