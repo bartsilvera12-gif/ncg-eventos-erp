@@ -47,6 +47,10 @@ export interface Venta {
   proyecto_id?: string | null;
   /** Título de la obra (denormalizado por el GET de listado). */
   proyecto_titulo?: string | null;
+
+  /** Workflow Presupuesto → Obra. */
+  tipo_documento?: "venta" | "presupuesto";
+  estado_presupuesto?: "pendiente" | "aprobado" | "rechazado" | "convertido" | null;
 }
 
 /**

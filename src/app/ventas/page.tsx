@@ -10,6 +10,7 @@ import Badge from "@/components/ui/Badge";
 import { getVentas } from "@/lib/ventas/storage";
 import type { Venta, TipoVenta, TipoIvaVenta } from "@/lib/ventas/types";
 import ImputarObraSelect from "@/components/proyectos/ImputarObraSelect";
+import PresupuestoActions from "@/components/ventas/PresupuestoActions";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -302,6 +303,7 @@ export default function VentasPage() {
             <thead>
               <tr className="bg-slate-50 text-slate-600 text-sm font-semibold">
                 <th className="py-3 pr-4 font-medium">Número</th>
+                <th className="py-3 pr-4 font-medium">Doc.</th>
                 <th className="py-3 pr-4 font-medium">Productos</th>
                 <th className="py-3 pr-4 font-medium text-center hidden md:table-cell">Ítems</th>
                 <th className="py-3 pr-4 font-medium text-right hidden lg:table-cell">Cant. total</th>
@@ -317,7 +319,7 @@ export default function VentasPage() {
             <tbody>
               {filtradas.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-12 text-center text-gray-400">
+                  <td colSpan={12} className="py-12 text-center text-gray-400">
                     {todas.length === 0
                       ? "No hay ventas registradas"
                       : "Ninguna venta coincide con los filtros"}
@@ -330,6 +332,13 @@ export default function VentasPage() {
                     <tr key={v.id} className="border-b border-slate-200 last:border-0 hover:bg-[#4FAEB2]/[0.04] transition-colors">
                       <td className="py-4 pr-4 font-mono text-xs text-gray-500 align-middle">
                         {v.numero_control}
+                      </td>
+                      <td className="py-4 pr-4 align-middle">
+                        <PresupuestoActions
+                          id={v.id}
+                          tipo={v.tipo_documento ?? "venta"}
+                          estado={v.estado_presupuesto ?? null}
+                        />
                       </td>
                       <td className="py-4 pr-4 align-middle">
                         <ResumenProductos v={v} />

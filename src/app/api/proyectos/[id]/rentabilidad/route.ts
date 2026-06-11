@@ -54,9 +54,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     // Cinco queries paralelas (ventas, materiales, compras, gastos, mano de obra).
     const [ventasQ, movsQ, comprasQ, gastosQ, moQ] = await Promise.all([
       sb.from("ventas")
-        .select("total, fecha")
+        .select("total, fecha, tipo_documento")
         .eq("empresa_id", empresaId)
-        .eq("proyecto_id", pid),
+        .eq("proyecto_id", pid)
+        // Solo ventas reales cuentan como facturado; los presupuestos se excluyen
+        // aunque estén vinculados a la obra (caso "presupuesto convertido").
+        .or("tipo_documento.eq.venta,tipo_documento.is.null"),
       sb.from("movimientos_inventario")
         .select("cantidad, costo_unitario, tipo, fecha")
         .eq("empresa_id", empresaId)
