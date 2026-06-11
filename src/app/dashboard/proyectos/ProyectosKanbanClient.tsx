@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   DndContext,
   DragOverlay,
@@ -256,8 +257,11 @@ function fmtPedidoHora(s: string | null | undefined): string {
   }
 }
 
+type TipoRow = { id: string; nombre: string; codigo: string };
+
 export default function ProyectosKanbanClient() {
   const [estados, setEstados] = useState<EstadoRow[]>([]);
+  const [tipos, setTipos] = useState<TipoRow[]>([]);
   const [proyectos, setProyectos] = useState<ProyectoCard[]>([]);
   const [prioridadesConfig, setPrioridadesConfig] = useState<PrioridadConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -271,6 +275,16 @@ export default function ProyectosKanbanClient() {
   const [filtroRc, setFiltroRc] = useState("");
   const [filtroRt, setFiltroRt] = useState("");
   const [modalProjectId, setModalProjectId] = useState<string | null>(null);
+
+  // Cargar tipos una vez (catálogo, no cambia con filtros).
+  useEffect(() => {
+    void fetchWithSupabaseSession("/api/proyectos/tipos", { cache: "no-store" })
+      .then(async (r) => {
+        const j = (await r.json().catch(() => ({}))) as { success?: boolean; data?: TipoRow[] };
+        if (r.ok && j.success && Array.isArray(j.data)) setTipos(j.data);
+      })
+      .catch(() => { /* sin tipos: el filtro queda oculto */ });
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -467,19 +481,55 @@ export default function ProyectosKanbanClient() {
   return (
     <div className="mx-auto max-w-[1800px] space-y-4 p-4 md:p-6">
       <PageHeader
-        eyebrow="NCG · Operaciones"
+        eyebrow="Tablero"
         title="Proyectos"
-        description="Tablero de proyectos — obras por estado y avance."
+        description="Kanban configurable por empresa — producción, clientes y SLA."
         actions={
-          <input
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#4FAEB2]/50 focus:ring-2 focus:ring-[#4FAEB2]/30 sm:w-72"
-            placeholder="Buscar título o cliente…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && void load()}
-          />
+          <Link
+            href="/dashboard/proyectos/nuevo"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#4FAEB2] px-3 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#3F8E91]"
+          >
+            <span className="text-lg leading-none">+</span> Nuevo proyecto
+          </Link>
         }
       />
+
+      <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <input
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#4FAEB2]/50 focus:ring-2 focus:ring-[#4FAEB2]/30 sm:w-72"
+          placeholder="Buscar título o cliente…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && void load()}
+        />
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+          Buscar
+        </button>
+        <select
+          value={filtroEstado}
+          onChange={(e) => setFiltroEstado(e.target.value)}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="">Todos los estados</option>
+          {estados.map((e) => (
+            <option key={e.id} value={e.id}>{e.nombre}</option>
+          ))}
+        </select>
+        <select
+          value={filtroTipo}
+          onChange={(e) => setFiltroTipo(e.target.value)}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="">Todos los tipos</option>
+          {tipos.map((t) => (
+            <option key={t.id} value={t.id}>{t.nombre}</option>
+          ))}
+        </select>
+      </div>
 
       {err ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div> : null}
 
