@@ -18,9 +18,12 @@ const UNIDADES_OPCIONES = [
 ] as const;
 
 const TIPO_SUMMARY = {
-  reventa: { titulo: "Producto de reventa", descripcion: "Se compra y se vende tal cual. Controla stock y descuenta al vender.", icono: "🥤" },
-  menu:    { titulo: "Producto del menú",   descripcion: "Se vende en Ventas y genera pedido. No descuenta stock directo.",     icono: "🌭" },
-  materia: { titulo: "Materia prima / insumo", descripcion: "Se usa para recetas y costeo. No aparece como producto de venta.", icono: "🌾" },
+  // reventa = Material de obra (controla stock, descuenta al usar/vender)
+  reventa: { titulo: "Material de obra", descripcion: "Chapas, perfiles, tornillos, tirantes. Controla stock y descuenta al usar en obra.", icono: "🔩" },
+  // menu = Servicio (no descuenta stock; se factura)
+  menu:    { titulo: "Servicio",         descripcion: "Mano de obra, instalación, transporte. Se factura pero no descuenta stock.",         icono: "🛠️" },
+  // materia = Insumo / consumible
+  materia: { titulo: "Insumo / consumible", descripcion: "Soldadura, pintura, sellador, electrodos. Se gasta durante la obra.",              icono: "🛢️" },
 } as const;
 
 interface CatRow { id: string; nombre: string }
@@ -76,10 +79,11 @@ export default function NuevoProductoPage() {
       setControlaStock(false);
       setForm((prev) => ({ ...prev, unidad_medida: prev.unidad_medida || "UNIDAD" }));
     } else {
+      // Insumo / consumible: se gasta durante la obra y SÍ controla stock.
       setEsVendible(false);
       setEsInsumo(true);
-      setControlaStock(false);
-      setForm((prev) => ({ ...prev, unidad_medida: prev.unidad_medida || "G" }));
+      setControlaStock(true);
+      setForm((prev) => ({ ...prev, unidad_medida: prev.unidad_medida || "UNIDAD" }));
     }
   }
 
@@ -449,26 +453,26 @@ export default function NuevoProductoPage() {
           {([
             {
               tipo: "reventa" as const,
-              titulo: "Producto de reventa",
-              icono: "🥤",
-              ejemplo: "Gaseosas, agua, jugos, postres comprados",
-              descripcion: "Se compra y se vende tal cual. Controla stock y descuenta al vender.",
+              titulo: "Material de obra",
+              icono: "🔩",
+              ejemplo: "Chapas, perfiles metálicos, tornillos, tirantes",
+              descripcion: "Se compra y se usa en obras. Controla stock y descuenta al imputarse a una obra.",
               acento: "border-sky-300 bg-sky-50/40 hover:border-sky-500",
             },
             {
               tipo: "menu" as const,
-              titulo: "Producto del menú",
-              icono: "🌭",
-              ejemplo: "Pizzas, lomitos, hamburguesas, combos",
-              descripcion: "Producto preparado por el local. No descuenta stock directo (usá receta para costeo).",
+              titulo: "Servicio",
+              icono: "🛠️",
+              ejemplo: "Mano de obra, instalación, transporte, flete",
+              descripcion: "Se factura al cliente pero no descuenta stock (no es un bien físico).",
               acento: "border-rose-300 bg-rose-50/40 hover:border-rose-500",
             },
             {
               tipo: "materia" as const,
-              titulo: "Materia prima / insumo",
-              icono: "🌾",
-              ejemplo: "Harina, queso, salsa, carne, envases",
-              descripcion: "Insumo para recetas. Sólo se usa para costear productos del menú.",
+              titulo: "Insumo / consumible",
+              icono: "🛢️",
+              ejemplo: "Soldadura, pintura, sellador, electrodos",
+              descripcion: "Se consume durante la obra. Controla stock y se descuenta al usar.",
               acento: "border-emerald-300 bg-emerald-50/40 hover:border-emerald-500",
             },
           ]).map((opt) => (

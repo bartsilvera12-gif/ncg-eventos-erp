@@ -28,6 +28,7 @@ export default function EmpleadosPage() {
   const [err, setErr] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editando, setEditando] = useState<Empleado | null>(null);
 
   const [form, setForm] = useState({
     nombre: "",
@@ -57,6 +58,20 @@ export default function EmpleadosPage() {
   }
 
   useEffect(() => { void load(); }, []);
+
+  async function toggleActivo(emp: Empleado) {
+    const r = await fetchWithSupabaseSession(`/api/rrhh/empleados/${emp.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ activo: !emp.activo }),
+    });
+    const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
+    if (!r.ok || !j.success) {
+      setErr(j.error ?? "No se pudo cambiar el estado");
+      return;
+    }
+    await load();
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -149,7 +164,7 @@ export default function EmpleadosPage() {
       )}
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full min-w-[760px] text-left text-sm">
+        <table className="w-full min-w-[860px] text-left text-sm">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-slate-600">
               <th className="px-5 py-3 font-semibold">Nombre</th>
@@ -158,16 +173,17 @@ export default function EmpleadosPage() {
               <th className="px-5 py-3 font-semibold text-right">Salario base</th>
               <th className="px-5 py-3 font-semibold text-right">Costo/h</th>
               <th className="px-5 py-3 font-semibold">Estado</th>
+              <th className="px-5 py-3 font-semibold text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {loading ? (
-              <tr><td colSpan={6} className="py-10 text-center text-gray-400">Cargando…</td></tr>
+              <tr><td colSpan={7} className="py-10 text-center text-gray-400">Cargando…</td></tr>
             ) : empleados.length === 0 ? (
-              <tr><td colSpan={6} className="py-10 text-center text-gray-400">No hay empleados registrados</td></tr>
+              <tr><td colSpan={7} className="py-10 text-center text-gray-400">No hay empleados registrados</td></tr>
             ) : (
               empleados.map((e) => (
-                <tr key={e.id} className="hover:bg-[#4FAEB2]/[0.04]">
+                <tr key={e.id} className={`hover:bg-[#4FAEB2]/[0.04] ${!e.activo ? "opacity-60" : ""}`}>
                   <td className="px-5 py-3.5 font-medium text-gray-800">{e.nombre}</td>
                   <td className="px-5 py-3.5 text-gray-600 hidden md:table-cell">{e.cargo ?? "—"}</td>
                   <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell">{e.documento ?? "—"}</td>
@@ -180,12 +196,32 @@ export default function EmpleadosPage() {
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">Inactivo</span>
                     )}
                   </td>
+                  <td className="px-5 py-3.5 text-right">
+                    <div className="flex justify-end gap-3">
+                      <button type="button" onClick={() => setEditando(e)}
+                        className="text-xs font-medium text-[#3F8E91] hover:text-[#2F6F72] underline">
+                        editar
+                      </button>
+                      <button type="button" onClick={() => void toggleActivo(e)}
+                        className={`text-xs font-medium underline ${e.activo ? "text-amber-700 hover:text-amber-900" : "text-emerald-700 hover:text-emerald-900"}`}>
+                        {e.activo ? "desactivar" : "activar"}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
+
+      {editando && (
+        <EditarEmpleadoModal
+          empleado={editando}
+          onClose={() => setEditando(null)}
+          onSaved={async () => { setEditando(null); await load(); }}
+        />
+      )}
 
       <p className="text-xs text-slate-500">
         Para asignar un empleado a una obra y registrar horas trabajadas, andá a la obra y abrí el tab <Link href="/dashboard/proyectos" className="underline">Personal</Link>.
@@ -204,6 +240,109 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
       </label>
       {children}
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+    </div>
+  );
+}
+
+function EditarEmpleadoModal({ empleado, onClose, onSaved }: { empleado: Empleado; onClose: () => void; onSaved: () => void | Promise<void> }) {
+  const [form, setForm] = useState({
+    nombre: empleado.nombre,
+    documento: empleado.documento ?? "",
+    cargo: empleado.cargo ?? "",
+    salario_base: String(empleado.salario_base ?? 0),
+    costo_hora: String(empleado.costo_hora ?? 0),
+    fecha_ingreso: empleado.fecha_ingreso ?? "",
+    activo: empleado.activo,
+  });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.nombre.trim()) return;
+    setSaving(true);
+    setErr(null);
+    try {
+      const r = await fetchWithSupabaseSession(`/api/rrhh/empleados/${empleado.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre: form.nombre.trim(),
+          documento: form.documento.trim() || null,
+          cargo: form.cargo.trim() || null,
+          salario_base: Number(form.salario_base) || 0,
+          costo_hora: Number(form.costo_hora) || 0,
+          fecha_ingreso: form.fecha_ingreso || null,
+          activo: form.activo,
+        }),
+      });
+      const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
+      if (!r.ok || !j.success) {
+        setErr(j.error ?? "No se pudo actualizar");
+        return;
+      }
+      await onSaved();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={onClose}>
+      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+          <h2 className="text-base font-semibold text-slate-900">Editar empleado</h2>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700">✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-5">
+          {err && <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div>}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Field label="Nombre" required>
+              <input className={inputCls} value={form.nombre}
+                onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
+            </Field>
+            <Field label="Documento">
+              <input className={inputCls} value={form.documento}
+                onChange={(e) => setForm({ ...form, documento: e.target.value })} />
+            </Field>
+            <Field label="Cargo">
+              <input className={inputCls} value={form.cargo}
+                onChange={(e) => setForm({ ...form, cargo: e.target.value })} />
+            </Field>
+            <Field label="Fecha de ingreso">
+              <input type="date" className={inputCls} value={form.fecha_ingreso}
+                onChange={(e) => setForm({ ...form, fecha_ingreso: e.target.value })} />
+            </Field>
+            <Field label="Salario base (Gs.)">
+              <input type="number" inputMode="numeric" className={inputCls} value={form.salario_base}
+                onChange={(e) => setForm({ ...form, salario_base: e.target.value })} />
+            </Field>
+            <Field label="Costo por hora (Gs.)">
+              <input type="number" inputMode="numeric" className={inputCls} value={form.costo_hora}
+                onChange={(e) => setForm({ ...form, costo_hora: e.target.value })} />
+            </Field>
+            <div className="md:col-span-2">
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <input type="checkbox" checked={form.activo}
+                  onChange={(e) => setForm({ ...form, activo: e.target.checked })}
+                  className="h-4 w-4 rounded border-slate-300" />
+                Empleado activo
+              </label>
+              <p className="ml-6 mt-1 text-xs text-slate-500">
+                Los inactivos no aparecen en selectores de asignación a obras ni en la nómina mensual.
+              </p>
+            </div>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <button type="button" onClick={onClose}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm">Cancelar</button>
+            <button type="submit" disabled={saving}
+              className="rounded-lg bg-[#4FAEB2] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+              {saving ? "Guardando…" : "Guardar cambios"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
