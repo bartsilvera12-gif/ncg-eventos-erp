@@ -2,7 +2,7 @@
 
 import PageHeader from "@/components/ui/PageHeader";
 import { ReportCard } from "@/components/reportes/ReportCard";
-import { Wallet, ShoppingCart, Package, Truck, ArrowLeftRight } from "lucide-react";
+import { Wallet, ShoppingCart, Package, Truck, ArrowLeftRight, TrendingUp, Users, AlertTriangle } from "lucide-react";
 
 /** Hub de reportería operativa: cards estilo Configuración Global. */
 export default function ReportesPage() {
@@ -15,6 +15,33 @@ export default function ReportesPage() {
       />
 
       <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
+        <li>
+          <ReportCard
+            title="Rentabilidad por obra"
+            subtitle="Comparativo presupuesto vs costo real"
+            icon={TrendingUp}
+            description="Todas las obras con presupuesto, facturado, costo real y margen %, ordenable."
+            href="/reportes/rentabilidad-obras"
+          />
+        </li>
+        <li>
+          <ReportCard
+            title="Personal por obra"
+            subtitle="Mano de obra consolidada"
+            icon={Users}
+            description="Horas y costo de personal por obra, con desglose por empleado expandible."
+            href="/reportes/personal-por-obra"
+          />
+        </li>
+        <li>
+          <ReportCard
+            title="Stock bajo"
+            subtitle="Materiales por reponer"
+            icon={AlertTriangle}
+            description="Productos por debajo del mínimo, ordenados por urgencia, con costo de reposición."
+            href="/reportes/stock-bajo"
+          />
+        </li>
         <li>
           <ReportCard
             title="Estado de cuenta"
