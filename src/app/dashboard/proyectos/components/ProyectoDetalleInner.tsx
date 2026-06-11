@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
+import RentabilidadObra from "./RentabilidadObra";
 import {
   ProyectoModuloSelector,
   type ProyectoModuloCatalogo as ModuloCatalogo,
@@ -40,12 +41,13 @@ export type DetalleResp = {
 
 type UsuarioActivo = { id: string; nombre?: string | null; email?: string | null };
 
-const TAB_IDS = ["resumen", "datos", "tareas", "comentarios", "archivos", "historial"] as const;
+const TAB_IDS = ["resumen", "datos", "rentabilidad", "tareas", "comentarios", "archivos", "historial"] as const;
 export type TabId = (typeof TAB_IDS)[number];
 
 const TAB_LABELS: Record<TabId, string> = {
   resumen: "Resumen",
   datos: "Datos",
+  rentabilidad: "Rentabilidad",
   tareas: "Tareas",
   comentarios: "Comentarios",
   archivos: "Archivos",
@@ -834,6 +836,10 @@ export default function ProyectoDetalleInner({
               </p>
             ) : null}
           </div>
+        ) : null}
+
+        {tab === "rentabilidad" ? (
+          <RentabilidadObra projectId={projectId} />
         ) : null}
 
         {tab === "tareas" ? (
