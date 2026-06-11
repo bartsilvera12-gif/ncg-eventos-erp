@@ -108,7 +108,7 @@ export async function GET(request: Request) {
     ];
     let outSlugs = modulos.map((m) => m.slug).filter(Boolean) as string[];
     let outModulos = modulos.map((m) => ({ id: m.id, nombre: m.nombre, slug: m.slug }));
-    if (strictAllowlist && !superAdmin) {
+    if (strictAllowlist) {
       const ya = new Set(outSlugs);
       for (const s of NCG_SLUGS_REQUERIDOS) {
         if (!ya.has(s)) {
