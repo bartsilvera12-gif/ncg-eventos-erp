@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import { getVentas } from "@/lib/ventas/storage";
 import type { Venta, TipoVenta, TipoIvaVenta } from "@/lib/ventas/types";
+import ImputarObraSelect from "@/components/proyectos/ImputarObraSelect";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -309,13 +310,14 @@ export default function VentasPage() {
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">Tipo</th>
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">Pago</th>
                 <th className="py-3 pr-4 font-medium">Fecha</th>
+                <th className="py-3 pr-4 font-medium hidden lg:table-cell">Obra</th>
                 <th className="py-3 font-medium text-center">Ticket</th>
               </tr>
             </thead>
             <tbody>
               {filtradas.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-gray-400">
+                  <td colSpan={11} className="py-12 text-center text-gray-400">
                     {todas.length === 0
                       ? "No hay ventas registradas"
                       : "Ninguna venta coincide con los filtros"}
@@ -361,6 +363,13 @@ export default function VentasPage() {
                       </td>
                       <td className="py-4 pr-4 text-gray-500 text-xs tabular-nums align-middle">
                         {formatFecha(v.fecha)}
+                      </td>
+                      <td className="py-4 pr-4 align-middle hidden lg:table-cell">
+                        <ImputarObraSelect
+                          tabla="ventas"
+                          id={v.id}
+                          proyectoIdInicial={v.proyecto_id ?? null}
+                        />
                       </td>
                       <td className="py-4 text-center align-middle">
                         <a

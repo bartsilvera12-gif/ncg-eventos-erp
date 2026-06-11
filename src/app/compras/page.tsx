@@ -12,6 +12,7 @@ import StatCard from "@/components/ui/StatCard";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import type { Compra, TipoPago, ResumenCompras } from "@/lib/compras/types";
+import ImputarObraSelect from "@/components/proyectos/ImputarObraSelect";
 
 const inputFilterClass =
   "border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none bg-white";
@@ -226,13 +227,14 @@ export default function ComprasPage() {
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">Pago</th>
                 <th className="py-3 pr-4 font-medium">Factura</th>
                 <th className="py-3 pr-4 font-medium">Fecha</th>
+                <th className="py-3 pr-4 font-medium hidden lg:table-cell">Obra</th>
                 <th className="py-3 font-medium text-right">Acción</th>
               </tr>
             </thead>
             <tbody>
               {filtradas.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="py-12 text-center text-gray-400">
+                  <td colSpan={13} className="py-12 text-center text-gray-400">
                     {todas.length === 0
                       ? "No hay compras registradas"
                       : "Ninguna compra coincide con los filtros"}
@@ -304,6 +306,13 @@ export default function ComprasPage() {
                     </td>
                     <td className="py-4 pr-4 text-gray-500 text-xs tabular-nums">
                       {formatFecha(c.fecha)}
+                    </td>
+                    <td className="py-4 pr-4 hidden lg:table-cell">
+                      <ImputarObraSelect
+                        tabla="compras"
+                        id={c.id}
+                        proyectoIdInicial={(c as Compra & { proyecto_id?: string | null }).proyecto_id ?? null}
+                      />
                     </td>
                     <td className="py-4 text-right">
                       <Link

@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
 import Badge from "@/components/ui/Badge";
+import ImputarObraSelect from "@/components/proyectos/ImputarObraSelect";
 
 function formatGs(valor: number) {
   return `${valor.toLocaleString("es-PY")} ₲`;
@@ -93,6 +94,7 @@ export default function GastosPage() {
                 <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Descripción</th>
                 <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Monto</th>
                 <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3 hidden md:table-cell">Tipo</th>
+                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3 hidden lg:table-cell">Obra</th>
                 <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Acciones</th>
               </tr>
             </thead>
@@ -109,6 +111,13 @@ export default function GastosPage() {
                   </td>
                   <td className="px-5 py-3.5 hidden md:table-cell">
                     <Badge tone={g.tipo === "fijo" ? "info" : "neutral"}>{g.tipo}</Badge>
+                  </td>
+                  <td className="px-5 py-3.5 hidden lg:table-cell">
+                    <ImputarObraSelect
+                      tabla="gastos"
+                      id={g.id}
+                      proyectoIdInicial={(g as Gasto & { proyecto_id?: string | null }).proyecto_id ?? null}
+                    />
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex gap-2">

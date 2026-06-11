@@ -42,6 +42,11 @@ export interface Venta {
   metodo_pago?: MetodoPago;  // En lo de Mari: efectivo/tarjeta/transferencia
 
   fecha: string;             // ISO string, generado automáticamente
+
+  /** Obra a la que se imputa la venta (opcional). Habilita "facturado por obra". */
+  proyecto_id?: string | null;
+  /** Título de la obra (denormalizado por el GET de listado). */
+  proyecto_titulo?: string | null;
 }
 
 /**

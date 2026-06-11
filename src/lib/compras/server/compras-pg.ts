@@ -49,6 +49,10 @@ export interface CompraRow {
   factura_nombre_original: string | null;
   factura_mime_type: string | null;
   items_count?: number;
+  /** Obra a la que se imputa la compra (opcional). */
+  proyecto_id?: string | null;
+  /** Título de la obra, lo llena el listado via LEFT JOIN. */
+  proyecto_titulo?: string | null;
 }
 
 const COLS = `
@@ -57,7 +61,8 @@ const COLS = `
   iva_tipo, subtotal, monto_iva, total, precio_venta, margen_venta,
   tipo_pago, plazo_dias, nro_timbrado, numero_control, estado, fecha,
   created_at, updated_at, created_by, usuario_nombre,
-  factura_bucket, factura_path, factura_nombre_original, factura_mime_type
+  factura_bucket, factura_path, factura_nombre_original, factura_mime_type,
+  proyecto_id
 `;
 
 export interface InsertCompraInput {
@@ -93,10 +98,13 @@ export async function listCompras(
   // items_count permite distinguir compras multiproducto (>1) de las legacy
   // mono-producto (0, se leen por los campos inline de `compras`).
   const colsPrefixed = COLS.replace(/\s+/g, " ").trim().split(",").map((c) => `c.${c.trim()}`).join(", ");
+  const tProyectos = quoteSchemaTable(schema, "proyectos");
   const { rows } = await pool().query<CompraRow>(
     `SELECT ${colsPrefixed},
-            (SELECT count(*) FROM ${tItems} ci WHERE ci.compra_id = c.id)::int AS items_count
+            (SELECT count(*) FROM ${tItems} ci WHERE ci.compra_id = c.id)::int AS items_count,
+            p.titulo AS proyecto_titulo
        FROM ${t} c
+       LEFT JOIN ${tProyectos} p ON p.id = c.proyecto_id
       WHERE c.empresa_id = $1::uuid
       ORDER BY c.fecha DESC LIMIT 500`,
     [empresaId]

@@ -16,6 +16,8 @@ interface VentaRow {
   tipo_venta: string;
   plazo_dias: number | null;
   fecha: string;
+  proyecto_id?: string | null;
+  proyectos?: { titulo?: string } | { titulo?: string }[] | null;
 }
 
 interface VentaItemRow {
@@ -65,7 +67,7 @@ export async function GET(request: NextRequest) {
     const ventasQ = await ctx.supabase
       .from("ventas")
       .select(
-        "id, empresa_id, numero_control, moneda, tipo_cambio, subtotal, monto_iva, total, tipo_venta, plazo_dias, metodo_pago, fecha"
+        "id, empresa_id, numero_control, moneda, tipo_cambio, subtotal, monto_iva, total, tipo_venta, plazo_dias, metodo_pago, fecha, proyecto_id, proyectos:proyecto_id(titulo)"
       )
       .eq("empresa_id", empresaId)
       .order("fecha", { ascending: false })
@@ -92,6 +94,7 @@ export async function GET(request: NextRequest) {
 
     const ventas: Venta[] = ventasRows.map((r) => {
       const lineRows = byVenta.get(r.id) ?? [];
+      const proyTitulo = Array.isArray(r.proyectos) ? r.proyectos[0]?.titulo : r.proyectos?.titulo;
       return {
         id: r.id,
         numero_control: r.numero_control,
@@ -111,7 +114,9 @@ export async function GET(request: NextRequest) {
           ? "efectivo"
           : undefined,
         fecha: r.fecha,
-      };
+        proyecto_id: r.proyecto_id ?? null,
+        proyecto_titulo: proyTitulo ?? null,
+      } as Venta & { proyecto_id: string | null; proyecto_titulo: string | null };
     });
 
     return NextResponse.json(successResponse({ ventas }));

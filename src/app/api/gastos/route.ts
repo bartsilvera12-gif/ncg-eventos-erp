@@ -16,14 +16,20 @@ export async function GET(request: NextRequest) {
     const { supabase, auth } = ctx;
     const { data, error } = await supabase
       .from("gastos")
-      .select("*")
+      .select("*, proyectos:proyecto_id(titulo)")
       .eq("empresa_id", auth.empresa_id)
       .order("fecha", { ascending: false });
 
     if (error) {
       return NextResponse.json(errorResponse(error.message), { status: 400 });
     }
-    return NextResponse.json(successResponse(data ?? []));
+    /** Aplana el join PostgREST {proyectos: {titulo}} → proyecto_titulo. */
+    const rows = (data ?? []).map((row: Record<string, unknown>) => {
+      const p = row.proyectos as { titulo?: string } | { titulo?: string }[] | null | undefined;
+      const titulo = Array.isArray(p) ? p[0]?.titulo : p?.titulo;
+      return { ...row, proyecto_titulo: titulo ?? null, proyectos: undefined };
+    });
+    return NextResponse.json(successResponse(rows));
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error";
     return NextResponse.json(errorResponse(msg), { status: 500 });
