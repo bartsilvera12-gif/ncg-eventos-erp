@@ -467,9 +467,9 @@ export default function ProyectosKanbanClient() {
   return (
     <div className="mx-auto max-w-[1800px] space-y-4 p-4 md:p-6">
       <PageHeader
-        eyebrow="NCG · Cocina"
-        title="Pedidos"
-        description="Tablero de cocina — pedidos por modalidad y estado."
+        eyebrow="NCG · Operaciones"
+        title="Proyectos"
+        description="Tablero de proyectos — obras por estado y avance."
         actions={
           <input
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#4FAEB2]/50 focus:ring-2 focus:ring-[#4FAEB2]/30 sm:w-72"
