@@ -51,8 +51,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (ep) return NextResponse.json(errorResponse(ep.message), { status: 400 });
     if (!proyecto) return NextResponse.json(errorResponse("Obra no encontrada"), { status: 404 });
 
-    // Cuatro queries paralelas a tablas operativas.
-    const [ventasQ, movsQ, comprasQ, gastosQ] = await Promise.all([
+    // Cinco queries paralelas (ventas, materiales, compras, gastos, mano de obra).
+    const [ventasQ, movsQ, comprasQ, gastosQ, moQ] = await Promise.all([
       sb.from("ventas")
         .select("total, fecha")
         .eq("empresa_id", empresaId)
@@ -70,9 +70,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         .select("monto, fecha")
         .eq("empresa_id", empresaId)
         .eq("proyecto_id", pid),
+      sb.from("empleado_asignaciones")
+        .select("horas, costo_total, fecha")
+        .eq("empresa_id", empresaId)
+        .eq("proyecto_id", pid),
     ]);
 
-    const errors = [ventasQ.error, movsQ.error, comprasQ.error, gastosQ.error].filter(Boolean);
+    const errors = [ventasQ.error, movsQ.error, comprasQ.error, gastosQ.error, moQ.error].filter(Boolean);
     if (errors.length > 0) {
       return NextResponse.json(errorResponse(errors[0]!.message), { status: 400 });
     }
@@ -81,6 +85,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const movsRows = (movsQ.data ?? []) as { cantidad: number | string; costo_unitario: number | string }[];
     const comprasRows = (comprasQ.data ?? []) as { total: number | string }[];
     const gastosRows = (gastosQ.data ?? []) as { monto: number | string }[];
+    const moRows = (moQ.data ?? []) as { horas: number | string; costo_total: number | string }[];
 
     const presupuestado = num(proyecto.monto_vendido);
     const facturado = sum(ventasRows, "total");
@@ -90,7 +95,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     );
     const costoCompras = sum(comprasRows, "total");
     const costoGastos = sum(gastosRows, "monto");
-    const costoTotal = costoMateriales + costoCompras + costoGastos;
+    const costoManoObra = sum(moRows, "costo_total");
+    const totalHoras = sum(moRows, "horas");
+    const costoTotal = costoMateriales + costoCompras + costoGastos + costoManoObra;
     const margen = facturado - costoTotal;
     const margenPct = facturado > 0 ? (margen / facturado) * 100 : 0;
 
@@ -101,6 +108,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       costo_materiales: costoMateriales,
       costo_compras: costoCompras,
       costo_gastos: costoGastos,
+      costo_mano_obra: costoManoObra,
+      total_horas: totalHoras,
       costo_total: costoTotal,
       margen,
       margen_pct: margenPct,
@@ -109,6 +118,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         movimientos: movsRows.length,
         compras: comprasRows.length,
         gastos: gastosRows.length,
+        asignaciones: moRows.length,
       },
     }));
   } catch (err) {

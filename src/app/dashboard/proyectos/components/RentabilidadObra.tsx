@@ -10,6 +10,8 @@ type RentabilidadData = {
   costo_materiales: number;
   costo_compras: number;
   costo_gastos: number;
+  costo_mano_obra: number;
+  total_horas: number;
   costo_total: number;
   margen: number;
   margen_pct: number;
@@ -18,6 +20,7 @@ type RentabilidadData = {
     movimientos: number;
     compras: number;
     gastos: number;
+    asignaciones: number;
   };
 };
 
@@ -99,6 +102,11 @@ export default function RentabilidadObra({ projectId }: { projectId: string }) {
               label="Gastos imputados"
               hint={`${data.cantidades.gastos} gasto(s)`}
               value={data.costo_gastos}
+            />
+            <Row
+              label="Mano de obra"
+              hint={`${data.cantidades.asignaciones} asignación(es) · ${data.total_horas.toFixed(1)} h`}
+              value={data.costo_mano_obra}
             />
             <tr className="border-t border-slate-200">
               <td className="py-3 text-sm font-semibold text-slate-800">Total costo</td>

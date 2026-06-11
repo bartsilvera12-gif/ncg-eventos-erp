@@ -1,14 +1,16 @@
+import Link from "next/link";
 import PageHeader from "@/components/ui/PageHeader";
 
 export const dynamic = "force-dynamic";
 
-const SECCIONES = [
-  { titulo: "Empleados", descripcion: "Alta, datos personales, contratos y salarios base." },
-  { titulo: "Control Horario", descripcion: "Fichajes de entrada y salida, horas trabajadas por jornada." },
+type Seccion = { titulo: string; descripcion: string; href?: string };
+
+const SECCIONES: Seccion[] = [
+  { titulo: "Empleados", descripcion: "Alta de personal, cargos, salarios base y costo por hora.", href: "/rrhh/empleados" },
+  { titulo: "Personal por obra", descripcion: "Asignación de empleados a obras desde la pestaña Personal de cada obra.", href: "/dashboard/proyectos" },
+  { titulo: "Control horario", descripcion: "Fichajes de entrada y salida, horas trabajadas por jornada." },
   { titulo: "Vacaciones", descripcion: "Solicitudes, aprobaciones y saldo de días por empleado." },
   { titulo: "Nómina", descripcion: "Liquidación mensual con conceptos, descuentos e IPS." },
-  { titulo: "Asignación a Obras", descripcion: "Personal asignado a cada obra con horas y costo imputado." },
-  { titulo: "Costo de Mano de Obra", descripcion: "Reporte de costo de personal consolidado por obra." },
 ];
 
 export default function RrhhPage() {
@@ -17,27 +19,37 @@ export default function RrhhPage() {
       <PageHeader
         eyebrow="NCG · Personal"
         title="Recursos Humanos"
-        description="Gestión integral de empleados, jornadas, nómina y asignación a obras."
+        description="Gestión de empleados y asignación de mano de obra a obras."
       />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {SECCIONES.map((s) => (
-          <div
-            key={s.titulo}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-semibold text-slate-900">{s.titulo}</h3>
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-                Próximamente
-              </span>
+        {SECCIONES.map((s) => {
+          const card = (
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-[#4FAEB2]/40 hover:shadow">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-semibold text-slate-900">{s.titulo}</h3>
+                {s.href ? (
+                  <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                    Disponible
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                    Próximamente
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{s.descripcion}</p>
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-slate-600">{s.descripcion}</p>
-          </div>
-        ))}
+          );
+          return s.href ? (
+            <Link key={s.titulo} href={s.href} className="block">{card}</Link>
+          ) : (
+            <div key={s.titulo}>{card}</div>
+          );
+        })}
       </div>
       <p className="text-xs text-slate-500">
-        Módulo en preparación. La implementación incluye tablas de empleados, fichajes, nómina y vínculo con obras
-        para calcular costo de mano de obra real por proyecto.
+        El costo por hora del empleado se usa para imputar mano de obra a cada obra y se suma
+        automáticamente al costo real (visible en el tab Rentabilidad de la obra).
       </p>
     </div>
   );
