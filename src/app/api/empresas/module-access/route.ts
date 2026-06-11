@@ -90,12 +90,40 @@ export async function GET(request: Request) {
       }
     }
 
+    /**
+     * En single_client, garantizamos que los slugs visibles de NCG aparezcan
+     * aunque el catálogo de la DB clonada no los tenga (`contabilidad`, `rrhh`
+     * son nuevos para esta instancia).
+     */
+    const NCG_SLUGS_REQUERIDOS = [
+      "dashboard",
+      "ventas",
+      "clientes",
+      "proyectos",
+      "compras",
+      "inventario",
+      "contabilidad",
+      "rrhh",
+      "configuracion",
+    ];
+    let outSlugs = modulos.map((m) => m.slug).filter(Boolean) as string[];
+    let outModulos = modulos.map((m) => ({ id: m.id, nombre: m.nombre, slug: m.slug }));
+    if (strictAllowlist && !superAdmin) {
+      const ya = new Set(outSlugs);
+      for (const s of NCG_SLUGS_REQUERIDOS) {
+        if (!ya.has(s)) {
+          outSlugs.push(s);
+          outModulos.push({ id: s, nombre: s, slug: s });
+        }
+      }
+    }
+
     return NextResponse.json({
       superAdmin,
-      slugs: modulos.map((m) => m.slug).filter(Boolean),
+      slugs: outSlugs,
       inactiveSlugs,
       strictAllowlist,
-      modulos: modulos.map((m) => ({ id: m.id, nombre: m.nombre, slug: m.slug })),
+      modulos: outModulos,
     });
   } catch (err: unknown) {
     /**
