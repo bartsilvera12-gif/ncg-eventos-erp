@@ -115,6 +115,7 @@ export async function GET(request: Request) {
         "inventario",
         "contabilidad",
         "rrhh",
+        "configuracion",
       ];
       return NextResponse.json({
         superAdmin: false,

@@ -87,18 +87,19 @@ function adminEmpresasMatchesQuery(queryRaw: string): boolean {
 }
 
 const MENU_STRUCTURE: MenuItem[] = [
-  { key: "ventas", slug: "ventas", label: "Ventas y Presupuestos", href: "/ventas", icon: ShoppingCart },
+  { key: "dashboard", slug: "dashboard", label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { key: "ventas", slug: "ventas", label: "Ventas", href: "/ventas", icon: ShoppingCart },
   {
     key: "proyectos",
     slug: "proyectos",
-    label: "Obras / Proyectos",
+    label: "Proyectos",
     href: "/dashboard/proyectos",
     icon: FolderKanban,
   },
   {
     key: "compras",
     slug: "compras",
-    label: "Compras y Proveedores",
+    label: "Compras",
     href: "/compras",
     icon: Package,
     children: [
@@ -109,7 +110,7 @@ const MENU_STRUCTURE: MenuItem[] = [
   {
     key: "inventario",
     slug: "inventario",
-    label: "Inventario / Almacenes",
+    label: "Inventario",
     href: "/inventario",
     icon: Package,
     children: [
@@ -121,11 +122,18 @@ const MENU_STRUCTURE: MenuItem[] = [
   {
     key: "contabilidad",
     slug: "contabilidad",
-    label: "Finanzas y Contabilidad",
+    label: "Finanzas",
     href: "/finanzas",
     icon: BarChart3,
   },
   { key: "rrhh", slug: "rrhh", label: "Recursos Humanos", href: "/rrhh", icon: Users },
+  {
+    key: "configuracion",
+    slug: "configuracion",
+    label: "Configuración",
+    href: "/configuracion",
+    icon: Settings,
+  },
 ];
 
 function modulosSyntheticFromMenu(): ModuloEmpresa[] {
