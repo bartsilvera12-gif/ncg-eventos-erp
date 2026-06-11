@@ -14,22 +14,22 @@ export interface ClienteTipoServicioRow {
   usos?: number;
 }
 
-/** Slugs fijos; la lógica (marketing) depende de estos códigos. */
+/** Slugs fijos del catálogo NCG (construcción de cubiertas y estructura ligera). */
 export const SLUGS_TIPOS_CLIENTE_SISTEMA = [
-  "marketing",
-  "saas",
-  "branding",
-  "web",
+  "cubierta_metalica",
+  "estructura_ligera",
+  "reforma",
+  "mantenimiento",
   "otro",
 ] as const;
 export type SlugTipoClienteSistema = (typeof SLUGS_TIPOS_CLIENTE_SISTEMA)[number];
 
 export const LABEL_FALLBACK_POR_SLUG: Record<SlugTipoClienteSistema, string> = {
-  marketing: "Marketing",
-  saas: "SaaS",
-  branding: "Branding",
-  web: "Web",
-  otro: "Otro",
+  cubierta_metalica:  "Cubierta metálica",
+  estructura_ligera:  "Estructura ligera",
+  reforma:            "Reforma",
+  mantenimiento:      "Mantenimiento",
+  otro:               "Otro",
 };
 
 const SLUG_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -88,11 +88,11 @@ export function normalizeSlug(s: string): string {
 }
 
 const SEED_ROWS: { slug: SlugTipoClienteSistema; nombre: string; orden: number }[] = [
-  { slug: "marketing", nombre: "Marketing", orden: 10 },
-  { slug: "saas", nombre: "SaaS", orden: 20 },
-  { slug: "branding", nombre: "Branding", orden: 30 },
-  { slug: "web", nombre: "Web", orden: 40 },
-  { slug: "otro", nombre: "Otro", orden: 50 },
+  { slug: "cubierta_metalica", nombre: "Cubierta metálica", orden: 10 },
+  { slug: "estructura_ligera", nombre: "Estructura ligera", orden: 20 },
+  { slug: "reforma",           nombre: "Reforma",           orden: 30 },
+  { slug: "mantenimiento",     nombre: "Mantenimiento",     orden: 40 },
+  { slug: "otro",              nombre: "Otro",              orden: 50 },
 ];
 
 const SLUGS_SISTEMA_LIST = SEED_ROWS.map((r) => r.slug) as string[];
