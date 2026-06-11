@@ -502,63 +502,6 @@ export default function ProyectosKanbanClient() {
         }
       />
 
-      <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-center">
-        <input
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#4FAEB2]/50 focus:ring-2 focus:ring-[#4FAEB2]/30 sm:w-72"
-          placeholder="Buscar título o cliente…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && void load()}
-        />
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-        >
-          Buscar
-        </button>
-        <select
-          value={filtroEstado}
-          onChange={(e) => setFiltroEstado(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          <option value="">Todos los estados</option>
-          {estados.map((e) => (
-            <option key={e.id} value={e.id}>{e.nombre}</option>
-          ))}
-        </select>
-        <select
-          value={filtroTipo}
-          onChange={(e) => setFiltroTipo(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          <option value="">Todos los tipos</option>
-          {tipos.map((t) => (
-            <option key={t.id} value={t.id}>{t.nombre}</option>
-          ))}
-        </select>
-        <select
-          value={filtroRc}
-          onChange={(e) => setFiltroRc(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          <option value="">Resp. comercial</option>
-          {usuarios.map((u) => (
-            <option key={u.id} value={u.id}>{u.nombre ?? u.email}</option>
-          ))}
-        </select>
-        <select
-          value={filtroRt}
-          onChange={(e) => setFiltroRt(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
-        >
-          <option value="">Resp. técnico</option>
-          {usuarios.map((u) => (
-            <option key={u.id} value={u.id}>{u.nombre ?? u.email}</option>
-          ))}
-        </select>
-      </div>
-
       {err ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div> : null}
 
       <div className="overflow-x-auto pb-1">
@@ -572,6 +515,63 @@ export default function ProyectosKanbanClient() {
             />
           ))}
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <input
+          className="min-w-0 flex-1 basis-48 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-[#4FAEB2]/50 focus:ring-2 focus:ring-[#4FAEB2]/30"
+          placeholder="Buscar título o cliente…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && void load()}
+        />
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+        >
+          Buscar
+        </button>
+        <select
+          value={filtroEstado}
+          onChange={(e) => setFiltroEstado(e.target.value)}
+          className="min-w-0 flex-1 basis-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="">Todos los estados</option>
+          {estados.map((e) => (
+            <option key={e.id} value={e.id}>{e.nombre}</option>
+          ))}
+        </select>
+        <select
+          value={filtroTipo}
+          onChange={(e) => setFiltroTipo(e.target.value)}
+          className="min-w-0 flex-1 basis-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="">Todos los tipos</option>
+          {tipos.map((t) => (
+            <option key={t.id} value={t.id}>{t.nombre}</option>
+          ))}
+        </select>
+        <select
+          value={filtroRc}
+          onChange={(e) => setFiltroRc(e.target.value)}
+          className="min-w-0 flex-1 basis-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="">Resp. comercial</option>
+          {usuarios.map((u) => (
+            <option key={u.id} value={u.id}>{u.nombre ?? u.email}</option>
+          ))}
+        </select>
+        <select
+          value={filtroRt}
+          onChange={(e) => setFiltroRt(e.target.value)}
+          className="min-w-0 flex-1 basis-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="">Resp. técnico</option>
+          {usuarios.map((u) => (
+            <option key={u.id} value={u.id}>{u.nombre ?? u.email}</option>
+          ))}
+        </select>
       </div>
 
       <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
