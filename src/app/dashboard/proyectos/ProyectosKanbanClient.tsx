@@ -258,10 +258,12 @@ function fmtPedidoHora(s: string | null | undefined): string {
 }
 
 type TipoRow = { id: string; nombre: string; codigo: string };
+type UsuarioRow = { id: string; nombre: string | null; email: string };
 
 export default function ProyectosKanbanClient() {
   const [estados, setEstados] = useState<EstadoRow[]>([]);
   const [tipos, setTipos] = useState<TipoRow[]>([]);
+  const [usuarios, setUsuarios] = useState<UsuarioRow[]>([]);
   const [proyectos, setProyectos] = useState<ProyectoCard[]>([]);
   const [prioridadesConfig, setPrioridadesConfig] = useState<PrioridadConfig[]>([]);
   const [loading, setLoading] = useState(true);
@@ -276,14 +278,20 @@ export default function ProyectosKanbanClient() {
   const [filtroRt, setFiltroRt] = useState("");
   const [modalProjectId, setModalProjectId] = useState<string | null>(null);
 
-  // Cargar tipos una vez (catálogo, no cambia con filtros).
+  // Catálogos para los filtros (cargan una vez).
   useEffect(() => {
     void fetchWithSupabaseSession("/api/proyectos/tipos", { cache: "no-store" })
       .then(async (r) => {
         const j = (await r.json().catch(() => ({}))) as { success?: boolean; data?: TipoRow[] };
         if (r.ok && j.success && Array.isArray(j.data)) setTipos(j.data);
       })
-      .catch(() => { /* sin tipos: el filtro queda oculto */ });
+      .catch(() => { /* sin tipos */ });
+    void fetchWithSupabaseSession("/api/usuarios/empresa-activos", { cache: "no-store" })
+      .then(async (r) => {
+        const j = (await r.json().catch(() => ({}))) as { usuarios?: UsuarioRow[] };
+        if (r.ok && Array.isArray(j.usuarios)) setUsuarios(j.usuarios);
+      })
+      .catch(() => { /* sin usuarios */ });
   }, []);
 
   const sensors = useSensors(
@@ -527,6 +535,26 @@ export default function ProyectosKanbanClient() {
           <option value="">Todos los tipos</option>
           {tipos.map((t) => (
             <option key={t.id} value={t.id}>{t.nombre}</option>
+          ))}
+        </select>
+        <select
+          value={filtroRc}
+          onChange={(e) => setFiltroRc(e.target.value)}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="">Resp. comercial</option>
+          {usuarios.map((u) => (
+            <option key={u.id} value={u.id}>{u.nombre ?? u.email}</option>
+          ))}
+        </select>
+        <select
+          value={filtroRt}
+          onChange={(e) => setFiltroRt(e.target.value)}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+        >
+          <option value="">Resp. técnico</option>
+          {usuarios.map((u) => (
+            <option key={u.id} value={u.id}>{u.nombre ?? u.email}</option>
           ))}
         </select>
       </div>
