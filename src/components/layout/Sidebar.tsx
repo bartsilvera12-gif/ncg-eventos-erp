@@ -553,39 +553,11 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* Menú principal FIJO (siempre visible, no entra en el scroll). */}
-      <div className="shrink-0 px-3 pt-3">
+      <nav className="zentra-sidebar-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain p-3">
         {showMenuNoResults ? (
           <p className="px-2 py-6 text-center text-xs text-slate-400">Sin resultados</p>
         ) : null}
 
-        <div className="space-y-0.5">
-          {!collapsed && mainItemsFiltered.length > 0 && (
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">General</p>
-          )}
-          {cargando ? (
-            <div className="px-3 py-2 text-sm text-slate-500 animate-pulse">Cargando…</div>
-          ) : (
-            mainItemsFiltered.map((item) => (
-              <NavItem
-                key={item.key}
-                item={item}
-                itemId={slugToId(item.slug)}
-                isActive={isActive(item.slug, item.href)}
-                isFavorito={favoritos.includes(slugToId(item.slug))}
-                onToggleFavorito={handleToggleFavorito}
-                hasAccess={hasAccess(item.slug)}
-                collapsed={collapsed}
-                expanded={expandedItems[item.key] ?? false}
-                onToggleExpand={() => toggleExpand(item.key)}
-              />
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Secciones secundarias (favoritos / admin) — scrollean si no entran. */}
-      <nav className="zentra-sidebar-scroll min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 pb-3 pt-2">
         {/* Favoritos */}
         {favoritosItemsFiltered.length > 0 && !collapsed && (
           <div className="mb-4">
@@ -609,9 +581,37 @@ export default function Sidebar() {
           </div>
         )}
 
+        {/* Menú principal — SIEMPRE visible. El loading sucede por debajo:
+            si todavía no llegó la respuesta del API, mostramos el menú filtrado
+            con lo que tengamos (cache de sessionStorage o estado anterior).
+            Cargando=true solo afecta si NO hay items para mostrar. */}
+        <div className="space-y-0.5">
+          {!collapsed && mainItemsFiltered.length > 0 && (
+            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">General</p>
+          )}
+          {mainItemsFiltered.length > 0 ? (
+            mainItemsFiltered.map((item) => (
+              <NavItem
+                key={item.key}
+                item={item}
+                itemId={slugToId(item.slug)}
+                isActive={isActive(item.slug, item.href)}
+                isFavorito={favoritos.includes(slugToId(item.slug))}
+                onToggleFavorito={handleToggleFavorito}
+                hasAccess={hasAccess(item.slug)}
+                collapsed={collapsed}
+                expanded={expandedItems[item.key] ?? false}
+                onToggleExpand={() => toggleExpand(item.key)}
+              />
+            ))
+          ) : cargando ? (
+            <div className="px-3 py-2 text-sm text-slate-500 animate-pulse">Cargando…</div>
+          ) : null}
+        </div>
+
         {/* Admin */}
         {esSuperAdmin && adminEmpresasMatchesQuery(menuSearchQuery) && (
-          <div className="mt-2 pt-4 border-t border-[color:var(--zentra-sidebar-border)]">
+          <div className="mt-6 pt-4 border-t border-[color:var(--zentra-sidebar-border)]">
             {!collapsed && (
               <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Admin</p>
             )}
