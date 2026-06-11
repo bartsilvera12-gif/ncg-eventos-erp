@@ -237,6 +237,9 @@ export async function POST(request: NextRequest) {
 
     const schema = await fetchDataSchemaForEmpresaId(auth.empresa_id);
 
+    const tipoDocumento: "venta" | "presupuesto" =
+      String(o.tipo_documento ?? "").trim().toLowerCase() === "presupuesto" ? "presupuesto" : "venta";
+
     const { ventaId, numeroControl, fechaIso } = await createVentaTransaccionalPg({
       schema,
       empresaId: auth.empresa_id,
@@ -254,6 +257,7 @@ export async function POST(request: NextRequest) {
       pedidoCocina,
       usuarioCatalogId: auth.usuarioCatalogId ?? null,
       usuarioNombre: auth.usuarioNombre ?? auth.user?.email ?? null,
+      tipoDocumento,
     });
 
     // Detalle de pago (transferencia/tarjeta) → ventas_pagos_detalle (raw-PG).

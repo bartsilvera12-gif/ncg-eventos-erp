@@ -199,9 +199,14 @@ export default function VentasPage() {
         title="Ventas"
         description="Registro de ventas y salidas de inventario"
         actions={
-          <Button href="/ventas/nueva" size="sm">
-            <span aria-hidden>+</span> Nueva venta
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button href="/ventas/nueva?tipo=presupuesto" size="sm" variant="secondary">
+              <span aria-hidden>+</span> Nuevo presupuesto
+            </Button>
+            <Button href="/ventas/nueva" size="sm">
+              <span aria-hidden>+</span> Nueva venta
+            </Button>
+          </div>
         }
       />
 

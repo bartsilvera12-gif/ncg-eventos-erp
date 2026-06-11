@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import MontoInput from "@/components/ui/MontoInput";
 import PageHeader from "@/components/ui/PageHeader";
 import ProductPickerModal, { type AgregarVentaPayload } from "@/components/inventario/ProductPickerModal";
@@ -59,6 +59,17 @@ const tipoPrecioLabel: Record<TipoPrecioVenta, string> = {
 
 export default function NuevaVentaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  /**
+   * Modo presupuesto: el form es el mismo, pero al guardar se envía
+   * tipo_documento='presupuesto', lo que en el servidor:
+   *  - No valida stock
+   *  - No descuenta stock
+   *  - No genera movimientos de inventario
+   *  - Crea la venta con estado_presupuesto='pendiente'
+   */
+  const esPresupuesto = (searchParams?.get("tipo") ?? "") === "presupuesto";
 
   // ── Estado global ──────────────────────────────────────────────────────────
   const [items, setItems]           = useState<LineaVenta[]>([]);
@@ -204,14 +215,17 @@ export default function NuevaVentaPage() {
         tipo_venta:   tipoVenta,
         metodo_pago:  metodoPago,
       },
-      buildPedidoCocina(),
-      pagoDetalle
+      esPresupuesto ? null : buildPedidoCocina(),
+      esPresupuesto ? null : pagoDetalle,
+      { tipoDocumento: esPresupuesto ? "presupuesto" : "venta" }
     );
     if (resultado.success) {
-      // Abrir comandas + ticket cliente en nueva pestaña con autoprint.
-      try {
-        window.open(`/api/ventas/${resultado.venta.id}/ticket?mode=comandas&auto=1`, "_blank", "noopener");
-      } catch {}
+      if (!esPresupuesto) {
+        // Solo ventas reales generan ticket/comandas para imprimir.
+        try {
+          window.open(`/api/ventas/${resultado.venta.id}/ticket?mode=comandas&auto=1`, "_blank", "noopener");
+        } catch {}
+      }
       router.push("/ventas");
     }
     return resultado;
@@ -253,11 +267,21 @@ export default function NuevaVentaPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow="NCG · Operaciones"
-        title="Nueva venta"
+        eyebrow={esPresupuesto ? "NCG · Comercial" : "NCG · Operaciones"}
+        title={esPresupuesto ? "Nuevo presupuesto" : "Nueva venta"}
+        description={esPresupuesto
+          ? "Cotización para el cliente. No descuenta stock ni genera movimientos. Si el cliente aprueba, podés convertirlo en obra desde la lista de ventas."
+          : undefined}
         backHref="/ventas"
         backLabel="Ventas"
       />
+
+      {esPresupuesto && (
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+          <strong>Modo presupuesto:</strong> esta operación se guarda como presupuesto pendiente
+          de aprobación. No afecta el stock ni genera ticket de cobro.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-7xl">
 

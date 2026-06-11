@@ -47,6 +47,16 @@ export interface CreateVentaPgParams {
   /** Atribución del movimiento de inventario (columna "Usuario"). */
   usuarioCatalogId?: string | null;
   usuarioNombre?: string | null;
+  /**
+   * Documento a generar: 'venta' (default) o 'presupuesto'.
+   * En 'presupuesto':
+   *  - se setea tipo_documento='presupuesto' y estado_presupuesto='pendiente'
+   *  - NO se valida stock
+   *  - NO se descuenta stock
+   *  - NO se generan movimientos de inventario
+   *  - NO se crea pedido cocina
+   */
+  tipoDocumento?: "venta" | "presupuesto";
 }
 
 function recalcTotals(items: CreateVentaItemInput[]) {
@@ -143,12 +153,16 @@ export async function createVentaTransaccionalPg(
     });
   }
 
-  // 3) Validar stock SOLO para productos que controlan stock (Reventa).
-  for (const [pid, need] of qtyByProduct) {
-    const p = stockMap.get(pid)!;
-    if (!p.controlaStock) continue;
-    if (p.stock < need) {
-      throw new Error(`Stock insuficiente para "${p.nombre}". Disponible: ${p.stock} u.; requerido: ${need}.`);
+  const esPresupuesto = params.tipoDocumento === "presupuesto";
+
+  // 3) Validar stock SOLO para productos que controlan stock (Reventa). Skip si es presupuesto.
+  if (!esPresupuesto) {
+    for (const [pid, need] of qtyByProduct) {
+      const p = stockMap.get(pid)!;
+      if (!p.controlaStock) continue;
+      if (p.stock < need) {
+        throw new Error(`Stock insuficiente para "${p.nombre}". Disponible: ${p.stock} u.; requerido: ${need}.`);
+      }
     }
   }
 
@@ -170,7 +184,7 @@ export async function createVentaTransaccionalPg(
   const numeroControl = `VTA-${String(nextNum).padStart(6, "0")}`;
   const fechaIso = new Date().toISOString();
 
-  // 5) Insertar venta
+  // 5) Insertar venta (presupuesto vs venta real difieren en estado, tipo_documento)
   const insVenta = await sb
     .from("ventas")
     .insert({
@@ -182,12 +196,14 @@ export async function createVentaTransaccionalPg(
       subtotal: calc.subtotal,
       monto_iva: calc.montoIva,
       total: calc.total,
-      estado: "completada",
+      estado: esPresupuesto ? "borrador" : "completada",
       tipo_venta: params.tipoVenta,
       plazo_dias: params.plazoDias,
       metodo_pago: params.metodoPago,
       fecha: fechaIso,
       observaciones: params.observaciones,
+      tipo_documento: esPresupuesto ? "presupuesto" : "venta",
+      estado_presupuesto: esPresupuesto ? "pendiente" : null,
     })
     .select("id")
     .single();
@@ -228,38 +244,41 @@ export async function createVentaTransaccionalPg(
     if (insItems.error) throw new Error(insItems.error.message);
 
     // 7) Descuento de stock + movimientos solo para productos con controla_stock=true.
-    for (const line of items) {
-      const p = stockMap.get(line.producto_id)!;
-      if (!p.controlaStock) continue;
-      const nuevoStock = p.stock - line.cantidad;
-      const upd = await sb
-        .from("productos")
-        .update({ stock_actual: nuevoStock })
-        .eq("id", line.producto_id)
-        .eq("empresa_id", params.empresaId);
-      if (upd.error) throw new Error(upd.error.message);
-      p.stock = nuevoStock;
+    //    Para presupuestos NO se toca stock ni se crean movimientos.
+    if (!esPresupuesto) {
+      for (const line of items) {
+        const p = stockMap.get(line.producto_id)!;
+        if (!p.controlaStock) continue;
+        const nuevoStock = p.stock - line.cantidad;
+        const upd = await sb
+          .from("productos")
+          .update({ stock_actual: nuevoStock })
+          .eq("id", line.producto_id)
+          .eq("empresa_id", params.empresaId);
+        if (upd.error) throw new Error(upd.error.message);
+        p.stock = nuevoStock;
 
-      const mov = await sb.from("movimientos_inventario").insert({
-        empresa_id: params.empresaId,
-        producto_id: line.producto_id,
-        producto_nombre: line.producto_nombre,
-        producto_sku: line.sku,
-        tipo: "SALIDA",
-        cantidad: line.cantidad,
-        costo_unitario: p.costo,
-        origen: "venta",
-        referencia: numeroControl,
-        fecha: fechaIso,
-        venta_id: ventaId,
-        created_by: params.usuarioCatalogId ?? null,
-        usuario_nombre: params.usuarioNombre ?? null,
-      });
-      if (mov.error) throw new Error(mov.error.message);
+        const mov = await sb.from("movimientos_inventario").insert({
+          empresa_id: params.empresaId,
+          producto_id: line.producto_id,
+          producto_nombre: line.producto_nombre,
+          producto_sku: line.sku,
+          tipo: "SALIDA",
+          cantidad: line.cantidad,
+          costo_unitario: p.costo,
+          origen: "venta",
+          referencia: numeroControl,
+          fecha: fechaIso,
+          venta_id: ventaId,
+          created_by: params.usuarioCatalogId ?? null,
+          usuario_nombre: params.usuarioNombre ?? null,
+        });
+        if (mov.error) throw new Error(mov.error.message);
+      }
     }
 
-    // 8) Pedido cocina (tarjeta en proyectos)
-    if (params.pedidoCocina) {
+    // 8) Pedido cocina (tarjeta en proyectos). No aplica a presupuestos.
+    if (params.pedidoCocina && !esPresupuesto) {
       const tipoQ = await sb
         .from("proyecto_tipos")
         .select("id")
