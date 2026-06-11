@@ -204,6 +204,9 @@ export async function createVentaTransaccionalPg(
       observaciones: params.observaciones,
       tipo_documento: esPresupuesto ? "presupuesto" : "venta",
       estado_presupuesto: esPresupuesto ? "pendiente" : null,
+      // CONTADO: se cobra al instante; CREDITO/presupuesto: queda pendiente.
+      monto_cobrado: !esPresupuesto && params.tipoVenta === "CONTADO" ? calc.total : 0,
+      fecha_cobro: !esPresupuesto && params.tipoVenta === "CONTADO" ? fechaIso : null,
     })
     .select("id")
     .single();

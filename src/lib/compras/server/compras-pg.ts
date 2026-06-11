@@ -416,6 +416,16 @@ export async function insertCompraMultiConImpacto(
     const compra = compraRows[0];
     const compraId = compra.id;
 
+    // Si la compra es CONTADO se marca como pagada al instante (Cuentas por Pagar
+    // solo lista las compras a crédito que aún no se saldaron).
+    if (d.tipo_pago === "contado") {
+      await client.query(
+        `UPDATE ${tC} SET monto_pagado = $1::numeric, fecha_pago = now()
+         WHERE id = $2::uuid AND empresa_id = $3::uuid`,
+        [total, compraId, empresaId]
+      );
+    }
+
     // 1) Insertar TODAS las líneas en compras_items
     for (const it of items) {
       await client.query(

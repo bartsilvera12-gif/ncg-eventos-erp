@@ -98,6 +98,9 @@ export async function createGasto(input: GastoInput): Promise<Gasto> {
       recurrente: input.recurrente,
       frecuencia: input.frecuencia?.trim() || null,
       fecha: input.fecha,
+      // Gastos se asumen liquidados al cargarlos (mismo criterio que el backfill).
+      monto_pagado: input.monto,
+      fecha_pago: input.fecha,
     })
     .select()
     .single();
