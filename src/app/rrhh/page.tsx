@@ -8,9 +8,9 @@ type Seccion = { titulo: string; descripcion: string; href?: string };
 const SECCIONES: Seccion[] = [
   { titulo: "Empleados", descripcion: "Alta de personal, cargos, salarios base y costo por hora.", href: "/rrhh/empleados" },
   { titulo: "Personal por obra", descripcion: "Asignación de empleados a obras desde la pestaña Personal de cada obra.", href: "/dashboard/proyectos" },
-  { titulo: "Control horario", descripcion: "Fichajes de entrada y salida, horas trabajadas por jornada." },
-  { titulo: "Vacaciones", descripcion: "Solicitudes, aprobaciones y saldo de días por empleado." },
-  { titulo: "Nómina", descripcion: "Liquidación mensual con conceptos, descuentos e IPS." },
+  { titulo: "Control horario", descripcion: "Fichajes de entrada y salida diarios. Calcula horas automáticamente.", href: "/rrhh/control-horario" },
+  { titulo: "Vacaciones", descripcion: "Solicitudes y aprobación de vacaciones por empleado.", href: "/rrhh/vacaciones" },
+  { titulo: "Nómina", descripcion: "Liquidación mensual: salario base + costo de horas en obras del mes.", href: "/rrhh/nomina" },
 ];
 
 export default function RrhhPage() {
