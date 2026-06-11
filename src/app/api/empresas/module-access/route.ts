@@ -105,6 +105,11 @@ export async function GET(request: Request) {
       "contabilidad",
       "rrhh",
       "configuracion",
+      "pagos",
+      "gastos",
+      "notas_credito",
+      "reportes",
+      "usuarios",
     ];
     let outSlugs = modulos.map((m) => m.slug).filter(Boolean) as string[];
     let outModulos = modulos.map((m) => ({ id: m.id, nombre: m.nombre, slug: m.slug }));

@@ -88,45 +88,87 @@ function adminEmpresasMatchesQuery(queryRaw: string): boolean {
 
 const MENU_STRUCTURE: MenuItem[] = [
   { key: "dashboard", slug: "dashboard", label: "Dashboard", href: "/", icon: LayoutDashboard },
-  { key: "ventas", slug: "ventas", label: "Ventas", href: "/ventas", icon: ShoppingCart },
+
+  {
+    key: "ventas",
+    slug: "ventas",
+    label: "Ventas y Presupuestos",
+    href: "/ventas",
+    icon: ShoppingCart,
+    children: [
+      { label: "Clientes",              href: "/clientes" },
+      { label: "Presupuestos / Ventas", href: "/ventas" },
+      { label: "Facturación",           href: "/ventas" },
+    ],
+  },
+
   {
     key: "proyectos",
     slug: "proyectos",
-    label: "Proyectos",
+    label: "Obras / Proyectos",
     href: "/dashboard/proyectos",
     icon: FolderKanban,
+    children: [
+      { label: "Obras",              href: "/dashboard/proyectos" },
+      { label: "Resumen de costos",  href: "/dashboard/proyectos" },
+      { label: "Rentabilidad",       href: "/dashboard/proyectos" },
+    ],
   },
+
   {
     key: "compras",
     slug: "compras",
-    label: "Compras",
+    label: "Compras y Proveedores",
     href: "/compras",
     icon: Package,
     children: [
-      { label: "Órdenes", href: "/compras" },
-      { label: "Proveedores", href: "/proveedores" },
+      { label: "Compras / Órdenes",   href: "/compras" },
+      { label: "Proveedores",         href: "/proveedores" },
+      { label: "Facturas recibidas",  href: "/compras" },
     ],
   },
+
   {
     key: "inventario",
     slug: "inventario",
-    label: "Inventario",
+    label: "Inventario / Almacenes",
     href: "/inventario",
     icon: Package,
     children: [
-      { label: "Productos", href: "/inventario" },
-      { label: "Movimientos", href: "/inventario/movimientos" },
-      { label: "Categorías", href: "/inventario/categorias" },
+      { label: "Productos / Materiales", href: "/inventario" },
+      { label: "Movimientos",            href: "/inventario/movimientos" },
+      { label: "Categorías",             href: "/inventario/categorias" },
+      { label: "Stock mínimo",           href: "/inventario" },
     ],
   },
+
   {
     key: "contabilidad",
     slug: "contabilidad",
-    label: "Finanzas",
+    label: "Finanzas y Contabilidad",
     href: "/finanzas",
     icon: BarChart3,
+    children: [
+      { label: "Pagos / Cobros",    href: "/pagos" },
+      { label: "Gastos",            href: "/gastos" },
+      { label: "Notas de crédito",  href: "/notas-credito" },
+      { label: "Reportes",          href: "/reportes" },
+      { label: "Panel financiero",  href: "/finanzas" },
+    ],
   },
-  { key: "rrhh", slug: "rrhh", label: "Recursos Humanos", href: "/rrhh", icon: Users },
+
+  {
+    key: "rrhh",
+    slug: "rrhh",
+    label: "Recursos Humanos",
+    href: "/rrhh",
+    icon: Users,
+    children: [
+      { label: "Panel RRHH", href: "/rrhh" },
+    ],
+  },
+
+  // Visible solo si rol ∈ {admin, administrador, super_admin}. Gateado en mainItemsFiltered.
   {
     key: "configuracion",
     slug: "configuracion",
@@ -287,6 +329,7 @@ export default function Sidebar() {
   });
   const [cargando, setCargando] = useState(true);
   const [esSuperAdmin, setEsSuperAdmin] = useState(false);
+  const [usuarioRol, setUsuarioRol] = useState<string>("");
   /** Filtro visual del menú (no altera permisos ni rutas). */
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
   const { setSidebarReady, mobileSidebarOpen, setMobileSidebarOpen } = useBoot();
@@ -345,6 +388,7 @@ export default function Sidebar() {
         if (!superA) {
           try {
             const cu = await getCurrentUser();
+            if (!cancelled) setUsuarioRol((cu?.rol ?? "").trim().toLowerCase());
             if ((cu?.rol ?? "").trim() === "super_admin") {
               superA = true;
               const mr = await fetchWithSupabaseSession("/api/admin/modulos", { cache: "no-store" });
@@ -449,13 +493,17 @@ export default function Sidebar() {
     const idForSlug = (slug: string) => modulos.find((m) => m.slug === slug)?.id ?? slug;
     const access = (slug: string) =>
       canAccessSidebarSlug(slug, slugs, esSuperAdmin, inactiveSlugsSet, { strict: strictAllowlist });
+    /** Configuración visible solo para admin/administrador/super_admin. */
+    const rolEsAdmin =
+      esSuperAdmin || ["admin", "administrador", "super_admin"].includes(usuarioRol);
     return MENU_STRUCTURE.filter(
       (item) =>
         !favoritos.includes(idForSlug(item.slug)) &&
         access(item.slug) &&
-        menuItemMatchesQuery(item, menuSearchQuery)
+        menuItemMatchesQuery(item, menuSearchQuery) &&
+        (item.slug !== "configuracion" || rolEsAdmin)
     );
-  }, [favoritos, menuSearchQuery, modulos, esSuperAdmin, inactiveSlugsSet, strictAllowlist]);
+  }, [favoritos, menuSearchQuery, modulos, esSuperAdmin, inactiveSlugsSet, strictAllowlist, usuarioRol]);
 
   const anyMenuVisible =
     favoritosItemsFiltered.length > 0 ||
