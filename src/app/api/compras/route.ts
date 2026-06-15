@@ -6,9 +6,19 @@ import { API_ERRORS } from "@/lib/api/errors";
 import { listCompras, insertCompraMultiConImpacto } from "@/lib/compras/server/compras-pg";
 import type { CompraItemInput } from "@/lib/compras/server/compras-pg";
 
-const IVA_OK = ["exenta", "5", "10"];
+const IVA_OK = ["exenta", "4", "10", "21", "5"]; // "5" se mantiene por compat con compras legacy
 function ivaRate(t: string): number {
-  return t === "5" ? 0.05 : t === "10" ? 0.10 : 0;
+  if (t === "21") return 0.21;
+  if (t === "10") return 0.10;
+  if (t === "4") return 0.04;
+  if (t === "5") return 0.05;
+  return 0;
+}
+
+const TIPO_DOC_OK = ["factura", "albaran", "ticket", "presupuesto", "rectificativa"];
+const ALMACEN_OK = ["deposito", "obra", "vehiculo", "taller"];
+function isIsoDate(s: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(s);
 }
 
 /**
@@ -31,7 +41,7 @@ function parseItems(body: Record<string, unknown>): { items: CompraItemInput[] }
     if (cantidad <= 0) return { error: "La cantidad de cada línea debe ser mayor a 0." };
     const costo_unitario = Number(r.costo_unitario) || 0;
     if (costo_unitario <= 0) return { error: "El costo unitario de cada línea debe ser mayor a 0." };
-    const iva_tipo = IVA_OK.includes(String(r.iva_tipo)) ? String(r.iva_tipo) : "10";
+    const iva_tipo = IVA_OK.includes(String(r.iva_tipo)) ? String(r.iva_tipo) : "21";
     const costo_unitario_original = Number(r.costo_unitario_original) || costo_unitario;
     const subtotal = cantidad * costo_unitario;
     const monto_iva = subtotal * ivaRate(iva_tipo);
@@ -90,6 +100,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse("Agregá al menos una línea de producto."), { status: 400 });
 
     try {
+      const tipoDoc = typeof body.tipo_documento === "string" && TIPO_DOC_OK.includes(body.tipo_documento)
+        ? body.tipo_documento : null;
+      const fechaCompra = typeof body.fecha_compra === "string" && isIsoDate(body.fecha_compra)
+        ? body.fecha_compra : null;
+      const fechaVenc = typeof body.fecha_vencimiento === "string" && isIsoDate(body.fecha_vencimiento)
+        ? body.fecha_vencimiento : null;
+      const almacen = typeof body.almacen_destino === "string" && ALMACEN_OK.includes(body.almacen_destino)
+        ? body.almacen_destino : null;
+      const proyectoId = typeof body.proyecto_id === "string" && body.proyecto_id.trim() !== ""
+        ? body.proyecto_id.trim() : null;
+
       const out = await insertCompraMultiConImpacto(schema, empresaId, {
         proveedor_id: String(body.proveedor_id),
         proveedor_nombre: String(body.proveedor_nombre ?? ""),
@@ -102,6 +123,11 @@ export async function POST(request: NextRequest) {
         created_by: ctx.auth.usuarioCatalogId ?? null,
         usuario_nombre: ctx.auth.usuarioNombre ?? ctx.auth.user?.email ?? null,
         items: parsed.items,
+        tipo_documento: tipoDoc,
+        fecha_compra: fechaCompra,
+        fecha_vencimiento: fechaVenc,
+        almacen_destino: almacen,
+        proyecto_id: proyectoId,
       });
 
       return NextResponse.json(successResponse({

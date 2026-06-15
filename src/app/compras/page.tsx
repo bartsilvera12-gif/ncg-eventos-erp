@@ -38,8 +38,10 @@ function formatFecha(iso: string) {
 
 const ivaLabel: Record<string, string> = {
   exenta: "Exenta",
-  "5": "IVA 5%",
+  "4": "IVA 4%",
+  "5": "IVA 5%", // legacy
   "10": "IVA 10%",
+  "21": "IVA 21%",
 };
 
 export default function ComprasPage() {
@@ -99,8 +101,8 @@ export default function ComprasPage() {
 
       <PageHeader
         eyebrow="NCG · Adquisiciones"
-        title="Compras"
-        description="Registro de órdenes de compra a proveedores"
+        title="Compras de materiales"
+        description="Registro de compras a proveedores: facturas, albaranes y tickets"
         actions={
           <>
             <ExportExcelButton url="/api/compras/export" />

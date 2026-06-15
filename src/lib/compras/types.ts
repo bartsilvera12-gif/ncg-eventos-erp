@@ -1,6 +1,14 @@
 export type TipoPago = "contado" | "credito";
-export type TipoIva = "exenta" | "5" | "10";
+export type TipoIva = "exenta" | "4" | "10" | "21";
+/** Códigos persistidos en DB. "PYG" se muestra como € en la UI (NCG). */
 export type Moneda = "PYG" | "USD";
+export type TipoDocumentoCompra =
+  | "factura"
+  | "albaran"
+  | "ticket"
+  | "presupuesto"
+  | "rectificativa";
+export type AlmacenDestino = "deposito" | "obra" | "vehiculo" | "taller";
 
 /** Una línea de detalle de compra (tabla sanantonio.compras_items). */
 export interface CompraItem {
@@ -60,6 +68,18 @@ export interface Compra {
   factura_path?: string | null;
   factura_nombre_original?: string | null;
   factura_mime_type?: string | null;
+
+  /** Tipo de documento del proveedor (factura, albarán, ticket…). */
+  tipo_documento?: TipoDocumentoCompra | null;
+  /** Fecha del documento (independiente de `fecha` = alta en sistema). */
+  fecha_compra?: string | null;
+  /** Vencimiento explícito (sólo si crédito). Reemplaza al cálculo desde plazo_dias. */
+  fecha_vencimiento?: string | null;
+  /** Destino físico del material comprado. */
+  almacen_destino?: AlmacenDestino | null;
+  /** Obra a la que se imputa la compra. */
+  proyecto_id?: string | null;
+  proyecto_titulo?: string | null;
 }
 
 // ── Detalle de compra (pantalla /compras/[id]) ───────────────────────────────

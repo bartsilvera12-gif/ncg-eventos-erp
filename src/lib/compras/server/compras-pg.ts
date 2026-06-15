@@ -53,6 +53,11 @@ export interface CompraRow {
   proyecto_id?: string | null;
   /** Título de la obra, lo llena el listado via LEFT JOIN. */
   proyecto_titulo?: string | null;
+  /** Tipo documento (NCG España): factura, albaran, ticket, presupuesto, rectificativa. */
+  tipo_documento?: string | null;
+  fecha_compra?: string | null;
+  fecha_vencimiento?: string | null;
+  almacen_destino?: string | null;
 }
 
 const COLS = `
@@ -62,7 +67,7 @@ const COLS = `
   tipo_pago, plazo_dias, nro_timbrado, numero_control, estado, fecha,
   created_at, updated_at, created_by, usuario_nombre,
   factura_bucket, factura_path, factura_nombre_original, factura_mime_type,
-  proyecto_id
+  proyecto_id, tipo_documento, fecha_compra, fecha_vencimiento, almacen_destino
 `;
 
 export interface InsertCompraInput {
@@ -305,7 +310,7 @@ export interface CompraItemInput {
   cantidad: number;
   costo_unitario: number;            // PYG
   costo_unitario_original: number;   // moneda elegida
-  iva_tipo: string;                  // 'exenta' | '5' | '10'
+  iva_tipo: string;                  // 'exenta' | '4' | '10' | '21'
   subtotal: number;
   monto_iva: number;
   total_linea: number;
@@ -323,6 +328,12 @@ export interface InsertCompraMultiInput {
   created_by: string | null;
   usuario_nombre: string | null;
   items: CompraItemInput[];
+  /** NCG España: documento del proveedor + obra + almacén. */
+  tipo_documento?: string | null;
+  fecha_compra?: string | null;
+  fecha_vencimiento?: string | null;
+  almacen_destino?: string | null;
+  proyecto_id?: string | null;
 }
 
 /**
@@ -379,13 +390,15 @@ export async function insertCompraMultiConImpacto(
          cantidad, moneda, tipo_cambio, costo_unitario_original, costo_unitario,
          iva_tipo, subtotal, monto_iva, total, precio_venta, margen_venta,
          tipo_pago, plazo_dias, nro_timbrado, numero_control, estado, fecha,
-         created_by, usuario_nombre
+         created_by, usuario_nombre,
+         tipo_documento, fecha_compra, fecha_vencimiento, almacen_destino, proyecto_id
        ) VALUES (
          $1::uuid, $2::uuid, $3, $4::uuid, $5,
          $6::numeric, $7, $8::numeric, $9::numeric, $10::numeric,
          $11, $12::numeric, $13::numeric, $14::numeric, $15::numeric, $16::numeric,
          $17, $18::integer, $19, $20, 'registrada', now(),
-         $21::uuid, $22
+         $21::uuid, $22,
+         $23, $24::date, $25::date, $26, $27::uuid
        )
        RETURNING ${COLS}`,
       [
@@ -411,6 +424,11 @@ export async function insertCompraMultiConImpacto(
         numero,
         d.created_by,
         d.usuario_nombre,
+        d.tipo_documento ?? null,
+        d.fecha_compra ?? null,
+        d.fecha_vencimiento ?? null,
+        d.almacen_destino ?? null,
+        d.proyecto_id ?? null,
       ]
     );
     const compra = compraRows[0];

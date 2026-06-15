@@ -13,6 +13,12 @@ interface CompraApiRow {
   factura_path?: string | null;
   factura_nombre_original?: string | null;
   factura_mime_type?: string | null;
+  tipo_documento?: string | null;
+  fecha_compra?: string | null;
+  fecha_vencimiento?: string | null;
+  almacen_destino?: string | null;
+  proyecto_id?: string | null;
+  proyecto_titulo?: string | null;
 }
 
 function mapRow(r: CompraApiRow): Compra {
@@ -43,6 +49,12 @@ function mapRow(r: CompraApiRow): Compra {
     factura_path: r.factura_path ?? null,
     factura_nombre_original: r.factura_nombre_original ?? null,
     factura_mime_type: r.factura_mime_type ?? null,
+    tipo_documento: (r.tipo_documento ?? null) as Compra["tipo_documento"],
+    fecha_compra: r.fecha_compra ?? null,
+    fecha_vencimiento: r.fecha_vencimiento ?? null,
+    almacen_destino: (r.almacen_destino ?? null) as Compra["almacen_destino"],
+    proyecto_id: r.proyecto_id ?? null,
+    proyecto_titulo: r.proyecto_titulo ?? null,
   };
 }
 
@@ -82,6 +94,12 @@ export interface SaveCompraMultiInput {
   plazo_dias?: number;
   nro_timbrado: string;
   items: CompraItem[];
+  /** NCG España: extras opcionales. */
+  tipo_documento?: string | null;
+  fecha_compra?: string | null;
+  fecha_vencimiento?: string | null;
+  almacen_destino?: string | null;
+  proyecto_id?: string | null;
 }
 
 /**
@@ -105,6 +123,11 @@ export async function saveCompraMulti(
         plazo_dias: datos.plazo_dias ?? null,
         nro_timbrado: datos.nro_timbrado,
         items: datos.items,
+        tipo_documento: datos.tipo_documento ?? null,
+        fecha_compra: datos.fecha_compra ?? null,
+        fecha_vencimiento: datos.fecha_vencimiento ?? null,
+        almacen_destino: datos.almacen_destino ?? null,
+        proyecto_id: datos.proyecto_id ?? null,
       }),
     });
     const j = await r.json().catch(() => ({}));

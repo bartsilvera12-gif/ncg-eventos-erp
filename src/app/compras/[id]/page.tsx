@@ -27,8 +27,10 @@ function formatFecha(iso: string) {
 
 const ivaLabel: Record<string, string> = {
   exenta: "Exenta",
-  "5": "IVA 5%",
+  "4": "IVA 4%",
+  "5": "IVA 5%", // legacy
   "10": "IVA 10%",
+  "21": "IVA 21%",
 };
 
 function DatoItem({ label, value }: { label: string; value: React.ReactNode }) {

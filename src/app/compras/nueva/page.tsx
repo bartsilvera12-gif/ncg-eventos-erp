@@ -7,21 +7,56 @@ import PageHeader from "@/components/ui/PageHeader";
 import { saveCompraMulti, uploadFacturaCompra } from "@/lib/compras/storage";
 import { getProveedores, proveedorExiste, createProveedor } from "@/lib/proveedores/storage";
 import { getProductos, productoExiste, saveProducto } from "@/lib/inventario/storage";
-import type { TipoIva, TipoPago, Moneda, CompraItem } from "@/lib/compras/types";
+import type {
+  TipoIva, TipoPago, Moneda, CompraItem,
+  TipoDocumentoCompra, AlmacenDestino,
+} from "@/lib/compras/types";
 import type { Proveedor } from "@/lib/proveedores/types";
 import type { MetodoValuacion, Producto } from "@/lib/inventario/types";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function formatGs(valor: number) {
+function formatEur(valor: number) {
   return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 function ivaRate(t: TipoIva) {
-  return t === "5" ? 0.05 : t === "10" ? 0.10 : 0;
+  if (t === "21") return 0.21;
+  if (t === "10") return 0.10;
+  if (t === "4") return 0.04;
+  return 0;
 }
 
-const ivaLabel: Record<TipoIva, string> = { exenta: "Exenta", "5": "5%", "10": "10%" };
+const ivaLabel: Record<TipoIva, string> = {
+  exenta: "Exenta",
+  "4": "4%",
+  "10": "10%",
+  "21": "21%",
+};
+
+const TIPO_DOC_OPTS: { value: TipoDocumentoCompra; label: string }[] = [
+  { value: "factura", label: "Factura" },
+  { value: "albaran", label: "Albarán" },
+  { value: "ticket", label: "Ticket" },
+  { value: "presupuesto", label: "Presupuesto" },
+  { value: "rectificativa", label: "Factura rectificativa" },
+];
+
+const ALMACEN_OPTS: { value: AlmacenDestino; label: string }[] = [
+  { value: "deposito", label: "Depósito principal" },
+  { value: "obra", label: "Obra" },
+  { value: "vehiculo", label: "Vehículo" },
+  { value: "taller", label: "Taller" },
+];
+
+function todayIso() {
+  // Render del lado cliente: usar la fecha local del navegador.
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
 
 // ── Estilos ────────────────────────────────────────────────────────────────────
 
@@ -63,20 +98,31 @@ function SegmentedControl<T extends string>({
 
 // ── Componente principal ───────────────────────────────────────────────────────
 
+type ProyectoLite = { id: string; titulo: string };
+
 export default function NuevaCompraPage() {
   const router = useRouter();
 
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [proyectos, setProyectos] = useState<ProyectoLite[]>([]);
 
-  // ── Cabecera (una sola vez por compra) ───────────────────────────────────
+  // ── Cabecera ─────────────────────────────────────────────────────────────
   const [header, setHeader] = useState({
-    proveedor_id: "",
+    // Documento del proveedor
+    tipo_documento: "factura" as TipoDocumentoCompra,
     nro_timbrado: "",
-    moneda: "PYG" as Moneda,
-    tipo_cambio: "",
+    fecha_compra: todayIso(),
+    fecha_vencimiento: "",
+    // Proveedor
+    proveedor_id: "",
+    // Condiciones
     tipo_pago: "contado" as TipoPago,
     plazo_dias: "",
+    moneda: "PYG" as Moneda, // PYG => se muestra como € (NCG)
+    tipo_cambio: "",
+    proyecto_id: "",
+    almacen_destino: "deposito" as AlmacenDestino,
   });
 
   // ── Líneas agregadas ─────────────────────────────────────────────────────
@@ -87,7 +133,7 @@ export default function NuevaCompraPage() {
     producto_id: "",
     cantidad: "",
     costo_input: "",
-    iva_tipo: "10" as TipoIva,
+    iva_tipo: "21" as TipoIva,
   });
 
   // ── Inline: PROVEEDOR ────────────────────────────────────────────────────
@@ -96,7 +142,7 @@ export default function NuevaCompraPage() {
   const [errorRuc, setErrorRuc] = useState<string | null>(null);
   const [proveedorCreado, setProveedorCreado] = useState<string | null>(null);
 
-  // ── Inline: PRODUCTO (para la línea en construcción) ─────────────────────
+  // ── Inline: PRODUCTO ─────────────────────────────────────────────────────
   const [mostrarFormProducto, setMostrarFormProducto] = useState(false);
   const [formProducto, setFormProducto] = useState({
     nombre: "", sku: "", unidad_medida: "Unidad",
@@ -111,7 +157,7 @@ export default function NuevaCompraPage() {
 
   // ── Factura adjunta (opcional) ───────────────────────────────────────────
   const FACTURA_MIME = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-  const FACTURA_MAX = 10 * 1024 * 1024; // 10 MB
+  const FACTURA_MAX = 10 * 1024 * 1024;
   const [facturaFile, setFacturaFile] = useState<File | null>(null);
   const [facturaPreview, setFacturaPreview] = useState<string | null>(null);
   const [facturaError, setFacturaError] = useState<string | null>(null);
@@ -151,22 +197,29 @@ export default function NuevaCompraPage() {
   useEffect(() => {
     recargarProveedores();
     recargarProductos();
+    fetch("/api/proyectos", { credentials: "include", cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: { id: string; titulo: string }[] }) => {
+        if (j.success && Array.isArray(j.data)) {
+          setProyectos(j.data.map((p) => ({ id: p.id, titulo: p.titulo })));
+        }
+      })
+      .catch(() => { /* sin proyectos: se queda vacío */ });
   }, []);
 
-  // ── Cálculos de la línea en construcción ──────────────────────────────────
+  // ── Cálculos ──────────────────────────────────────────────────────────────
   const tipoCambioNum = header.moneda === "USD" ? (parseFloat(header.tipo_cambio) || 0) : 1;
   const cantNum = parseFloat(linea.cantidad) || 0;
   const costoInputNum = parseFloat(linea.costo_input) || 0;
-  const costoPYG = costoInputNum * tipoCambioNum;
-  const lineaSubtotal = cantNum > 0 && costoPYG > 0 ? cantNum * costoPYG : 0;
+  const costoEur = costoInputNum * tipoCambioNum;
+  const lineaSubtotal = cantNum > 0 && costoEur > 0 ? cantNum * costoEur : 0;
   const lineaIvaMonto = lineaSubtotal * ivaRate(linea.iva_tipo);
   const lineaTotal = lineaSubtotal + lineaIvaMonto;
   const prodLineaSel = productos.find((p) => p.id === linea.producto_id);
   const lineaValida =
-    !!linea.producto_id && cantNum > 0 && costoPYG > 0 &&
+    !!linea.producto_id && cantNum > 0 && costoEur > 0 &&
     (header.moneda !== "USD" || tipoCambioNum > 0);
 
-  // ── Totales de la compra (suma de líneas) ─────────────────────────────────
   const totalSubtotal = items.reduce((s, i) => s + i.subtotal, 0);
   const totalIva = items.reduce((s, i) => s + i.monto_iva, 0);
   const totalGeneral = items.reduce((s, i) => s + i.total_linea, 0);
@@ -174,10 +227,9 @@ export default function NuevaCompraPage() {
   const proveedorSel = proveedores.find((p) => String(p.id) === header.proveedor_id);
   const compraValida = !!header.proveedor_id && !!header.nro_timbrado.trim() && items.length > 0;
 
-  // Margen preview del form de nuevo producto (usa el costo de la línea)
   const precioSugeridoNum = parseFloat(formProducto.precio_venta_sugerido) || 0;
   const margenPreview =
-    precioSugeridoNum > 0 && costoPYG > 0 ? ((precioSugeridoNum - costoPYG) / precioSugeridoNum) * 100 : null;
+    precioSugeridoNum > 0 && costoEur > 0 ? ((precioSugeridoNum - costoEur) / precioSugeridoNum) * 100 : null;
 
   // ── Handlers de la línea ──────────────────────────────────────────────────
   function handleProductoLineaChange(e: React.ChangeEvent<HTMLSelectElement>) {
@@ -188,7 +240,6 @@ export default function NuevaCompraPage() {
     setLinea((prev) => ({
       ...prev,
       producto_id: id,
-      // Prefill del costo con el costo promedio actual (en PYG → de-convertir si USD).
       costo_input: p
         ? header.moneda === "USD" && tipoCambioNum > 0
           ? String(Math.round((p.costo_promedio / tipoCambioNum) * 100) / 100)
@@ -201,7 +252,7 @@ export default function NuevaCompraPage() {
     setErrorLinea(null);
     if (!linea.producto_id) return setErrorLinea("Seleccioná un producto.");
     if (cantNum <= 0) return setErrorLinea("La cantidad debe ser mayor a 0.");
-    if (costoPYG <= 0) return setErrorLinea("El costo unitario debe ser mayor a 0.");
+    if (costoEur <= 0) return setErrorLinea("El coste unitario debe ser mayor a 0.");
     if (header.moneda === "USD" && tipoCambioNum <= 0) return setErrorLinea("Cargá el tipo de cambio.");
     const p = prodLineaSel;
     if (!p) return setErrorLinea("Producto no encontrado.");
@@ -213,7 +264,7 @@ export default function NuevaCompraPage() {
         producto_nombre: p.nombre,
         sku: p.sku,
         cantidad: cantNum,
-        costo_unitario: costoPYG,
+        costo_unitario: costoEur,
         costo_unitario_original: costoInputNum,
         iva_tipo: linea.iva_tipo,
         subtotal: lineaSubtotal,
@@ -233,7 +284,7 @@ export default function NuevaCompraPage() {
     e.preventDefault();
     setErrorSubmit(null);
     if (!header.proveedor_id) return setErrorSubmit("Seleccioná o agregá un proveedor.");
-    if (!header.nro_timbrado.trim()) return setErrorSubmit("Ingresá el N° de timbrado.");
+    if (!header.nro_timbrado.trim()) return setErrorSubmit("Ingresá el N° de factura / albarán del proveedor.");
     if (items.length === 0) return setErrorSubmit("Agregá al menos una línea de producto.");
     if (header.moneda === "USD" && tipoCambioNum <= 0) return setErrorSubmit("Cargá el tipo de cambio.");
     if (!proveedorSel) return setErrorSubmit("Proveedor no encontrado. Recargá e intentá de nuevo.");
@@ -249,6 +300,12 @@ export default function NuevaCompraPage() {
         plazo_dias: header.tipo_pago === "credito" && header.plazo_dias ? parseInt(header.plazo_dias) : undefined,
         nro_timbrado: header.nro_timbrado.trim().toUpperCase(),
         items,
+        tipo_documento: header.tipo_documento,
+        fecha_compra: header.fecha_compra || null,
+        fecha_vencimiento: header.tipo_pago === "credito" && header.fecha_vencimiento
+          ? header.fecha_vencimiento : null,
+        almacen_destino: header.almacen_destino,
+        proyecto_id: header.proyecto_id || null,
       });
       if (!res.success) {
         setErrorSubmit(res.error);
@@ -256,8 +313,6 @@ export default function NuevaCompraPage() {
       }
       if (res.warning) alert(res.warning);
 
-      // Subir factura (post-creación, con el compra_id real). Si falla, la
-      // compra YA quedó guardada: avisamos pero no la perdemos.
       if (facturaFile) {
         const up = await uploadFacturaCompra(res.compra.id, facturaFile);
         if (!up.success) {
@@ -283,7 +338,7 @@ export default function NuevaCompraPage() {
     if (!formProveedor.nombre.trim() || !formProveedor.ruc.trim()) return;
     setErrorRuc(null);
     const dup = await proveedorExiste(formProveedor.ruc);
-    if (dup) { setErrorRuc(`RUC ya registrado para "${dup.nombre}".`); return; }
+    if (dup) { setErrorRuc(`NIF ya registrado para "${dup.nombre}".`); return; }
     const resultado = await createProveedor({
       nombre: formProveedor.nombre.trim().toUpperCase(),
       ruc: formProveedor.ruc.trim(),
@@ -321,10 +376,9 @@ export default function NuevaCompraPage() {
       sku: formProducto.sku.trim().toUpperCase(),
       unidad_medida: formProducto.unidad_medida.toUpperCase(),
       metodo_valuacion: formProducto.metodo_valuacion,
-      stock_actual: 0,                       // la compra sumará stock via ENTRADA
+      stock_actual: 0,
       stock_minimo: parseInt(formProducto.stock_minimo) || 0,
-      costo_promedio: costoPYG || 0,
-      // Precio de venta del producto (gestión de inventario, NO impacto de compra).
+      costo_promedio: costoEur || 0,
       precio_minorista: precioSugeridoNum || 0,
       precio_mayorista: precioSugeridoNum || 0,
       precio_venta: precioSugeridoNum || 0,
@@ -347,31 +401,67 @@ export default function NuevaCompraPage() {
     <div className="space-y-8">
       <PageHeader
         eyebrow="NCG · Adquisiciones"
-        title="Nueva compra"
-        description="Cargá uno o varios productos del mismo proveedor. Al guardar impacta el inventario."
+        title="Nueva compra de materiales"
+        description="Cargá uno o varios materiales del mismo proveedor. Al guardar impacta el inventario y, si lo imputás, la rentabilidad de la obra."
         backHref="/compras"
-        backLabel="Compras"
+        backLabel="Compras de materiales"
       />
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-6 max-w-3xl">
         <form className="space-y-8" onSubmit={handleSubmit}>
 
-          {/* ── 1. Comprobante ────────────────────────────────────────────── */}
+          {/* ── 1. Documento del proveedor ────────────────────────────────── */}
           <section className="space-y-4">
-            <SectionTitle>Comprobante</SectionTitle>
+            <SectionTitle>Documento del proveedor</SectionTitle>
+
             <div>
-              <label className={labelClass}>N° de timbrado</label>
+              <label className={labelClass}>Tipo de documento</label>
+              <SegmentedControl<TipoDocumentoCompra>
+                value={header.tipo_documento}
+                options={TIPO_DOC_OPTS}
+                onChange={(v) => setHeader((p) => ({ ...p, tipo_documento: v }))}
+                small
+              />
+            </div>
+
+            <div>
+              <label className={labelClass}>N° de factura / albarán <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={header.nro_timbrado}
                 onChange={(e) => setHeader((p) => ({ ...p, nro_timbrado: e.target.value }))}
-                placeholder="Ej: 001-001-0000001"
+                placeholder="Ej: F2026-000125"
                 className={inputClass}
               />
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClass}>Fecha de compra</label>
+                <input
+                  type="date"
+                  value={header.fecha_compra}
+                  onChange={(e) => setHeader((p) => ({ ...p, fecha_compra: e.target.value }))}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>
+                  Fecha de vencimiento
+                  <span className="ml-1 text-xs font-normal text-gray-400">(solo si es a crédito)</span>
+                </label>
+                <input
+                  type="date"
+                  value={header.fecha_vencimiento}
+                  disabled={header.tipo_pago !== "credito"}
+                  onChange={(e) => setHeader((p) => ({ ...p, fecha_vencimiento: e.target.value }))}
+                  className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-400`}
+                />
+              </div>
+            </div>
           </section>
 
-          {/* ── 2. Proveedor (una sola vez) ───────────────────────────────── */}
+          {/* ── 2. Proveedor ──────────────────────────────────────────────── */}
           <section className="space-y-3">
             <SectionTitle>Proveedor</SectionTitle>
             <div>
@@ -384,12 +474,26 @@ export default function NuevaCompraPage() {
               >
                 <option value="">Seleccionar proveedor...</option>
                 {proveedores.map((p) => (
-                  <option key={p.id} value={p.id}>{p.nombre} — NIF {p.ruc}</option>
+                  <option key={p.id} value={p.id}>{p.nombre} — NIF {p.ruc ?? "—"}</option>
                 ))}
               </select>
 
               {proveedorCreado && (
                 <p className="mt-1.5 text-xs text-green-600">✓ Proveedor &quot;{proveedorCreado}&quot; creado y seleccionado.</p>
+              )}
+
+              {/* Datos auto-cargados del proveedor seleccionado */}
+              {proveedorSel && (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-4 py-3 text-xs">
+                  <div>
+                    <p className="font-semibold uppercase tracking-wider text-slate-400 text-[10px]">NIF / CIF</p>
+                    <p className="mt-0.5 font-medium text-slate-700">{proveedorSel.ruc || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold uppercase tracking-wider text-slate-400 text-[10px]">Dirección fiscal</p>
+                    <p className="mt-0.5 font-medium text-slate-700">{proveedorSel.direccion || "—"}</p>
+                  </div>
+                </div>
               )}
 
               {!mostrarFormProveedor ? (
@@ -404,18 +508,18 @@ export default function NuevaCompraPage() {
                     <div>
                       <label className={labelSmClass}>Nombre / Razón social <span className="text-red-500">*</span></label>
                       <input type="text" name="nombre" value={formProveedor.nombre} onChange={handleProveedorInputChange}
-                        placeholder="Ej: DISTRIBUIDORA DEL SUR S.A." className={`${inputSmClass} uppercase`} />
+                        placeholder="Ej: ACEROS DEL NORTE S.L." className={`${inputSmClass} uppercase`} />
                     </div>
                     <div>
-                      <label className={labelSmClass}>NIF <span className="text-red-500">*</span></label>
+                      <label className={labelSmClass}>NIF / CIF <span className="text-red-500">*</span></label>
                       <input type="text" name="ruc" value={formProveedor.ruc} onChange={handleProveedorInputChange}
-                        placeholder="Ej: 80012345-1" className={`${inputSmClass} ${errorRuc ? "border-red-300 bg-red-50" : ""}`} />
+                        placeholder="Ej: B12345678" className={`${inputSmClass} ${errorRuc ? "border-red-300 bg-red-50" : ""}`} />
                       {errorRuc && <p className="mt-1 text-xs text-red-600">{errorRuc}</p>}
                     </div>
                     <div>
                       <label className={labelSmClass}>Teléfono</label>
                       <input type="text" name="telefono" value={formProveedor.telefono} onChange={handleProveedorInputChange}
-                        placeholder="Ej: 0981 111 222" className={inputSmClass} />
+                        placeholder="Ej: 911 222 333" className={inputSmClass} />
                     </div>
                     <div>
                       <label className={labelSmClass}>Email</label>
@@ -433,7 +537,7 @@ export default function NuevaCompraPage() {
             </div>
           </section>
 
-          {/* ── 3. Condiciones (pago + moneda) ────────────────────────────── */}
+          {/* ── 3. Condiciones ────────────────────────────────────────────── */}
           <section className="space-y-4">
             <SectionTitle>Condiciones</SectionTitle>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -442,18 +546,26 @@ export default function NuevaCompraPage() {
                 <SegmentedControl<TipoPago>
                   value={header.tipo_pago}
                   options={[{ value: "contado", label: "Contado" }, { value: "credito", label: "Crédito" }]}
-                  onChange={(v) => setHeader((p) => ({ ...p, tipo_pago: v }))}
+                  onChange={(v) => setHeader((p) => ({
+                    ...p,
+                    tipo_pago: v,
+                    fecha_vencimiento: v === "contado" ? "" : p.fecha_vencimiento,
+                  }))}
                 />
               </div>
               <div>
                 <label className={labelClass}>Moneda</label>
                 <SegmentedControl<Moneda>
                   value={header.moneda}
-                  options={[{ value: "PYG", label: "Guaraníes (₲)" }, { value: "USD", label: "Dólares (USD)" }]}
+                  options={[{ value: "PYG", label: "Euros (€)" }, { value: "USD", label: "Dólares (USD)" }]}
                   onChange={(v) => setHeader((p) => ({ ...p, moneda: v, tipo_cambio: "" }))}
                 />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Por defecto euros. Dólares queda como opción si importás material.
+                </p>
               </div>
             </div>
+
             {header.tipo_pago === "credito" && (
               <div>
                 <label className={labelClass}>Plazo (días)</label>
@@ -467,22 +579,52 @@ export default function NuevaCompraPage() {
                 <label className={labelClass}>Tipo de cambio (USD → €) <span className="text-red-500">*</span></label>
                 <MontoInput value={header.tipo_cambio}
                   onChange={(n) => setHeader((p) => ({ ...p, tipo_cambio: String(n) }))}
-                  placeholder="Ej: 7500" className={inputClass} decimals />
+                  placeholder="Ej: 0,92" className={inputClass} decimals />
               </div>
             )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClass}>Obra / proyecto asociado</label>
+                <select
+                  value={header.proyecto_id}
+                  onChange={(e) => setHeader((p) => ({ ...p, proyecto_id: e.target.value }))}
+                  className={inputClass}
+                >
+                  <option value="">— Sin obra —</option>
+                  {proyectos.map((p) => (
+                    <option key={p.id} value={p.id}>{p.titulo}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Imputar la compra a una obra alimenta la rentabilidad del proyecto.
+                </p>
+              </div>
+              <div>
+                <label className={labelClass}>Almacén destino</label>
+                <select
+                  value={header.almacen_destino}
+                  onChange={(e) => setHeader((p) => ({ ...p, almacen_destino: e.target.value as AlmacenDestino }))}
+                  className={inputClass}
+                >
+                  {ALMACEN_OPTS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </section>
 
           {/* ── 4. Líneas de producto ─────────────────────────────────────── */}
           <section className="space-y-3">
-            <SectionTitle>Productos de la compra</SectionTitle>
+            <SectionTitle>Materiales de la compra</SectionTitle>
 
-            {/* Constructor de línea */}
             <div className="rounded-xl border border-slate-200 p-4 space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                 <div className="md:col-span-5">
-                  <label className={labelSmClass}>Producto</label>
+                  <label className={labelSmClass}>Material</label>
                   <select value={linea.producto_id} onChange={handleProductoLineaChange} className={inputClass}>
-                    <option value="">Seleccionar producto...</option>
+                    <option value="">Seleccionar material...</option>
                     {productos.map((p) => (
                       <option key={p.id} value={p.id}>{p.nombre} — {p.sku} (stock: {p.stock_actual})</option>
                     ))}
@@ -495,32 +637,36 @@ export default function NuevaCompraPage() {
                     placeholder="Ej: 50" className={inputClass} />
                 </div>
                 <div className="md:col-span-2">
-                  <label className={labelSmClass}>Costo ({header.moneda === "USD" ? "USD" : "€"})</label>
+                  <label className={labelSmClass}>Coste unitario ({header.moneda === "USD" ? "USD" : "€"})</label>
                   <MontoInput value={linea.costo_input}
                     onChange={(n) => { setErrorLinea(null); setLinea((p) => ({ ...p, costo_input: String(n) })); }}
-                    placeholder={header.moneda === "USD" ? "Ej: 12" : "Ej: 35000"}
-                    className={inputClass} decimals={header.moneda === "USD"} />
+                    placeholder={header.moneda === "USD" ? "Ej: 12" : "Ej: 35,50"}
+                    className={inputClass} decimals />
                 </div>
                 <div className="md:col-span-3">
                   <label className={labelSmClass}>IVA</label>
                   <SegmentedControl<TipoIva>
                     small
                     value={linea.iva_tipo}
-                    options={[{ value: "exenta", label: "Ex" }, { value: "5", label: "5%" }, { value: "10", label: "10%" }]}
+                    options={[
+                      { value: "exenta", label: "Ex" },
+                      { value: "4", label: "4%" },
+                      { value: "10", label: "10%" },
+                      { value: "21", label: "21%" },
+                    ]}
                     onChange={(v) => setLinea((p) => ({ ...p, iva_tipo: v }))}
                   />
                 </div>
               </div>
 
-              {/* Preview de la línea + agregar */}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-gray-500 flex gap-3">
-                  {header.moneda === "USD" && costoPYG > 0 && <span>≈ {formatGs(costoPYG)}/u</span>}
+                  {header.moneda === "USD" && costoEur > 0 && <span>≈ {formatEur(costoEur)}/u</span>}
                   {lineaSubtotal > 0 && (
                     <>
-                      <span>Subtotal: <strong className="text-gray-700">{formatGs(lineaSubtotal)}</strong></span>
-                      <span>IVA: <strong className="text-gray-700">{linea.iva_tipo === "exenta" ? "—" : formatGs(lineaIvaMonto)}</strong></span>
-                      <span>Total: <strong className="text-gray-900">{formatGs(lineaTotal)}</strong></span>
+                      <span>Subtotal: <strong className="text-gray-700">{formatEur(lineaSubtotal)}</strong></span>
+                      <span>IVA: <strong className="text-gray-700">{linea.iva_tipo === "exenta" ? "—" : formatEur(lineaIvaMonto)}</strong></span>
+                      <span>Total: <strong className="text-gray-900">{formatEur(lineaTotal)}</strong></span>
                     </>
                   )}
                 </div>
@@ -542,21 +688,21 @@ export default function NuevaCompraPage() {
               {!mostrarFormProducto ? (
                 <button type="button" onClick={() => { setMostrarFormProducto(true); setProductoCreado(null); }}
                   className="text-xs text-gray-400 hover:text-gray-700 underline transition-colors">
-                  ¿No encontrás el producto? Crear nuevo
+                  ¿No encontrás el material? Crear nuevo
                 </button>
               ) : (
-                <InlineFormBox titulo="Nuevo producto" onCancel={handleCancelarProducto} onSave={handleAgregarProducto}
+                <InlineFormBox titulo="Nuevo material" onCancel={handleCancelarProducto} onSave={handleAgregarProducto}
                   saveDisabled={!formProducto.nombre.trim() || !formProducto.sku.trim()}>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                       <label className={labelSmClass}>Nombre <span className="text-red-500">*</span></label>
                       <input type="text" name="nombre" value={formProducto.nombre} onChange={handleProductoInputChange}
-                        placeholder="Ej: ACEITE GIRASOL 1L" className={`${inputSmClass} uppercase`} />
+                        placeholder="Ej: PERFIL IPE 200" className={`${inputSmClass} uppercase`} />
                     </div>
                     <div>
                       <label className={labelSmClass}>SKU / Código <span className="text-red-500">*</span></label>
                       <input type="text" name="sku" value={formProducto.sku} onChange={handleProductoInputChange}
-                        placeholder="Ej: ACE-001" className={`${inputSmClass} uppercase ${errorSku ? "border-red-300 bg-red-50" : ""}`} />
+                        placeholder="Ej: IPE-200" className={`${inputSmClass} uppercase ${errorSku ? "border-red-300 bg-red-50" : ""}`} />
                       {errorSku && <p className="mt-1 text-xs text-red-600">{errorSku}</p>}
                     </div>
                     <div>
@@ -579,14 +725,14 @@ export default function NuevaCompraPage() {
                       <label className={labelSmClass}>Precio de venta sugerido (€)</label>
                       <MontoInput value={formProducto.precio_venta_sugerido}
                         onChange={(n) => setFormProducto((prev) => ({ ...prev, precio_venta_sugerido: String(n) }))}
-                        placeholder="Ej: 75000" className={inputSmClass} decimals />
+                        placeholder="Ej: 75,00" className={inputSmClass} decimals />
                       {margenPreview !== null && (
                         <p className="mt-1 text-xs text-gray-500">
-                          Margen s/venta: {margenPreview.toFixed(2)}% (costo línea: {formatGs(costoPYG)})
+                          Margen s/venta: {margenPreview.toFixed(2)}% (coste línea: {formatEur(costoEur)})
                         </p>
                       )}
                       <p className="mt-1 text-xs text-gray-400">
-                        Se usa solo para crear el producto. La compra no modifica el precio de venta.
+                        Se usa solo para crear el material. La compra no modifica el precio de venta.
                       </p>
                     </div>
                   </div>
@@ -594,15 +740,14 @@ export default function NuevaCompraPage() {
               )}
             </div>
 
-            {/* Tabla de líneas agregadas */}
             {items.length > 0 && (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] sm:min-w-0 text-sm text-left">
                   <thead>
                     <tr className="bg-slate-50 text-slate-600 text-xs font-semibold">
-                      <th className="py-2.5 pr-3 font-medium">Producto</th>
+                      <th className="py-2.5 pr-3 font-medium">Material</th>
                       <th className="py-2.5 pr-3 font-medium text-right">Cant.</th>
-                      <th className="py-2.5 pr-3 font-medium text-right">Costo u.</th>
+                      <th className="py-2.5 pr-3 font-medium text-right">Coste u.</th>
                       <th className="py-2.5 pr-3 font-medium text-center hidden sm:table-cell">IVA</th>
                       <th className="py-2.5 pr-3 font-medium text-right hidden sm:table-cell">Subtotal</th>
                       <th className="py-2.5 pr-3 font-medium text-right">Total</th>
@@ -617,12 +762,12 @@ export default function NuevaCompraPage() {
                           <span className="ml-1.5 font-mono text-xs text-gray-400">{it.sku}</span>
                         </td>
                         <td className="py-3 pr-3 text-right tabular-nums">{it.cantidad}</td>
-                        <td className="py-3 pr-3 text-right tabular-nums text-gray-600 text-xs">{formatGs(it.costo_unitario)}</td>
+                        <td className="py-3 pr-3 text-right tabular-nums text-gray-600 text-xs">{formatEur(it.costo_unitario)}</td>
                         <td className="py-3 pr-3 text-center hidden sm:table-cell">
                           <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">{ivaLabel[it.iva_tipo]}</span>
                         </td>
-                        <td className="py-3 pr-3 text-right tabular-nums text-gray-600 text-xs hidden sm:table-cell">{formatGs(it.subtotal)}</td>
-                        <td className="py-3 pr-3 text-right tabular-nums font-semibold text-gray-800">{formatGs(it.total_linea)}</td>
+                        <td className="py-3 pr-3 text-right tabular-nums text-gray-600 text-xs hidden sm:table-cell">{formatEur(it.subtotal)}</td>
+                        <td className="py-3 pr-3 text-right tabular-nums font-semibold text-gray-800">{formatEur(it.total_linea)}</td>
                         <td className="py-3 text-center">
                           <button type="button" onClick={() => quitarLinea(idx)}
                             className="inline-flex items-center justify-center min-w-[36px] min-h-[36px] text-red-400 hover:text-red-700 rounded hover:bg-red-50" title="Quitar línea">
@@ -636,17 +781,16 @@ export default function NuevaCompraPage() {
                   </tbody>
                 </table>
 
-                {/* Totales de la compra */}
                 <div className="mt-4 flex justify-end">
                   <div className="w-full sm:w-72 space-y-1.5">
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>Subtotal</span><span className="tabular-nums font-medium">{formatGs(totalSubtotal)}</span>
+                      <span>Subtotal</span><span className="tabular-nums font-medium">{formatEur(totalSubtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>IVA</span><span className="tabular-nums font-medium">{totalIva > 0 ? formatGs(totalIva) : "—"}</span>
+                      <span>IVA</span><span className="tabular-nums font-medium">{totalIva > 0 ? formatEur(totalIva) : "—"}</span>
                     </div>
                     <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
-                      <span>TOTAL</span><span className="tabular-nums">{formatGs(totalGeneral)}</span>
+                      <span>TOTAL</span><span className="tabular-nums">{formatEur(totalGeneral)}</span>
                     </div>
                   </div>
                 </div>
@@ -654,9 +798,10 @@ export default function NuevaCompraPage() {
             )}
           </section>
 
-          {/* ── 5. Factura del proveedor (opcional) ───────────────────────── */}
+          {/* ── 5. Archivo adjunto ────────────────────────────────────────── */}
           <section className="space-y-3">
-            <SectionTitle>Factura del proveedor (opcional)</SectionTitle>
+            <SectionTitle>Archivo adjunto</SectionTitle>
+            <p className="text-xs text-slate-500 -mt-1">Factura / albarán del proveedor (opcional).</p>
             <div className="flex items-start gap-4">
               <div className="w-24 h-24 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
                 {facturaPreview ? (
@@ -673,7 +818,7 @@ export default function NuevaCompraPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <label className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white text-sm px-4 py-2 rounded-lg cursor-pointer transition-colors">
-                    {facturaFile ? "Cambiar factura" : "Adjuntar factura"}
+                    {facturaFile ? "Cambiar archivo" : "Adjuntar factura / albarán"}
                     <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" onChange={handleFacturaChange} />
                   </label>
                   {facturaFile && (
@@ -686,17 +831,16 @@ export default function NuevaCompraPage() {
                 {facturaFile && (
                   <p className="mt-1.5 text-xs text-slate-500 truncate">{facturaFile.name}</p>
                 )}
-                <p className="mt-1 text-xs text-slate-400">JPG, PNG, WebP o PDF — máx. 10 MB. Se adjunta al guardar la compra.</p>
+                <p className="mt-1 text-xs text-slate-400">Adjuntar JPG, PNG, WebP o PDF — máx. 10 MB.</p>
                 {facturaError && <p className="mt-1.5 text-xs text-red-600">{facturaError}</p>}
               </div>
             </div>
           </section>
 
-          {/* Banner impacto en inventario */}
           {items.length > 0 && (
             <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-xs text-green-700">
               <span className="mt-0.5 text-base leading-none">✓</span>
-              <span>Al guardar se registrará una entrada de inventario por cada una de las <strong>{items.length} líneas</strong> (stock + costo promedio por producto).</span>
+              <span>Al guardar se registrará una entrada de inventario por cada una de las <strong>{items.length} líneas</strong> (stock + coste promedio por material).</span>
             </div>
           )}
 
@@ -706,7 +850,6 @@ export default function NuevaCompraPage() {
             </div>
           )}
 
-          {/* Acciones */}
           <div className="flex gap-4 pt-2">
             <button type="submit" disabled={!compraValida || submitting}
               className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white px-5 py-3 rounded-lg text-sm font-medium transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed active:scale-95">
