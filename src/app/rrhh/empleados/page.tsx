@@ -228,16 +228,17 @@ export default function EmpleadosPage() {
               <th className="px-5 py-3 font-semibold hidden md:table-cell">Cargo</th>
               <th className="px-5 py-3 font-semibold hidden lg:table-cell">Documento</th>
               <th className="px-5 py-3 font-semibold text-right">Salario base</th>
-              <th className="px-5 py-3 font-semibold text-right">Costo/h</th>
+              <th className="px-5 py-3 font-semibold text-right hidden md:table-cell">Complementario</th>
+              <th className="px-5 py-3 font-semibold text-right">Salario total</th>
               <th className="px-5 py-3 font-semibold">Estado</th>
               <th className="px-5 py-3 font-semibold text-right">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200">
             {loading ? (
-              <tr><td colSpan={7} className="py-10 text-center text-gray-400">Cargando…</td></tr>
+              <tr><td colSpan={8} className="py-10 text-center text-gray-400">Cargando…</td></tr>
             ) : empleadosFiltrados.length === 0 ? (
-              <tr><td colSpan={7} className="py-10 text-center text-gray-400">
+              <tr><td colSpan={8} className="py-10 text-center text-gray-400">
                 {verInactivos ? "No hay empleados desactivados" : "No hay empleados activos"}
               </td></tr>
             ) : (
@@ -247,7 +248,8 @@ export default function EmpleadosPage() {
                   <td className="px-5 py-3.5 text-gray-600 hidden md:table-cell">{e.cargo ?? "—"}</td>
                   <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell">{e.documento ?? "—"}</td>
                   <td className="px-5 py-3.5 text-right tabular-nums text-gray-700">{fmtGs(e.salario_base)}</td>
-                  <td className="px-5 py-3.5 text-right tabular-nums text-gray-700">{fmtGs(e.costo_hora)}</td>
+                  <td className="px-5 py-3.5 text-right tabular-nums text-gray-500 hidden md:table-cell">{fmtGs(e.salario_complementario ?? 0)}</td>
+                  <td className="px-5 py-3.5 text-right tabular-nums font-semibold text-gray-900">{fmtGs(e.salario_base + (e.salario_complementario ?? 0))}</td>
                   <td className="px-5 py-3.5">
                     {e.activo ? (
                       <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Activo</span>
