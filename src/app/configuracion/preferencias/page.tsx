@@ -46,6 +46,7 @@ export default function ConfiguracionPreferenciasPage() {
             <div>
               <label className={F_LABEL}>Moneda base del sistema</label>
               <select name="moneda_base" value={form.moneda_base} onChange={handleChange} className={F_SELECT}>
+                <option value="EUR">Euros (€)</option>
                 <option value="GS">Guaraníes (GS)</option>
                 <option value="USD">Dólares (USD)</option>
                 <option value="BRL">Reales (BRL)</option>
@@ -71,11 +72,18 @@ export default function ConfiguracionPreferenciasPage() {
             <div>
               <label className={F_LABEL}>Zona horaria</label>
               <select name="timezone" value={form.timezone} onChange={handleChange} className={F_SELECT}>
-                <option value="America/Asuncion">América/Asunción (Paraguay, UTC-4)</option>
-                <option value="America/Sao_Paulo">América/São Paulo (Brasil, UTC-3)</option>
-                <option value="America/Buenos_Aires">América/Buenos Aires (Argentina, UTC-3)</option>
-                <option value="America/Lima">América/Lima (Perú, UTC-5)</option>
-                <option value="America/Bogota">América/Bogotá (Colombia, UTC-5)</option>
+                <optgroup label="España">
+                  <option value="Europe/Madrid">Europa/Madrid (España peninsular, UTC+1 / +2 verano)</option>
+                  <option value="Atlantic/Canary">Atlántico/Canarias (España, UTC+0 / +1 verano)</option>
+                  <option value="Africa/Ceuta">África/Ceuta (España, UTC+1 / +2 verano)</option>
+                </optgroup>
+                <optgroup label="Latinoamérica">
+                  <option value="America/Asuncion">América/Asunción (Paraguay, UTC-4)</option>
+                  <option value="America/Sao_Paulo">América/São Paulo (Brasil, UTC-3)</option>
+                  <option value="America/Buenos_Aires">América/Buenos Aires (Argentina, UTC-3)</option>
+                  <option value="America/Lima">América/Lima (Perú, UTC-5)</option>
+                  <option value="America/Bogota">América/Bogotá (Colombia, UTC-5)</option>
+                </optgroup>
               </select>
               <ConfigHelpText>Zona horaria usada para registrar fechas y horas en el sistema.</ConfigHelpText>
             </div>
