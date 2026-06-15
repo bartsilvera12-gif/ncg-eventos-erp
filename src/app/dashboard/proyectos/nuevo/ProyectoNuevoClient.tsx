@@ -271,37 +271,7 @@ export default function ProyectoNuevoClient() {
           />
         </label>
 
-        {esWeb ? (
-          <div className="space-y-3 rounded-lg border border-indigo-100 bg-indigo-50/40 p-4">
-            <h2 className="text-sm font-semibold text-indigo-900">Datos del proyecto (web)</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {PROYECTO_WEB_BRIEF_FIELDS.map((f) =>
-                f.kind === "checkbox" ? (
-                  <label key={f.key} className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={brief[f.key] === "1"}
-                      onChange={(e) =>
-                        setBrief((b) => ({ ...b, [f.key]: e.target.checked ? "1" : "" }))
-                      }
-                    />
-                    {f.label}
-                  </label>
-                ) : (
-                  <label key={f.key} className="block text-sm sm:col-span-2">
-                    <span className="text-slate-700">{f.label}</span>
-                    <input
-                      className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-                      placeholder={f.placeholder}
-                      value={brief[f.key] ?? ""}
-                      onChange={(e) => setBrief((b) => ({ ...b, [f.key]: e.target.value }))}
-                    />
-                  </label>
-                )
-              )}
-            </div>
-          </div>
-        ) : null}
+        {/* Sección 'Datos del proyecto (web)' removida — no aplica al rubro construcción. */}
 
         {!esWeb && !esSaas ? (
           <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
