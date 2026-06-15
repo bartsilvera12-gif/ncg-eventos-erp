@@ -507,7 +507,7 @@ export default function Sidebar() {
             className={`relative flex items-center justify-center ${collapsed ? "h-11 w-11" : "h-[4.5rem] w-full max-w-[200px]"}`}
           >
             <Image
-              src="/brand/zentra-logo-official.png"
+              src={collapsed ? "/brand/zentra-icon.png" : "/brand/zentra-logo-official.png"}
               alt="ZENTRA"
               width={400}
               height={220}
