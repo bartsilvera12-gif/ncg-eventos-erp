@@ -111,7 +111,7 @@ export default function Header() {
           <img
             src="/banner.png"
             alt="Banner"
-            className="h-14 w-full max-w-[900px] object-cover object-center rounded-md"
+            className="h-14 w-full max-w-[900px] object-cover object-center rounded-md opacity-60"
           />
         </div>
       ) : (
