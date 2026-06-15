@@ -494,15 +494,15 @@ export default function Sidebar() {
         initial={false}
         animate={{ width: collapsed ? 80 : 260 }}
         transition={{ duration: 0.2 }}
-        className={`zentra-sidebar-bg flex h-svh min-h-0 shrink-0 flex-col border-r border-[color:var(--zentra-sidebar-border)] lg:relative lg:translate-x-0 ${
+        className={`zentra-sidebar-bg relative flex h-svh min-h-0 shrink-0 flex-col border-r border-[color:var(--zentra-sidebar-border)] lg:relative lg:translate-x-0 ${
           mobileSidebarOpen
             ? "fixed inset-y-0 left-0 z-50 translate-x-0 shadow-2xl transition-transform duration-200"
             : "fixed inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0 transition-transform duration-200"
         }`}
       >
       {/* Logo oficial ZENTRA (blanco sobre azul marca) */}
-      <div className="flex h-[7.25rem] shrink-0 items-center justify-between gap-2 border-b border-[color:var(--zentra-sidebar-border)] bg-[color:var(--zentra-sidebar-elevated)]/35 px-3 py-2.5">
-        <Link href="/" className={`flex items-center justify-center min-w-0 flex-1 overflow-hidden`}>
+      <div className="flex h-[7.25rem] shrink-0 items-center justify-center border-b border-[color:var(--zentra-sidebar-border)] bg-[color:var(--zentra-sidebar-elevated)]/35 px-3 py-2.5">
+        <Link href="/" className="flex items-center justify-center min-w-0 overflow-hidden">
           <div
             className={`relative flex items-center justify-center ${collapsed ? "h-11 w-11" : "h-[4.5rem] w-full max-w-[200px]"}`}
           >
@@ -517,15 +517,17 @@ export default function Sidebar() {
             />
           </div>
         </Link>
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-[color:var(--zentra-sidebar-hover)] hover:text-white"
-          aria-label={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
-        >
-          {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-        </button>
       </div>
+
+      {/* Botón flotante para colapsar/expandir (círculo en el borde derecho) */}
+      <button
+        type="button"
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute top-[3.25rem] -right-3 z-20 hidden lg:flex h-7 w-7 items-center justify-center rounded-full border border-[color:var(--zentra-sidebar-border)] bg-[color:var(--zentra-sidebar-elevated)] text-white shadow-md transition-colors hover:bg-[color:var(--zentra-sidebar-hover)]"
+        aria-label={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+      >
+        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+      </button>
 
       {!collapsed && (
         <div className="shrink-0 border-b border-[color:var(--zentra-sidebar-border)] px-3 py-2.5">
