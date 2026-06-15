@@ -186,24 +186,20 @@ export default function NuevaVentaPage() {
    *   el pedido en el kanban con título genérico "Venta {numero}".
    */
   function buildPedidoCocina() {
-    return ES_GASTRONOMIA
-      ? (modalidad === ""
-          ? undefined
-          : {
-              modalidad,
-              mesa: modalidad === "local" ? pedidoMesa.trim() || null : null,
-              cliente_nombre: pedidoClienteNombre.trim() || null,
-              cliente_telefono: pedidoClienteTelefono.trim() || null,
-              direccion_entrega: pedidoDireccion.trim() || null,
-              observacion: pedidoObservacion.trim() || null,
-            })
+    // NCG (constructora): no aplica el concepto de "pedido cocina" / tarjeta
+    // automática en kanban. Las obras son proyectos largos imputados a mano,
+    // no una tarjeta por venta. Devolver undefined evita el INSERT en
+    // proyectos y el error "Tipo de proyecto 'pedido' no configurado".
+    if (!ES_GASTRONOMIA) return undefined;
+    return modalidad === ""
+      ? undefined
       : {
-          modalidad: null,
-          mesa: null,
-          cliente_nombre: null,
-          cliente_telefono: null,
-          direccion_entrega: null,
-          observacion: null,
+          modalidad,
+          mesa: modalidad === "local" ? pedidoMesa.trim() || null : null,
+          cliente_nombre: pedidoClienteNombre.trim() || null,
+          cliente_telefono: pedidoClienteTelefono.trim() || null,
+          direccion_entrega: pedidoDireccion.trim() || null,
+          observacion: pedidoObservacion.trim() || null,
         };
   }
 
@@ -224,7 +220,7 @@ export default function NuevaVentaPage() {
         tipo_venta:   tipoVenta,
         metodo_pago:  metodoPago,
       },
-      esPresupuesto ? null : buildPedidoCocina(),
+      esPresupuesto ? undefined : buildPedidoCocina(),
       esPresupuesto ? null : pagoDetalle,
       { tipoDocumento: esPresupuesto ? "presupuesto" : "venta" }
     );
