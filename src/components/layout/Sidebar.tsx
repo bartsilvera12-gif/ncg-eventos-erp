@@ -519,11 +519,11 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      {/* Botón flotante para colapsar/expandir (círculo en el borde derecho) */}
+      {/* Botón flotante para colapsar/expandir (círculo en el borde derecho, alineado al buscador) */}
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute top-[3.25rem] -right-3 z-20 hidden lg:flex h-7 w-7 items-center justify-center rounded-full border border-[color:var(--zentra-sidebar-border)] bg-[color:var(--zentra-sidebar-elevated)] text-white shadow-md transition-colors hover:bg-[color:var(--zentra-sidebar-hover)]"
+        className="absolute top-[8.25rem] -right-3 z-20 hidden lg:flex h-7 w-7 items-center justify-center rounded-full border border-[#104A4E] bg-[#104A4E] text-white shadow-md transition-colors hover:bg-[#0d3d40]"
         aria-label={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
       >
         {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
