@@ -29,10 +29,17 @@ function formatGs(valor: number) {
   return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
-function calcIva(tipo: TipoIvaVenta, base: number) {
-  if (tipo === "EXENTA") return 0;
-  if (tipo === "5%")     return base * 0.05;
-  return base * 0.10;
+/**
+ * IVA incluido en el precio (NCG España): el precio que ingresa el cajero
+ * YA incluye IVA. Esta función extrae el monto de IVA contenido en `total`.
+ *   base_imponible = total / (1 + tasa)
+ *   iva = total - base_imponible
+ * El total de la línea sigue siendo `total` (no se suma encima).
+ */
+function calcIva(tipo: TipoIvaVenta, total: number) {
+  const tasa = tipo === "EXENTA" ? 0 : tipo === "5%" ? 0.05 : 0.10;
+  if (tasa === 0) return 0;
+  return total - total / (1 + tasa);
 }
 
 // ── Estilos ────────────────────────────────────────────────────────────────────
@@ -121,9 +128,11 @@ export default function NuevaVentaPage() {
         return false;
       }
     }
-    const subtotal = cantidad * precioPyg;
-    const montoIva = calcIva(iva, subtotal);
-    const totalLinea = subtotal + montoIva;
+    // Precio con IVA incluido: total_linea = cantidad × precio (sin sumar IVA).
+    // monto_iva se extrae del total (informativo / contable).
+    const totalLinea = cantidad * precioPyg;
+    const montoIva = calcIva(iva, totalLinea);
+    const subtotal = totalLinea - montoIva; // base imponible
 
     setItems((prev) => [
       ...prev,
@@ -387,13 +396,9 @@ export default function NuevaVentaPage() {
               <div className="mt-5 flex justify-end">
                 <div className="w-full md:w-80 space-y-3">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>Subtotal</span>
-                      <span className="tabular-nums font-medium">{formatGs(totalSubtotal)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>IVA</span>
-                      <span className="tabular-nums font-medium">
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>IVA incluido (referencia)</span>
+                      <span className="tabular-nums">
                         {totalIva > 0 ? formatGs(totalIva) : "—"}
                       </span>
                     </div>
