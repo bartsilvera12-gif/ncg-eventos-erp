@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await ctx.supabase
       .from("empleados")
-      .select("id, nombre, documento, cargo, salario_base, costo_hora, activo, fecha_ingreso, created_at")
+      .select("*")
       .eq("empresa_id", ctx.auth.empresa_id)
       .order("nombre", { ascending: true });
 
@@ -38,15 +38,52 @@ export async function POST(request: NextRequest) {
     const nombre = String(body.nombre ?? "").trim();
     if (!nombre) return NextResponse.json(errorResponse("El nombre es obligatorio."), { status: 400 });
 
+    const str = (k: string): string | null => body[k] ? String(body[k]).trim() || null : null;
+    const date = (k: string): string | null => body[k] ? String(body[k]) : null;
+    const numv = (k: string): number => Number(body[k]) || 0;
+    const bool = (k: string): boolean => Boolean(body[k]);
+
     const insert = {
       empresa_id: ctx.auth.empresa_id,
       nombre,
-      documento: body.documento ? String(body.documento).trim() : null,
-      cargo: body.cargo ? String(body.cargo).trim() : null,
-      salario_base: Number(body.salario_base) || 0,
-      costo_hora: Number(body.costo_hora) || 0,
-      fecha_ingreso: body.fecha_ingreso ? String(body.fecha_ingreso) : null,
-      activo: true,
+      // Documento
+      tipo_documento: str("tipo_documento") ?? "CI",
+      documento: str("documento"),
+      // Personales
+      fecha_nacimiento: date("fecha_nacimiento"),
+      lugar_nacimiento: str("lugar_nacimiento"),
+      nacionalidad: str("nacionalidad"),
+      estado_civil: str("estado_civil"),
+      grupo_sanguineo: str("grupo_sanguineo"),
+      // Contacto
+      direccion: str("direccion"),
+      email: str("email"),
+      telefono: str("telefono"),
+      // Laborales
+      cargo: str("cargo"),
+      fecha_ingreso: date("fecha_ingreso"),
+      fecha_baja: date("fecha_baja"),
+      tipo_empleado: str("tipo_empleado"),
+      tipo_periodo: str("tipo_periodo") ?? "mensual",
+      departamento: str("departamento"),
+      seccion: str("seccion"),
+      supervisor: str("supervisor"),
+      // Compensación
+      salario_base: numv("salario_base"),
+      salario_complementario: numv("salario_complementario"),
+      costo_hora: numv("costo_hora"),
+      // Bancario
+      banco: str("banco"),
+      numero_cuenta: str("numero_cuenta"),
+      cobrar_con_cheque: bool("cobrar_con_cheque"),
+      // IPS / control
+      numero_ips: str("numero_ips"),
+      codigo_reloj: str("codigo_reloj"),
+      observacion: str("observacion"),
+      imagen_url: str("imagen_url"),
+      // Estado
+      excluir_liquidaciones: bool("excluir_liquidaciones"),
+      activo: body.activo === undefined ? true : Boolean(body.activo),
     };
 
     const { data, error } = await ctx.supabase

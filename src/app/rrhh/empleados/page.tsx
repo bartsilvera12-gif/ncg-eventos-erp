@@ -11,12 +11,79 @@ type Empleado = {
   id: string;
   nombre: string;
   documento: string | null;
+  tipo_documento: string | null;
+  fecha_nacimiento: string | null;
+  lugar_nacimiento: string | null;
+  nacionalidad: string | null;
+  estado_civil: string | null;
+  grupo_sanguineo: string | null;
+  direccion: string | null;
+  email: string | null;
+  telefono: string | null;
   cargo: string | null;
-  salario_base: number;
-  costo_hora: number;
-  activo: boolean;
   fecha_ingreso: string | null;
+  fecha_baja: string | null;
+  tipo_empleado: string | null;
+  tipo_periodo: string | null;
+  departamento: string | null;
+  seccion: string | null;
+  supervisor: string | null;
+  salario_base: number;
+  salario_complementario: number;
+  costo_hora: number;
+  banco: string | null;
+  numero_cuenta: string | null;
+  cobrar_con_cheque: boolean;
+  numero_ips: string | null;
+  codigo_reloj: string | null;
+  observacion: string | null;
+  imagen_url: string | null;
+  excluir_liquidaciones: boolean;
+  activo: boolean;
 };
+
+const FORM_INICIAL = {
+  nombre: "",
+  tipo_documento: "CI",
+  documento: "",
+  fecha_nacimiento: "",
+  lugar_nacimiento: "",
+  nacionalidad: "Paraguaya",
+  estado_civil: "",
+  grupo_sanguineo: "",
+  direccion: "",
+  email: "",
+  telefono: "",
+  cargo: "",
+  fecha_ingreso: "",
+  fecha_baja: "",
+  tipo_empleado: "CONTRATADO",
+  tipo_periodo: "mensual",
+  departamento: "",
+  seccion: "",
+  supervisor: "",
+  salario_base: "",
+  salario_complementario: "",
+  costo_hora: "",
+  banco: "",
+  numero_cuenta: "",
+  cobrar_con_cheque: false,
+  numero_ips: "",
+  codigo_reloj: "",
+  observacion: "",
+  excluir_liquidaciones: false,
+};
+
+const ESTADO_CIVIL_OPTS = ["soltero/a", "casado/a", "divorciado/a", "viudo/a", "unión libre"];
+const GRUPO_SANG_OPTS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const TIPO_DOC_OPTS = ["CI", "RUC", "Pasaporte", "Otro"];
+const TIPO_EMP_OPTS = ["CONTRATADO", "PERMANENTE", "JORNALERO", "PASANTE"];
+const TIPO_PERIODO_OPTS = [
+  { value: "mensual",   label: "Mensual" },
+  { value: "quincenal", label: "Quincenal" },
+  { value: "semanal",   label: "Semanal" },
+  { value: "jornal",    label: "Jornal" },
+];
 
 function fmtGs(n: number): string {
   return `Gs. ${Math.round(n).toLocaleString("es-PY")}`;
@@ -30,14 +97,7 @@ export default function EmpleadosPage() {
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<Empleado | null>(null);
 
-  const [form, setForm] = useState({
-    nombre: "",
-    documento: "",
-    cargo: "",
-    salario_base: "",
-    costo_hora: "",
-    fecha_ingreso: "",
-  });
+  const [form, setForm] = useState(FORM_INICIAL);
 
   async function load() {
     setLoading(true);
@@ -81,18 +141,11 @@ export default function EmpleadosPage() {
       const r = await fetchWithSupabaseSession("/api/rrhh/empleados", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: form.nombre.trim(),
-          documento: form.documento.trim() || undefined,
-          cargo: form.cargo.trim() || undefined,
-          salario_base: Number(form.salario_base) || 0,
-          costo_hora: Number(form.costo_hora) || 0,
-          fecha_ingreso: form.fecha_ingreso || undefined,
-        }),
+        body: JSON.stringify({ ...form, nombre: form.nombre.trim() }),
       });
       const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
       if (r.ok && j.success) {
-        setForm({ nombre: "", documento: "", cargo: "", salario_base: "", costo_hora: "", fecha_ingreso: "" });
+        setForm(FORM_INICIAL);
         setShowForm(false);
         await load();
       } else {
@@ -125,34 +178,9 @@ export default function EmpleadosPage() {
       {err ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div> : null}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Field label="Nombre" required>
-              <input className={inputCls} value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
-            </Field>
-            <Field label="Documento (CI / RUC)">
-              <input className={inputCls} value={form.documento}
-                onChange={(e) => setForm({ ...form, documento: e.target.value })} />
-            </Field>
-            <Field label="Cargo">
-              <input className={inputCls} value={form.cargo} placeholder="Ej. Albañil, Encargado, Soldador"
-                onChange={(e) => setForm({ ...form, cargo: e.target.value })} />
-            </Field>
-            <Field label="Fecha de ingreso">
-              <input type="date" className={inputCls} value={form.fecha_ingreso}
-                onChange={(e) => setForm({ ...form, fecha_ingreso: e.target.value })} />
-            </Field>
-            <Field label="Salario base (Gs.)">
-              <input type="number" inputMode="numeric" className={inputCls} value={form.salario_base}
-                onChange={(e) => setForm({ ...form, salario_base: e.target.value })} />
-            </Field>
-            <Field label="Costo por hora (Gs.)" hint="Se usa para calcular costo de obra automáticamente.">
-              <input type="number" inputMode="numeric" className={inputCls} value={form.costo_hora}
-                onChange={(e) => setForm({ ...form, costo_hora: e.target.value })} />
-            </Field>
-          </div>
-          <div className="mt-4 flex justify-end gap-2">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <EmpleadoFormFields form={form} setForm={setForm} />
+          <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
             <button type="button" onClick={() => setShowForm(false)}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm">Cancelar</button>
             <button type="submit" disabled={saving}
@@ -244,16 +272,45 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
   );
 }
 
+type FormEmpleado = typeof FORM_INICIAL & { activo?: boolean };
+
+function empleadoToForm(e: Empleado): FormEmpleado {
+  return {
+    nombre: e.nombre,
+    tipo_documento: e.tipo_documento ?? "CI",
+    documento: e.documento ?? "",
+    fecha_nacimiento: e.fecha_nacimiento ?? "",
+    lugar_nacimiento: e.lugar_nacimiento ?? "",
+    nacionalidad: e.nacionalidad ?? "Paraguaya",
+    estado_civil: e.estado_civil ?? "",
+    grupo_sanguineo: e.grupo_sanguineo ?? "",
+    direccion: e.direccion ?? "",
+    email: e.email ?? "",
+    telefono: e.telefono ?? "",
+    cargo: e.cargo ?? "",
+    fecha_ingreso: e.fecha_ingreso ?? "",
+    fecha_baja: e.fecha_baja ?? "",
+    tipo_empleado: e.tipo_empleado ?? "CONTRATADO",
+    tipo_periodo: e.tipo_periodo ?? "mensual",
+    departamento: e.departamento ?? "",
+    seccion: e.seccion ?? "",
+    supervisor: e.supervisor ?? "",
+    salario_base: String(e.salario_base ?? 0),
+    salario_complementario: String(e.salario_complementario ?? 0),
+    costo_hora: String(e.costo_hora ?? 0),
+    banco: e.banco ?? "",
+    numero_cuenta: e.numero_cuenta ?? "",
+    cobrar_con_cheque: !!e.cobrar_con_cheque,
+    numero_ips: e.numero_ips ?? "",
+    codigo_reloj: e.codigo_reloj ?? "",
+    observacion: e.observacion ?? "",
+    excluir_liquidaciones: !!e.excluir_liquidaciones,
+    activo: e.activo,
+  };
+}
+
 function EditarEmpleadoModal({ empleado, onClose, onSaved }: { empleado: Empleado; onClose: () => void; onSaved: () => void | Promise<void> }) {
-  const [form, setForm] = useState({
-    nombre: empleado.nombre,
-    documento: empleado.documento ?? "",
-    cargo: empleado.cargo ?? "",
-    salario_base: String(empleado.salario_base ?? 0),
-    costo_hora: String(empleado.costo_hora ?? 0),
-    fecha_ingreso: empleado.fecha_ingreso ?? "",
-    activo: empleado.activo,
-  });
+  const [form, setForm] = useState<FormEmpleado>(() => empleadoToForm(empleado));
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -266,15 +323,7 @@ function EditarEmpleadoModal({ empleado, onClose, onSaved }: { empleado: Emplead
       const r = await fetchWithSupabaseSession(`/api/rrhh/empleados/${empleado.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nombre: form.nombre.trim(),
-          documento: form.documento.trim() || null,
-          cargo: form.cargo.trim() || null,
-          salario_base: Number(form.salario_base) || 0,
-          costo_hora: Number(form.costo_hora) || 0,
-          fecha_ingreso: form.fecha_ingreso || null,
-          activo: form.activo,
-        }),
+        body: JSON.stringify({ ...form, nombre: form.nombre.trim() }),
       });
       const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
       if (!r.ok || !j.success) {
@@ -289,51 +338,15 @@ function EditarEmpleadoModal({ empleado, onClose, onSaved }: { empleado: Emplead
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+      <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
           <h2 className="text-base font-semibold text-slate-900">Editar empleado</h2>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700">✕</button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5">
-          {err && <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div>}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Field label="Nombre" required>
-              <input className={inputCls} value={form.nombre}
-                onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
-            </Field>
-            <Field label="Documento">
-              <input className={inputCls} value={form.documento}
-                onChange={(e) => setForm({ ...form, documento: e.target.value })} />
-            </Field>
-            <Field label="Cargo">
-              <input className={inputCls} value={form.cargo}
-                onChange={(e) => setForm({ ...form, cargo: e.target.value })} />
-            </Field>
-            <Field label="Fecha de ingreso">
-              <input type="date" className={inputCls} value={form.fecha_ingreso}
-                onChange={(e) => setForm({ ...form, fecha_ingreso: e.target.value })} />
-            </Field>
-            <Field label="Salario base (Gs.)">
-              <input type="number" inputMode="numeric" className={inputCls} value={form.salario_base}
-                onChange={(e) => setForm({ ...form, salario_base: e.target.value })} />
-            </Field>
-            <Field label="Costo por hora (Gs.)">
-              <input type="number" inputMode="numeric" className={inputCls} value={form.costo_hora}
-                onChange={(e) => setForm({ ...form, costo_hora: e.target.value })} />
-            </Field>
-            <div className="md:col-span-2">
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                <input type="checkbox" checked={form.activo}
-                  onChange={(e) => setForm({ ...form, activo: e.target.checked })}
-                  className="h-4 w-4 rounded border-slate-300" />
-                Empleado activo
-              </label>
-              <p className="ml-6 mt-1 text-xs text-slate-500">
-                Los inactivos no aparecen en selectores de asignación a obras ni en la nómina mensual.
-              </p>
-            </div>
-          </div>
-          <div className="mt-5 flex justify-end gap-2">
+        <form onSubmit={handleSubmit} className="space-y-6 p-5">
+          {err && <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div>}
+          <EmpleadoFormFields form={form} setForm={setForm} editMode />
+          <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
             <button type="button" onClick={onClose}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm">Cancelar</button>
             <button type="submit" disabled={saving}
@@ -344,5 +357,205 @@ function EditarEmpleadoModal({ empleado, onClose, onSaved }: { empleado: Emplead
         </form>
       </div>
     </div>
+  );
+}
+
+function Section({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{titulo}</h3>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">{children}</div>
+    </section>
+  );
+}
+
+function EmpleadoFormFields({
+  form, setForm, editMode = false,
+}: {
+  form: FormEmpleado;
+  setForm: React.Dispatch<React.SetStateAction<FormEmpleado>>;
+  editMode?: boolean;
+}) {
+  function set<K extends keyof FormEmpleado>(k: K, v: FormEmpleado[K]) {
+    setForm((s) => ({ ...s, [k]: v }));
+  }
+  return (
+    <>
+      <Section titulo="Datos personales">
+        <Field label="Nombre completo" required>
+          <input className={inputCls} value={form.nombre}
+            onChange={(e) => set("nombre", e.target.value)} required />
+        </Field>
+        <Field label="Tipo de documento">
+          <select className={inputCls} value={form.tipo_documento}
+            onChange={(e) => set("tipo_documento", e.target.value)}>
+            {TIPO_DOC_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </Field>
+        <Field label="Nro. documento">
+          <input className={inputCls} value={form.documento}
+            onChange={(e) => set("documento", e.target.value)} />
+        </Field>
+        <Field label="Fecha de nacimiento">
+          <input type="date" className={inputCls} value={form.fecha_nacimiento}
+            onChange={(e) => set("fecha_nacimiento", e.target.value)} />
+        </Field>
+        <Field label="Lugar de nacimiento">
+          <input className={inputCls} value={form.lugar_nacimiento}
+            onChange={(e) => set("lugar_nacimiento", e.target.value)} placeholder="Ej. Asunción" />
+        </Field>
+        <Field label="Nacionalidad">
+          <input className={inputCls} value={form.nacionalidad}
+            onChange={(e) => set("nacionalidad", e.target.value)} />
+        </Field>
+        <Field label="Estado civil">
+          <select className={inputCls} value={form.estado_civil}
+            onChange={(e) => set("estado_civil", e.target.value)}>
+            <option value="">—</option>
+            {ESTADO_CIVIL_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </Field>
+        <Field label="Grupo sanguíneo">
+          <select className={inputCls} value={form.grupo_sanguineo}
+            onChange={(e) => set("grupo_sanguineo", e.target.value)}>
+            <option value="">—</option>
+            {GRUPO_SANG_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </Field>
+      </Section>
+
+      <Section titulo="Contacto">
+        <Field label="Teléfono">
+          <input className={inputCls} value={form.telefono}
+            onChange={(e) => set("telefono", e.target.value)} placeholder="0981 000 000" />
+        </Field>
+        <Field label="E-mail">
+          <input type="email" className={inputCls} value={form.email}
+            onChange={(e) => set("email", e.target.value)} />
+        </Field>
+        <Field label="Dirección">
+          <input className={inputCls} value={form.direccion}
+            onChange={(e) => set("direccion", e.target.value)} />
+        </Field>
+      </Section>
+
+      <Section titulo="Datos laborales">
+        <Field label="Cargo">
+          <input className={inputCls} value={form.cargo} placeholder="Ej. Albañil, Encargado, Soldador"
+            onChange={(e) => set("cargo", e.target.value)} />
+        </Field>
+        <Field label="Tipo de empleado">
+          <select className={inputCls} value={form.tipo_empleado}
+            onChange={(e) => set("tipo_empleado", e.target.value)}>
+            {TIPO_EMP_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </Field>
+        <Field label="Tipo de período">
+          <select className={inputCls} value={form.tipo_periodo}
+            onChange={(e) => set("tipo_periodo", e.target.value)}>
+            {TIPO_PERIODO_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </Field>
+        <Field label="Fecha de ingreso">
+          <input type="date" className={inputCls} value={form.fecha_ingreso}
+            onChange={(e) => set("fecha_ingreso", e.target.value)} />
+        </Field>
+        <Field label="Fecha de baja" hint="Dejá vacío si sigue activo.">
+          <input type="date" className={inputCls} value={form.fecha_baja}
+            onChange={(e) => set("fecha_baja", e.target.value)} />
+        </Field>
+        <Field label="Supervisor inmediato">
+          <input className={inputCls} value={form.supervisor}
+            onChange={(e) => set("supervisor", e.target.value)} />
+        </Field>
+        <Field label="Departamento">
+          <input className={inputCls} value={form.departamento}
+            onChange={(e) => set("departamento", e.target.value)} placeholder="Ej. Operaciones" />
+        </Field>
+        <Field label="Sección / Equipo">
+          <input className={inputCls} value={form.seccion}
+            onChange={(e) => set("seccion", e.target.value)} placeholder="Ej. Cuadrilla A" />
+        </Field>
+      </Section>
+
+      <Section titulo="Compensación">
+        <Field label="Salario base (Gs.)">
+          <input type="number" inputMode="numeric" className={inputCls} value={form.salario_base}
+            onChange={(e) => set("salario_base", e.target.value)} />
+        </Field>
+        <Field label="Salario complementario (Gs.)" hint="Bonos, antigüedad, etc.">
+          <input type="number" inputMode="numeric" className={inputCls} value={form.salario_complementario}
+            onChange={(e) => set("salario_complementario", e.target.value)} />
+        </Field>
+        <Field label="Costo por hora (Gs.)" hint="Se usa para imputar mano de obra a las obras.">
+          <input type="number" inputMode="numeric" className={inputCls} value={form.costo_hora}
+            onChange={(e) => set("costo_hora", e.target.value)} />
+        </Field>
+      </Section>
+
+      <Section titulo="Bancario">
+        <Field label="Banco">
+          <input className={inputCls} value={form.banco}
+            onChange={(e) => set("banco", e.target.value)} placeholder="Ej. Continental, Itaú" />
+        </Field>
+        <Field label="Nro. de cuenta">
+          <input className={inputCls} value={form.numero_cuenta}
+            onChange={(e) => set("numero_cuenta", e.target.value)} />
+        </Field>
+        <div className="md:col-span-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <input type="checkbox" checked={form.cobrar_con_cheque}
+              onChange={(e) => set("cobrar_con_cheque", e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300" />
+            Cobra con cheque
+          </label>
+        </div>
+      </Section>
+
+      <Section titulo="IPS y control">
+        <Field label="Nro. IPS">
+          <input className={inputCls} value={form.numero_ips}
+            onChange={(e) => set("numero_ips", e.target.value)} />
+        </Field>
+        <Field label="Código de reloj" hint="Para fichaje de entrada/salida.">
+          <input className={inputCls} value={form.codigo_reloj}
+            onChange={(e) => set("codigo_reloj", e.target.value)} />
+        </Field>
+        <div className="md:col-span-2 lg:col-span-3">
+          <Field label="Observación">
+            <textarea className={inputCls + " min-h-[72px]"} value={form.observacion}
+              onChange={(e) => set("observacion", e.target.value)}
+              placeholder="Notas internas sobre el empleado" />
+          </Field>
+        </div>
+      </Section>
+
+      <Section titulo="Estado">
+        {editMode && (
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+              <input type="checkbox" checked={!!form.activo}
+                onChange={(e) => set("activo", e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300" />
+              Empleado activo
+            </label>
+            <p className="ml-6 mt-1 text-xs text-slate-500">
+              Los inactivos no aparecen en asignación a obras ni en nómina.
+            </p>
+          </div>
+        )}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <input type="checkbox" checked={form.excluir_liquidaciones}
+              onChange={(e) => set("excluir_liquidaciones", e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300" />
+            Excluir de liquidaciones
+          </label>
+          <p className="ml-6 mt-1 text-xs text-slate-500">
+            No suma al total devengado de la nómina mensual.
+          </p>
+        </div>
+      </Section>
+    </>
   );
 }

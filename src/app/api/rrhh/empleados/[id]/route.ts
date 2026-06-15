@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
     const { data, error } = await ctx.supabase
       .from("empleados")
-      .select("id, nombre, documento, cargo, salario_base, costo_hora, activo, fecha_ingreso")
+      .select("*")
       .eq("empresa_id", ctx.auth.empresa_id)
       .eq("id", id)
       .maybeSingle();
@@ -42,17 +42,33 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
     const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
+    const TEXT_FIELDS = [
+      "tipo_documento","documento","lugar_nacimiento","nacionalidad","estado_civil",
+      "grupo_sanguineo","direccion","email","telefono","cargo","tipo_empleado","tipo_periodo",
+      "departamento","seccion","supervisor","banco","numero_cuenta","numero_ips","codigo_reloj",
+      "observacion","imagen_url",
+    ];
+    const DATE_FIELDS = ["fecha_nacimiento","fecha_ingreso","fecha_baja"];
+    const NUM_FIELDS = ["salario_base","salario_complementario","costo_hora"];
+    const BOOL_FIELDS = ["cobrar_con_cheque","excluir_liquidaciones","activo"];
+
     if (body.nombre !== undefined) {
       const n = String(body.nombre).trim();
       if (!n) return NextResponse.json(errorResponse("El nombre no puede estar vacío"), { status: 400 });
       update.nombre = n;
     }
-    if (body.documento !== undefined) update.documento = body.documento ? String(body.documento).trim() : null;
-    if (body.cargo !== undefined) update.cargo = body.cargo ? String(body.cargo).trim() : null;
-    if (body.salario_base !== undefined) update.salario_base = Number(body.salario_base) || 0;
-    if (body.costo_hora !== undefined) update.costo_hora = Number(body.costo_hora) || 0;
-    if (body.fecha_ingreso !== undefined) update.fecha_ingreso = body.fecha_ingreso ? String(body.fecha_ingreso) : null;
-    if (body.activo !== undefined) update.activo = Boolean(body.activo);
+    for (const k of TEXT_FIELDS) {
+      if (body[k] !== undefined) update[k] = body[k] ? String(body[k]).trim() || null : null;
+    }
+    for (const k of DATE_FIELDS) {
+      if (body[k] !== undefined) update[k] = body[k] ? String(body[k]) : null;
+    }
+    for (const k of NUM_FIELDS) {
+      if (body[k] !== undefined) update[k] = Number(body[k]) || 0;
+    }
+    for (const k of BOOL_FIELDS) {
+      if (body[k] !== undefined) update[k] = Boolean(body[k]);
+    }
 
     const { error } = await ctx.supabase
       .from("empleados")
