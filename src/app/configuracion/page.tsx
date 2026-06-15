@@ -13,6 +13,7 @@ import {
   PieChart,
   Receipt,
   SlidersHorizontal,
+  Tag,
   UsersRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -78,6 +79,16 @@ export default function ConfiguracionPage() {
           </p>
         </div>
         <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
+          <li>
+            <SettingsModuleCard
+              title="Tipos de cliente / servicio"
+              subtitle="EMPRESA · CATÁLOGO"
+              description="Editá las opciones del selector «Tipo de servicio» en los formularios de cliente (Cubierta metálica, Estructura ligera, Reforma, Mantenimiento, etc.). Podés agregar, renombrar o desactivar."
+              icon={Tag}
+              badge={editorBadge}
+              href="/configuracion/crm"
+            />
+          </li>
           <li>
             <SettingsModuleCard
               title="Facturación"

@@ -57,7 +57,6 @@ import {
   getErrorDiaVencimientoTributario,
   type TributarioFormState,
 } from "@/components/clientes/ClientePerfilTributarioForm";
-import { ClienteDatosSifenReceptorForm } from "@/components/clientes/ClienteDatosSifenReceptorForm";
 // ── Estilos ────────────────────────────────────────────────────────────────────
 
 const inputClass =
@@ -1554,72 +1553,7 @@ export default function ClienteDetailPage() {
                   </div>
                 </div>
 
-                <ClienteDatosSifenReceptorForm
-                  value={{
-                    sifen_receptor_manual: form.sifen_receptor_manual,
-                    sifen_receptor_naturaleza: (form.sifen_receptor_naturaleza || null) as Cliente["sifen_receptor_naturaleza"],
-                    sifen_ti_ope: form.sifen_ti_ope.trim() ? parseInt(form.sifen_ti_ope, 10) : null,
-                    sifen_tipo_doc_receptor: form.sifen_tipo_doc.trim() ? parseInt(form.sifen_tipo_doc, 10) : null,
-                    sifen_codigo_pais: form.sifen_codigo_pais.trim() || null,
-                    sifen_num_id_de: form.sifen_num_id_de.trim() || null,
-                    sifen_direccion_de: form.sifen_direccion_de.trim() || null,
-                    sifen_num_casa_de:
-                      form.sifen_num_casa_de.trim() === "" ? null : Math.max(0, parseInt(form.sifen_num_casa_de, 10) || 0),
-                    sifen_descripcion_tipo_doc: form.sifen_descripcion_tipo_doc.trim() || null,
-                  }}
-                  onChange={(patch) => {
-                    setForm((p) => {
-                      if (patch.sifen_receptor_manual === false) {
-                        return {
-                          ...p,
-                          sifen_receptor_manual: false,
-                          sifen_receptor_naturaleza: "",
-                          sifen_ti_ope: "",
-                          sifen_tipo_doc: "",
-                          sifen_num_id_de: "",
-                          sifen_codigo_pais: "",
-                          sifen_direccion_de: "",
-                          sifen_num_casa_de: "",
-                          sifen_descripcion_tipo_doc: "",
-                        };
-                      }
-                      return {
-                        ...p,
-                        ...(patch.sifen_receptor_manual !== undefined
-                          ? { sifen_receptor_manual: Boolean(patch.sifen_receptor_manual) }
-                          : {}),
-                        ...(patch.sifen_receptor_naturaleza !== undefined
-                          ? { sifen_receptor_naturaleza: patch.sifen_receptor_naturaleza ?? "" }
-                          : {}),
-                        ...(patch.sifen_ti_ope !== undefined
-                          ? { sifen_ti_ope: patch.sifen_ti_ope != null ? String(patch.sifen_ti_ope) : "" }
-                          : {}),
-                        ...(patch.sifen_tipo_doc_receptor !== undefined
-                          ? {
-                              sifen_tipo_doc:
-                                patch.sifen_tipo_doc_receptor != null ? String(patch.sifen_tipo_doc_receptor) : "",
-                            }
-                          : {}),
-                        ...(patch.sifen_num_id_de !== undefined ? { sifen_num_id_de: patch.sifen_num_id_de ?? "" } : {}),
-                        ...(patch.sifen_codigo_pais !== undefined
-                          ? { sifen_codigo_pais: patch.sifen_codigo_pais ?? "" }
-                          : {}),
-                        ...(patch.sifen_direccion_de !== undefined
-                          ? { sifen_direccion_de: patch.sifen_direccion_de ?? "" }
-                          : {}),
-                        ...(patch.sifen_num_casa_de !== undefined
-                          ? {
-                              sifen_num_casa_de:
-                                patch.sifen_num_casa_de != null ? String(patch.sifen_num_casa_de) : "",
-                            }
-                          : {}),
-                        ...(patch.sifen_descripcion_tipo_doc !== undefined
-                          ? { sifen_descripcion_tipo_doc: patch.sifen_descripcion_tipo_doc ?? "" }
-                          : {}),
-                      };
-                    });
-                  }}
-                />
+                {/* SIFEN ocultado en NCG (España): no aplica facturación electrónica paraguaya. */}
               </section>
 
               {/* Digital */}
