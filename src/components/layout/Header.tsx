@@ -100,8 +100,23 @@ export default function Header() {
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Spacer en desktop para empujar el resto a la derecha */}
-      <div className="hidden lg:block lg:flex-1" />
+      {/* Banner central del header. Toggle por env var NEXT_PUBLIC_HEADER_BANNER:
+          - "on" (o vacío/no definido) → banner visible
+          - "off" → rollback, vuelve al spacer vacío original
+          Se sigue manteniendo el spacer alrededor para empujar el bloque
+          derecho (notificaciones + usuario) al final. */}
+      {process.env.NEXT_PUBLIC_HEADER_BANNER !== "off" ? (
+        <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/banner.png"
+            alt="Banner"
+            className="max-h-12 w-auto object-contain"
+          />
+        </div>
+      ) : (
+        <div className="hidden lg:block lg:flex-1" />
+      )}
 
       <div className="flex items-center gap-2">
         {/* Notificaciones */}
