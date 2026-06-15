@@ -106,12 +106,12 @@ export default function Header() {
           Se sigue manteniendo el spacer alrededor para empujar el bloque
           derecho (notificaciones + usuario) al final. */}
       {process.env.NEXT_PUBLIC_HEADER_BANNER !== "off" ? (
-        <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center">
+        <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-center lg:px-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/banner.png"
             alt="Banner"
-            className="max-h-12 w-auto object-contain"
+            className="h-14 w-full max-w-[900px] object-cover object-center rounded-md"
           />
         </div>
       ) : (
