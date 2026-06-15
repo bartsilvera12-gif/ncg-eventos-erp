@@ -117,12 +117,8 @@ export async function DELETE(
     if (e0 || !row) {
       return NextResponse.json(errorResponse("Registro no encontrado"), { status: 404 });
     }
-    if ((row as { es_sistema?: boolean }).es_sistema) {
-      return NextResponse.json(
-        errorResponse("Los tipos predefinidos no se eliminan. Podés desactivarlos."),
-        { status: 400 }
-      );
-    }
+    // Antes los predefinidos no se podían eliminar; ahora se permite siempre y
+    // cuando no haya clientes vinculados (la integridad referencial se mantiene).
     const slug = normalizeSlug((row as { slug: string }).slug);
     const usos = await contarClientesPorSlug(supabase, auth.empresa_id, slug);
     if (usos > 0) {

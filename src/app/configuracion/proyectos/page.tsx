@@ -740,7 +740,184 @@ export default function ConfiguracionProyectosPage() {
           </div>
         )}
       </ConfigFormCard>
+
+      <TiposProyectoSection />
     </GlobalConfigSubpageShell>
+  );
+}
+
+type TipoProyecto = { id: string; nombre: string; codigo: string; descripcion: string | null; activo: boolean };
+
+function TiposProyectoSection() {
+  const [tipos, setTipos] = useState<TipoProyecto[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [borrador, setBorrador] = useState<{ id?: string; nombre: string; descripcion: string } | null>(null);
+  const [nuevoNombre, setNuevoNombre] = useState("");
+  const [nuevoDesc, setNuevoDesc] = useState("");
+
+  const load = useCallback(async () => {
+    setCargando(true);
+    try {
+      const r = await apiFetch("/api/proyectos/tipos?incluir_inactivos=1", { cache: "no-store" });
+      const j = (await r.json().catch(() => ({}))) as { success?: boolean; data?: TipoProyecto[]; error?: string };
+      if (r.ok && j.success && Array.isArray(j.data)) { setTipos(j.data); setErr(null); }
+      else setErr(j.error ?? "No se pudieron cargar los tipos");
+    } finally { setCargando(false); }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  async function crear(e: React.FormEvent) {
+    e.preventDefault();
+    if (!nuevoNombre.trim()) return;
+    setBusy(true);
+    try {
+      const r = await apiFetch("/api/proyectos/tipos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: nuevoNombre.trim(), descripcion: nuevoDesc.trim() || undefined }),
+      });
+      const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
+      if (!r.ok || !j.success) { setErr(j.error ?? "No se pudo crear"); return; }
+      setNuevoNombre(""); setNuevoDesc("");
+      await load();
+    } finally { setBusy(false); }
+  }
+
+  async function guardar() {
+    if (!borrador?.id) return;
+    setBusy(true);
+    try {
+      const r = await apiFetch(`/api/proyectos/tipos/${borrador.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: borrador.nombre.trim(), descripcion: borrador.descripcion.trim() || null }),
+      });
+      const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
+      if (!r.ok || !j.success) { setErr(j.error ?? "No se pudo guardar"); return; }
+      setBorrador(null);
+      await load();
+    } finally { setBusy(false); }
+  }
+
+  async function toggle(t: TipoProyecto) {
+    setBusy(true);
+    try {
+      const r = await apiFetch(`/api/proyectos/tipos/${t.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activo: !t.activo }),
+      });
+      const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
+      if (!r.ok || !j.success) { setErr(j.error ?? "No se pudo cambiar el estado"); return; }
+      await load();
+    } finally { setBusy(false); }
+  }
+
+  async function eliminar(t: TipoProyecto) {
+    if (!confirm(`¿Eliminar el tipo "${t.nombre}"? Solo se puede si no hay proyectos vinculados.`)) return;
+    setBusy(true);
+    try {
+      const r = await apiFetch(`/api/proyectos/tipos/${t.id}`, { method: "DELETE" });
+      const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
+      if (!r.ok || !j.success) { setErr(j.error ?? "No se pudo eliminar"); return; }
+      await load();
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <ConfigFormCard
+      title="Tipos de proyecto"
+      description="Categorías que clasifican las obras. Editables, agregables y eliminables (si no hay obras vinculadas)."
+    >
+      {err && <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div>}
+
+      <div className="space-y-3">
+        {cargando ? (
+          <p className="text-sm text-slate-500">Cargando…</p>
+        ) : tipos.length === 0 ? (
+          <p className="text-sm text-slate-500">No hay tipos cargados todavía.</p>
+        ) : tipos.map((t) => {
+          const editando = borrador?.id === t.id;
+          return (
+            <div key={t.id} className="rounded-xl border border-slate-200 bg-white p-4">
+              {editando ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Nombre</label>
+                    <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      value={borrador!.nombre}
+                      onChange={(e) => setBorrador({ ...borrador!, nombre: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Descripción</label>
+                    <input className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      value={borrador!.descripcion}
+                      onChange={(e) => setBorrador({ ...borrador!, descripcion: e.target.value })} />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => setBorrador(null)}
+                      className="rounded-lg border border-slate-200 px-3 py-2 text-xs">Cancelar</button>
+                    <button type="button" onClick={guardar} disabled={busy}
+                      className="rounded-lg bg-[#4FAEB2] px-3 py-2 text-xs font-medium text-white disabled:opacity-50">
+                      Guardar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-slate-800">{t.nombre}</span>
+                      {t.activo ? (
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Activo</span>
+                      ) : (
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Inactivo</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 font-mono">{t.codigo}</p>
+                    {t.descripcion && <p className="mt-1 text-xs text-slate-600">{t.descripcion}</p>}
+                  </div>
+                  <div className="shrink-0 flex flex-col items-end gap-1 text-xs">
+                    <button type="button" disabled={busy}
+                      onClick={() => setBorrador({ id: t.id, nombre: t.nombre, descripcion: t.descripcion ?? "" })}
+                      className="text-[#3F8E91] hover:underline">Editar</button>
+                    <button type="button" disabled={busy}
+                      onClick={() => void toggle(t)}
+                      className={t.activo ? "text-amber-700 hover:underline" : "text-emerald-700 hover:underline"}>
+                      {t.activo ? "Desactivar" : "Activar"}
+                    </button>
+                    <button type="button" disabled={busy}
+                      onClick={() => void eliminar(t)}
+                      className="text-red-600 hover:underline">Eliminar</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <form onSubmit={crear} className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 space-y-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Nuevo tipo</h4>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <input className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+            placeholder="Nombre (Ej. Cubierta industrial)"
+            value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} required />
+          <input className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+            placeholder="Descripción (opcional)"
+            value={nuevoDesc} onChange={(e) => setNuevoDesc(e.target.value)} />
+        </div>
+        <div className="flex justify-end">
+          <button type="submit" disabled={busy || !nuevoNombre.trim()}
+            className="rounded-lg bg-[#4FAEB2] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+            Crear tipo
+          </button>
+        </div>
+      </form>
+    </ConfigFormCard>
   );
 }
 

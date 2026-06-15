@@ -667,7 +667,7 @@ export default function ConfiguracionCrmPipelinePage() {
                           Activar
                         </button>
                       )}
-                      {!t.es_sistema && usos === 0 && (
+                      {usos === 0 && (
                         <button
                           type="button"
                           className="whitespace-nowrap text-xs text-red-500 hover:text-red-700 disabled:opacity-50"
