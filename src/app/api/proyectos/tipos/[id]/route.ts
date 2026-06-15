@@ -3,6 +3,44 @@ import { getChatServiceClientForEmpresa } from "@/app/api/chat/_chat-service-cli
 import { errorResponse, successResponse } from "@/lib/api/response";
 import { requireProyectosApiAccess } from "@/lib/proyectos/proyectos-auth";
 
+function slugify(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "")
+    .slice(0, 32);
+}
+
+/**
+ * Devuelve un codigo único para la empresa derivado de base.
+ * Si base ya está en uso por OTRO id, agrega sufijos _2, _3, etc.
+ */
+async function uniqueCodigo(
+  sb: Awaited<ReturnType<typeof getChatServiceClientForEmpresa>>,
+  empresaId: string,
+  base: string,
+  excluirId: string
+): Promise<string> {
+  if (!base) base = "tipo";
+  let candidato = base;
+  let n = 2;
+  for (let i = 0; i < 50; i++) {
+    const { data, error } = await sb
+      .from("proyecto_tipos")
+      .select("id")
+      .eq("empresa_id", empresaId)
+      .eq("codigo", candidato)
+      .neq("id", excluirId)
+      .limit(1);
+    if (error) throw new Error(error.message);
+    if (!data || data.length === 0) return candidato;
+    candidato = `${base}_${n++}`;
+  }
+  return `${base}_${Date.now()}`;
+}
+
 /** PATCH /api/proyectos/tipos/[id] — edita nombre, descripcion, activo. */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireProyectosApiAccess(request);
@@ -27,6 +65,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const sb = await getChatServiceClientForEmpresa(auth.empresaId);
+
+    // Si cambia el nombre, regenerar el codigo (slug) para que refleje el nuevo nombre.
+    // Mantiene unicidad por empresa con sufijos _2, _3 si hay colisión.
+    if (typeof update.nombre === "string") {
+      const base = slugify(update.nombre);
+      update.codigo = await uniqueCodigo(sb, auth.empresaId, base, id);
+    }
+
     const { error } = await sb
       .from("proyecto_tipos")
       .update(update)
