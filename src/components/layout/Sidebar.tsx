@@ -123,7 +123,7 @@ const MENU_SECTIONS: { label: string; keys: string[] }[] = [
   { label: "Obras",      keys: ["proyectos"] },
   { label: "Compras",    keys: ["compras", "proveedores"] },
   { label: "Inventario", keys: ["productos", "movimientos", "categorias"] },
-  { label: "Finanzas",   keys: ["pagos", "gastos", "notas_credito", "reportes", "panel_financiero"] },
+  { label: "Finanzas",   keys: ["pagos", "gastos", "reportes", "panel_financiero"] },
   { label: "RRHH",       keys: ["rrhh"] },
   { label: "Admin",      keys: ["configuracion"] },
 ];
