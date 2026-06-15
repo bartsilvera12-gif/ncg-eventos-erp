@@ -76,11 +76,6 @@ export async function POST(request: NextRequest) {
       banco: str("banco"),
       numero_cuenta: str("numero_cuenta"),
       cobrar_con_cheque: bool("cobrar_con_cheque"),
-      // IPS / control
-      numero_ips: str("numero_ips"),
-      codigo_reloj: str("codigo_reloj"),
-      observacion: str("observacion"),
-      imagen_url: str("imagen_url"),
       // Estado
       excluir_liquidaciones: bool("excluir_liquidaciones"),
       activo: body.activo === undefined ? true : Boolean(body.activo),

@@ -45,8 +45,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const TEXT_FIELDS = [
       "tipo_documento","documento","lugar_nacimiento","nacionalidad","estado_civil",
       "grupo_sanguineo","direccion","email","telefono","cargo","tipo_empleado","tipo_periodo",
-      "departamento","seccion","supervisor","banco","numero_cuenta","numero_ips","codigo_reloj",
-      "observacion","imagen_url",
+      "departamento","seccion","supervisor","banco","numero_cuenta",
     ];
     const DATE_FIELDS = ["fecha_nacimiento","fecha_ingreso","fecha_baja"];
     const NUM_FIELDS = ["salario_base","salario_complementario","costo_hora"];

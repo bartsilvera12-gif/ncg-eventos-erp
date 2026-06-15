@@ -34,10 +34,6 @@ type Empleado = {
   banco: string | null;
   numero_cuenta: string | null;
   cobrar_con_cheque: boolean;
-  numero_ips: string | null;
-  codigo_reloj: string | null;
-  observacion: string | null;
-  imagen_url: string | null;
   excluir_liquidaciones: boolean;
   activo: boolean;
 };
@@ -68,9 +64,6 @@ const FORM_INICIAL = {
   banco: "",
   numero_cuenta: "",
   cobrar_con_cheque: false,
-  numero_ips: "",
-  codigo_reloj: "",
-  observacion: "",
   excluir_liquidaciones: false,
 };
 
@@ -301,9 +294,6 @@ function empleadoToForm(e: Empleado): FormEmpleado {
     banco: e.banco ?? "",
     numero_cuenta: e.numero_cuenta ?? "",
     cobrar_con_cheque: !!e.cobrar_con_cheque,
-    numero_ips: e.numero_ips ?? "",
-    codigo_reloj: e.codigo_reloj ?? "",
-    observacion: e.observacion ?? "",
     excluir_liquidaciones: !!e.excluir_liquidaciones,
     activo: e.activo,
   };
@@ -509,24 +499,6 @@ function EmpleadoFormFields({
               className="h-4 w-4 rounded border-slate-300" />
             Cobra con cheque
           </label>
-        </div>
-      </Section>
-
-      <Section titulo="IPS y control">
-        <Field label="Nro. IPS">
-          <input className={inputCls} value={form.numero_ips}
-            onChange={(e) => set("numero_ips", e.target.value)} />
-        </Field>
-        <Field label="Código de reloj" hint="Para fichaje de entrada/salida.">
-          <input className={inputCls} value={form.codigo_reloj}
-            onChange={(e) => set("codigo_reloj", e.target.value)} />
-        </Field>
-        <div className="md:col-span-2 lg:col-span-3">
-          <Field label="Observación">
-            <textarea className={inputCls + " min-h-[72px]"} value={form.observacion}
-              onChange={(e) => set("observacion", e.target.value)}
-              placeholder="Notas internas sobre el empleado" />
-          </Field>
         </div>
       </Section>
 
