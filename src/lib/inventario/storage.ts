@@ -36,6 +36,7 @@ interface ProductoRow {
   es_vendible?: boolean | null;
   es_insumo?: boolean | null;
   controla_stock?: boolean | null;
+  tipo_inventario?: string | null;
   valorizado?: boolean | null;
   unidad_compra?: string | null;
   unidad_receta?: string | null;
@@ -107,6 +108,7 @@ function rowToProducto(row: ProductoRow): Producto {
     factor_compra_receta: row.factor_compra_receta != null ? Number(row.factor_compra_receta) : 1,
     tiempo_prep_minutos: row.tiempo_prep_minutos != null ? Number(row.tiempo_prep_minutos) : 0,
     descripcion: row.descripcion ?? null,
+    tipo_inventario: (row.tipo_inventario as "material" | "herramienta" | "consumible" | "accesorio" | null) ?? "material",
   };
 }
 
@@ -241,6 +243,7 @@ export async function saveProducto(
         ? datos.tiempo_prep_minutos
         : 0,
     descripcion: datos.descripcion ?? null,
+    tipo_inventario: datos.tipo_inventario ?? "material",
   };
 
   const res = await fetch("/api/productos", {

@@ -55,7 +55,7 @@ export default function InventarioPage() {
   const [filtroValuacion,  setFiltroValuacion]  = useState<MetodoValuacion | "">("");
   const [filtroUbicacion,  setFiltroUbicacion]  = useState<string>(""); // "", "__sin__" o id
   const [filtroTipo,       setFiltroTipo]       = useState<"todos" | "vendibles" | "insumos" | "mixtos">("todos");
-  const [tab,              setTab]               = useState<"reventa" | "menu" | "materia">("reventa");
+  const [tab,              setTab]               = useState<"material" | "herramienta" | "consumible" | "accesorio">("material");
   const [cargandoLista,    setCargandoLista]     = useState(true);
   const [soloStockBajo,    setSoloStockBajo]    = useState(false);
   const [eliminandoId,     setEliminandoId]     = useState<string | null>(null);
@@ -170,20 +170,16 @@ export default function InventarioPage() {
       if (filtroTipo === "insumos" && !(i && !v)) return false;
     }
 
-    // Filtro por tab (Reventa | Menú | Materia prima)
-    const esVendible    = p.es_vendible !== false;
-    const esInsumo      = p.es_insumo === true;
-    const controlaStock = p.controla_stock !== false; // default true
-    if (tab === "reventa") {
-      // vendibles que mueven stock real (gaseosas, postres comprados, etc.)
-      if (!esVendible || !controlaStock || esInsumo) return false;
-    } else if (tab === "menu") {
-      // productos preparados (pizzas, lomitos, combos): vendibles SIN stock
-      if (!esVendible || controlaStock || esInsumo) return false;
-    } else {
-      // materia prima / insumos
-      if (!esInsumo) return false;
-    }
+    // Filtro por tab (Materiales | Herramientas | Consumibles | Accesorios).
+    // Usa tipo_inventario (nueva columna). Si está vacío, fallback a 'material'.
+    const tipoInv = (p as { tipo_inventario?: string }).tipo_inventario ?? "material";
+    const tabMap: Record<string, string> = {
+      material: "material",
+      herramienta: "herramienta",
+      consumible: "consumible",
+      accesorio: "accesorio",
+    };
+    if (tabMap[tab] && tipoInv !== tabMap[tab]) return false;
 
     return true;
   }), [
@@ -240,11 +236,12 @@ export default function InventarioPage() {
 
       {/* Tabs gastronómicos (filtran por tipo de producto) */}
       <div className="border-b border-gray-200">
-        <nav className="-mb-px flex gap-6" aria-label="Tabs">
+        <nav className="-mb-px flex flex-wrap gap-6" aria-label="Tabs">
           {([
-            { id: "reventa", label: "Reventa", subtitle: "Productos comprados y revendidos" },
-            { id: "menu",    label: "Menú",    subtitle: "Productos preparados por el local" },
-            { id: "materia", label: "Materia prima", subtitle: "Insumos para costeo/recetas" },
+            { id: "material",    label: "Materiales",  subtitle: "Materiales principales que se consumen en cada obra" },
+            { id: "herramienta", label: "Herramientas", subtitle: "Activos de la empresa: equipos y herramientas" },
+            { id: "consumible",  label: "Consumibles",  subtitle: "Insumos que se gastan seguido" },
+            { id: "accesorio",   label: "Accesorios",   subtitle: "Accesorios y terminaciones específicas" },
           ] as const).map((t) => (
             <button
               key={t.id}
@@ -260,6 +257,13 @@ export default function InventarioPage() {
               {t.label}
             </button>
           ))}
+          <Link
+            href="/inventario/movimientos"
+            className="whitespace-nowrap border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
+            title="Entradas, salidas y trazabilidad por obra"
+          >
+            Movimientos →
+          </Link>
         </nav>
       </div>
 
@@ -272,7 +276,7 @@ export default function InventarioPage() {
               href="/inventario/nuevo"
               className="rounded-lg bg-[#4FAEB2] px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-[#4FAEB2]/25 transition-colors hover:bg-[#3F8E91] active:scale-95"
             >
-              Nuevo producto
+              Nuevo material
             </Link>
             <input
               type="text"
@@ -399,8 +403,8 @@ export default function InventarioPage() {
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">SKU</th>
                 <th className="py-3 pr-4 font-medium">Costo Prom.</th>
                 <th className="py-3 pr-4 font-medium">Precio Venta</th>
-                <th className={`py-3 pr-4 font-medium text-center ${tab === "reventa" ? "" : "hidden"}`}>Stock</th>
-                <th className={`py-3 pr-4 font-medium text-center ${tab === "reventa" ? "hidden md:table-cell" : "hidden"}`}>Stock Mín.</th>
+                <th className={`py-3 pr-4 font-medium text-center ${tab !== "herramienta" ? "" : "hidden"}`}>Stock</th>
+                <th className={`py-3 pr-4 font-medium text-center ${tab !== "herramienta" ? "hidden md:table-cell" : "hidden"}`}>Stock Mín.</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">Unidad</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">Valuación</th>
                 <th className="py-3 pr-6 font-medium text-right hidden md:table-cell">
@@ -467,12 +471,12 @@ export default function InventarioPage() {
                     <td className="py-4 pr-4 text-gray-500 font-mono hidden md:table-cell">{p.sku}</td>
                     <td className="py-4 pr-4 text-gray-700">{formatGs(p.costo_promedio)}</td>
                     <td className="py-4 pr-4 text-gray-700">{formatGs(p.precio_venta)}</td>
-                    <td className={`py-4 pr-4 text-center ${tab === "reventa" ? "" : "hidden"}`}>
+                    <td className={`py-4 pr-4 text-center ${tab !== "herramienta" ? "" : "hidden"}`}>
                       <span className={`font-semibold ${stockBajo ? "text-red-600" : "text-gray-800"}`}>
                         {p.stock_actual}
                       </span>
                     </td>
-                    <td className={`py-4 pr-4 text-center text-gray-500 ${tab === "reventa" ? "hidden md:table-cell" : "hidden"}`}>{p.stock_minimo}</td>
+                    <td className={`py-4 pr-4 text-center text-gray-500 ${tab !== "herramienta" ? "hidden md:table-cell" : "hidden"}`}>{p.stock_minimo}</td>
                     <td className="py-4 pr-4 text-gray-600 hidden lg:table-cell">{p.unidad_medida}</td>
                     <td className="py-4 pr-4 hidden lg:table-cell">
                       <Badge tone={metodoTone[p.metodo_valuacion]}>{p.metodo_valuacion}</Badge>
@@ -505,14 +509,16 @@ export default function InventarioPage() {
                 <tr>
                   <td colSpan={10} className="py-12 text-center text-sm text-slate-400">
                     {todos.length === 0
-                      ? "No hay productos registrados todavía. Creá uno con “Nuevo producto”."
+                      ? "No hay ítems registrados todavía. Creá uno con “Nuevo material”."
                       : hayFiltrosActivos
-                        ? "Ningún producto coincide con los filtros."
-                        : tab === "menu"
-                          ? "No hay productos de menú. Creá uno con “Nuevo producto” y elegí el tipo Menú."
-                          : tab === "materia"
-                            ? "No hay materia prima / insumos. Creá uno con “Nuevo producto” y elegí el tipo Materia prima."
-                            : "No hay productos de reventa. Creá uno con “Nuevo producto”."}
+                        ? "Ningún ítem coincide con los filtros."
+                        : tab === "herramienta"
+                          ? "No hay herramientas registradas. Creá una con “Nuevo material” y elegí Herramienta."
+                          : tab === "consumible"
+                            ? "No hay consumibles registrados. Creá uno con “Nuevo material” y elegí Consumible."
+                            : tab === "accesorio"
+                              ? "No hay accesorios registrados. Creá uno con “Nuevo material” y elegí Accesorio."
+                              : "No hay materiales registrados. Creá uno con “Nuevo material”."}
                   </td>
                 </tr>
               )}

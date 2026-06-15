@@ -18,12 +18,10 @@ const UNIDADES_OPCIONES = [
 ] as const;
 
 const TIPO_SUMMARY = {
-  // reventa = Material de obra (controla stock, descuenta al usar/vender)
-  reventa: { titulo: "Material de obra", descripcion: "Chapas, perfiles, tornillos, tirantes. Controla stock y descuenta al usar en obra.", icono: "🔩" },
-  // menu = Servicio (no descuenta stock; se factura)
-  menu:    { titulo: "Servicio",         descripcion: "Mano de obra, instalación, transporte. Se factura pero no descuenta stock.",         icono: "🛠️" },
-  // materia = Insumo / consumible
-  materia: { titulo: "Insumo / consumible", descripcion: "Soldadura, pintura, sellador, electrodos. Se gasta durante la obra.",              icono: "🛢️" },
+  material:    { titulo: "Material",    descripcion: "Materiales que se consumen en cada obra. Controlan stock.",                 icono: "🔩" },
+  herramienta: { titulo: "Herramienta", descripcion: "Activos de la empresa. No descuentan stock ni se facturan al cliente.",     icono: "🛠️" },
+  consumible:  { titulo: "Consumible",  descripcion: "Insumos que se gastan seguido. Controlan stock para alerta de reposición.", icono: "🛢️" },
+  accesorio:   { titulo: "Accesorio",   descripcion: "Piezas de terminación y accesorios certificados. Controlan stock.",        icono: "🪛" },
 } as const;
 
 interface CatRow { id: string; nombre: string }
@@ -63,28 +61,33 @@ export default function NuevoProductoPage() {
   const [esVendible, setEsVendible] = useState(true);
   const [esInsumo, setEsInsumo] = useState(false);
 
-  // Selector inicial de tipo gastronómico — aplica presets a los flags
-  type TipoGastro = "reventa" | "menu" | "materia" | null;
-  const [tipoGastro, setTipoGastro] = useState<TipoGastro>(null);
-  function aplicarTipoGastro(tipo: Exclude<TipoGastro, null>) {
-    setTipoGastro(tipo);
-    if (tipo === "reventa") {
+  // Selector inicial de tipo — aplica presets a los flags y persiste tipo_inventario.
+  type TipoInventario = "material" | "herramienta" | "consumible" | "accesorio" | null;
+  const [tipoInventario, setTipoInventario] = useState<TipoInventario>(null);
+  function aplicarTipoInventario(tipo: Exclude<TipoInventario, null>) {
+    setTipoInventario(tipo);
+    if (tipo === "material") {
+      // Material de obra: controla stock, no es insumo gastronómico.
       setEsVendible(true);
       setEsInsumo(false);
       setControlaStock(true);
-      setForm((prev) => ({ ...prev, unidad_medida: prev.unidad_medida || "UNIDAD" }));
-    } else if (tipo === "menu") {
-      setEsVendible(true);
+    } else if (tipo === "herramienta") {
+      // Activo: no descuenta stock, no se factura como bien físico.
+      setEsVendible(false);
       setEsInsumo(false);
       setControlaStock(false);
-      setForm((prev) => ({ ...prev, unidad_medida: prev.unidad_medida || "UNIDAD" }));
-    } else {
-      // Insumo / consumible: se gasta durante la obra y SÍ controla stock.
+    } else if (tipo === "consumible") {
+      // Se gasta seguido durante la obra. Controla stock para alerta de reposición.
       setEsVendible(false);
       setEsInsumo(true);
       setControlaStock(true);
-      setForm((prev) => ({ ...prev, unidad_medida: prev.unidad_medida || "UNIDAD" }));
+    } else {
+      // Accesorio: pieza terminación. Igual que material pero categorizada aparte.
+      setEsVendible(true);
+      setEsInsumo(false);
+      setControlaStock(true);
     }
+    setForm((prev) => ({ ...prev, unidad_medida: prev.unidad_medida || "UNIDAD" }));
   }
 
   // Configuración gastronómica
@@ -308,7 +311,7 @@ export default function NuevoProductoPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     e.stopPropagation();
-    console.log("[inventario/nuevo] handleSubmit start", { tipoGastro });
+    console.log("[inventario/nuevo] handleSubmit start", { tipoInventario });
     if (submitting) return;
     setErrorDuplicado(null);
     setErrorGeneral(null);
@@ -323,7 +326,7 @@ export default function NuevoProductoPage() {
       // Validaciones básicas en JS (HTML5 desactivado con noValidate).
       const nombreT = form.nombre.trim();
       if (!nombreT) { showErr("El nombre es obligatorio."); return; }
-      if (tipoGastro === "reventa" && !form.sku.trim()) { showErr("El código interno / SKU es obligatorio para productos de reventa."); return; }
+      if ((tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible") && !form.sku.trim()) { showErr("El código interno / SKU es obligatorio para productos de reventa."); return; }
 
       // Código de barras = NUMÉRICO escaneable (EAN-13). El código interno / SKU
       // va en el campo sku. No se autogenera nada al guardar.
@@ -375,6 +378,7 @@ export default function NuevoProductoPage() {
           es_insumo: esInsumo,
           controla_stock: controlaStock,
           valorizado: valorizado,
+          tipo_inventario: tipoInventario ?? "material",
           unidad_compra: unidadCompra.trim() || null,
           unidad_receta: unidadReceta.trim() || null,
           factor_compra_receta: Math.max(parseFloat(factorCompraReceta) || 1, 0.0001),
@@ -439,52 +443,55 @@ export default function NuevoProductoPage() {
   const labelClass = "block text-sm font-medium text-slate-700 mb-2";
 
   // Paso 0: selector inicial de tipo de producto
-  if (tipoGastro === null) {
+  if (tipoInventario === null) {
     return (
       <div className="space-y-8">
         <PageHeader
           eyebrow="NCG · Stock"
-          title="Nuevo producto"
-          description="¿Qué tipo de producto vas a cargar?"
+          title="Nuevo material"
+          description="¿Qué tipo de ítem vas a cargar?"
           backHref="/inventario"
           backLabel="Inventario"
         />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl">
           {([
             {
-              tipo: "reventa" as const,
-              titulo: "Material de obra",
+              tipo: "material" as const,
+              titulo: "Material",
               icono: "🔩",
-              ejemplo: "Chapas, perfiles metálicos, tornillos, tirantes",
-              descripcion: "Se compra y se usa en obras. Controla stock y descuenta al imputarse a una obra.",
+              descripcion: "Materiales que se consumen en cada obra. Controlan stock y se imputan a la obra al usarlos.",
               acento: "border-sky-300 bg-sky-50/40 hover:border-sky-500",
             },
             {
-              tipo: "menu" as const,
-              titulo: "Servicio",
+              tipo: "herramienta" as const,
+              titulo: "Herramienta",
               icono: "🛠️",
-              ejemplo: "Mano de obra, instalación, transporte, flete",
-              descripcion: "Se factura al cliente pero no descuenta stock (no es un bien físico).",
+              descripcion: "Equipos y activos de la empresa. No descuentan stock ni se facturan al cliente.",
               acento: "border-rose-300 bg-rose-50/40 hover:border-rose-500",
             },
             {
-              tipo: "materia" as const,
-              titulo: "Insumo / consumible",
+              tipo: "consumible" as const,
+              titulo: "Consumible",
               icono: "🛢️",
-              ejemplo: "Soldadura, pintura, sellador, electrodos",
-              descripcion: "Se consume durante la obra. Controla stock y se descuenta al usar.",
+              descripcion: "Insumos que se gastan seguido. Controlan stock con alerta de reposición.",
               acento: "border-emerald-300 bg-emerald-50/40 hover:border-emerald-500",
+            },
+            {
+              tipo: "accesorio" as const,
+              titulo: "Accesorio",
+              icono: "🪛",
+              descripcion: "Piezas de terminación y accesorios certificados. Controlan stock e se imputan a obra.",
+              acento: "border-amber-300 bg-amber-50/40 hover:border-amber-500",
             },
           ]).map((opt) => (
             <button
               key={opt.tipo}
               type="button"
-              onClick={() => aplicarTipoGastro(opt.tipo)}
+              onClick={() => aplicarTipoInventario(opt.tipo)}
               className={`text-left rounded-xl border-2 ${opt.acento} p-5 transition-all hover:shadow-md`}
             >
               <div className="text-3xl mb-2">{opt.icono}</div>
               <div className="text-base font-semibold text-slate-900">{opt.titulo}</div>
-              <div className="mt-1 text-xs italic text-slate-500">Ej: {opt.ejemplo}</div>
               <div className="mt-3 text-sm text-slate-700">{opt.descripcion}</div>
             </button>
           ))}
@@ -502,9 +509,9 @@ export default function NuevoProductoPage() {
     );
   }
 
-  const summary = TIPO_SUMMARY[tipoGastro];
-  const showStock = tipoGastro === "reventa";
-  const showPrecioVenta = tipoGastro !== "materia";
+  const summary = TIPO_SUMMARY[tipoInventario];
+  const showStock = (tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible");
+  const showPrecioVenta = tipoInventario !== "materia";
 
   return (
     <div className="space-y-8">
@@ -580,18 +587,18 @@ export default function NuevoProductoPage() {
           <div>
             <label className={labelClass}>
               Descripción
-              {tipoGastro === "menu" && <span className="text-xs font-normal text-amber-700 ml-2">(visible al cliente)</span>}
+              {tipoInventario === "herramienta" && <span className="text-xs font-normal text-amber-700 ml-2">(visible al cliente)</span>}
             </label>
             <textarea
               name="descripcion"
               value={form.descripcion}
               onChange={handleChange}
               placeholder={
-                tipoGastro === "menu"
+                tipoInventario === "herramienta"
                   ? "Ej: Pan, carne, huevo, doble queso, lechuga, tomate, mayonesa."
                   : "Descripción opcional del producto"
               }
-              rows={tipoGastro === "menu" ? 3 : 2}
+              rows={tipoInventario === "herramienta" ? 3 : 2}
               className={inputClass}
             />
           </div>
@@ -601,7 +608,7 @@ export default function NuevoProductoPage() {
             <div>
               <label className={labelClass}>
                 Código interno / SKU
-                {tipoGastro === "reventa" ? "" : <span className="text-xs font-normal text-gray-400 ml-1">(opcional)</span>}
+                {(tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible") ? "" : <span className="text-xs font-normal text-gray-400 ml-1">(opcional)</span>}
                 {codigoGeneradoInterno && form.sku && (
                   <span className="ml-2 align-middle text-[10px] uppercase tracking-wider bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded">
                     Generado
@@ -615,7 +622,7 @@ export default function NuevoProductoPage() {
                 onChange={handleChange}
                 placeholder="Ej: INT-DIS-202606-000010 o tu propio código"
                 className={`${inputClass} uppercase`}
-                required={tipoGastro === "reventa"}
+                required={(tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible")}
                 autoComplete="off"
               />
               <div className="mt-2">
@@ -634,14 +641,14 @@ export default function NuevoProductoPage() {
               </div>
             </div>
 
-            <div className={tipoGastro === "menu" ? "hidden" : ""}>
+            <div className={tipoInventario === "herramienta" ? "hidden" : ""}>
               <label className={labelClass}>Unidad de medida</label>
               <select
                 name="unidad_medida"
                 value={form.unidad_medida}
                 onChange={handleChange}
                 className={`${inputClass} uppercase`}
-                required={tipoGastro !== "menu"}
+                required={tipoInventario !== "menu"}
               >
                 {UNIDADES_OPCIONES.map((u) => (
                   <option key={u} value={u}>{u}</option>
@@ -898,7 +905,7 @@ export default function NuevoProductoPage() {
               </div>
 
               {/* Proveedor — 4 cols. Oculto para Menú (productos preparados no tienen proveedor). */}
-              <div className={`md:col-span-4 min-w-0 ${tipoGastro === "menu" ? "hidden" : ""}`}>
+              <div className={`md:col-span-4 min-w-0 ${tipoInventario === "herramienta" ? "hidden" : ""}`}>
                 <label className={labelClass}>Proveedor principal</label>
                 <SelectFromList
                   value={proveedorId}

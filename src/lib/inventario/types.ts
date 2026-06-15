@@ -46,6 +46,8 @@ export interface Producto {
   tiempo_prep_minutos?: number;
   /** Descripción detallada (visible en Menú y edición). */
   descripcion?: string | null;
+  /** Clasificación NCG (constructora): material / herramienta / consumible / accesorio. */
+  tipo_inventario?: "material" | "herramienta" | "consumible" | "accesorio";
 }
 
 export interface MovimientoInventario {
