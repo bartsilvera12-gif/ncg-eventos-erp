@@ -3,14 +3,14 @@
 /**
  * RRHH · Asignación de tipo de empleado
  *
- * Entidad propia (tabla `asignaciones_tipo_empleado`). No toca `empleados`.
- * Cada asignación tiene:
- *   - descripción (texto libre, ej: nombre del empleado)
- *   - tipos[] (roles operativos)
- *   - sección / sucursal-obra
- *   - estado activo/inactivo
- *   - datos de chofer (sólo si marca tipo "chofer")
- *   - auditoría (creado/modificado por + fechas)
+ * La tabla muestra TODOS los empleados activos de la empresa. A cada uno se
+ * le asigna su tipo (uno o varios roles). La asignación se guarda en la
+ * tabla independiente `asignaciones_tipo_empleado`, vinculada por
+ * empleado_id. Si todavía no existe asignación para un empleado, la fila
+ * sigue apareciendo pero con "— Sin asignar —".
+ *
+ * No hay "+ Crear" porque las filas son los empleados; lo único que se
+ * gestiona acá es la asignación de tipo.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -32,6 +32,13 @@ const TIPOS_DISPONIBLES = [
 
 const TIPOS_LABEL = Object.fromEntries(TIPOS_DISPONIBLES.map((t) => [t.value, t.label]));
 
+interface Empleado {
+  id: string;
+  nombre: string;
+  cargo: string | null;
+  activo: boolean;
+}
+
 interface Asignacion {
   id: string;
   codigo: number;
@@ -51,59 +58,59 @@ interface Asignacion {
   updated_by_nombre: string | null;
 }
 
+/** Fila de la tabla: empleado + su asignación (si existe). */
+interface Fila {
+  empleado: Empleado;
+  asignacion: Asignacion | null;
+}
+
 const inputClass =
   "w-full border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none bg-white text-sm";
 const labelClass = "block text-xs font-medium text-slate-600 mb-1.5";
 
-const FORM_INICIAL = {
-  descripcion: "",
-  seccion: "",
-  sucursal: "",
-  activo: true,
-  tipos: new Set<string>(),
-  chofer_habilitacion: "",
-  chofer_fecha_venc: "",
-  chofer_km: "",
-  chofer_observacion: "",
-};
-
 export default function AsignacionesTipoEmpleadoPage() {
-  const [lista, setLista] = useState<Asignacion[]>([]);
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+  const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
-  const [editando, setEditando] = useState<Asignacion | null>(null);
-  const [creando, setCreando] = useState(false);
+  const [editando, setEditando] = useState<Fila | null>(null);
 
   async function cargar() {
     setLoading(true);
     try {
-      const r = await fetchWithSupabaseSession("/api/rrhh/asignaciones-tipo", { cache: "no-store" });
-      const j = await r.json();
-      if (j.success) setLista(j.data.asignaciones ?? []);
+      const [rE, rA] = await Promise.all([
+        fetchWithSupabaseSession("/api/rrhh/empleados", { cache: "no-store" }),
+        fetchWithSupabaseSession("/api/rrhh/asignaciones-tipo", { cache: "no-store" }),
+      ]);
+      const jE = await rE.json();
+      const jA = await rA.json();
+      if (jE.success) setEmpleados(jE.data.empleados ?? []);
+      if (jA.success) setAsignaciones(jA.data.asignaciones ?? []);
     } finally {
       setLoading(false);
     }
   }
   useEffect(() => { void cargar(); }, []);
 
+  /** Une cada empleado con su asignación (si existe). */
+  const filas = useMemo<Fila[]>(() => {
+    const porEmpleado = new Map<string, Asignacion>();
+    for (const a of asignaciones) {
+      if (a.empleado_id) porEmpleado.set(a.empleado_id, a);
+    }
+    return empleados.map((e) => ({ empleado: e, asignacion: porEmpleado.get(e.id) ?? null }));
+  }, [empleados, asignaciones]);
+
   const filtradas = useMemo(() => {
     const t = busqueda.trim().toLowerCase();
-    if (!t) return lista;
-    return lista.filter(
-      (a) =>
-        a.descripcion.toLowerCase().includes(t) ||
-        String(a.codigo).includes(t) ||
-        (a.tipos ?? []).some((tp) => (TIPOS_LABEL[tp] ?? tp).toLowerCase().includes(t)),
+    if (!t) return filas;
+    return filas.filter(
+      (f) =>
+        f.empleado.nombre.toLowerCase().includes(t) ||
+        (f.empleado.cargo ?? "").toLowerCase().includes(t) ||
+        (f.asignacion?.tipos ?? []).some((tp) => (TIPOS_LABEL[tp] ?? tp).toLowerCase().includes(t)),
     );
-  }, [lista, busqueda]);
-
-  async function borrar(asig: Asignacion) {
-    if (!confirm(`¿Eliminar la asignación de "${asig.descripcion}"?`)) return;
-    const r = await fetchWithSupabaseSession(`/api/rrhh/asignaciones-tipo/${asig.id}`, { method: "DELETE" });
-    const j = await r.json();
-    if (j.success) void cargar();
-    else alert(j.error ?? "No se pudo eliminar.");
-  }
+  }, [filas, busqueda]);
 
   return (
     <div className="space-y-6">
@@ -116,63 +123,56 @@ export default function AsignacionesTipoEmpleadoPage() {
       />
 
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
-        {/* Barra superior */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
           <div className="flex items-center gap-2 flex-1 min-w-[240px] max-w-md">
             <input
               type="text"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar por código, descripción o tipo…"
+              placeholder="Buscar por nombre, cargo o tipo…"
               className={inputClass}
             />
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-500">
-              {filtradas.length} {filtradas.length === 1 ? "registro" : "registros"}
-            </span>
-            <button
-              type="button"
-              onClick={() => setCreando(true)}
-              className="rounded-lg bg-[#104A4E] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#0d3d40]"
-            >
-              + Crear
-            </button>
-          </div>
+          <span className="text-xs text-slate-500">
+            {filtradas.length} de {empleados.length} empleados
+          </span>
         </div>
 
-        {/* Tabla */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[920px] text-left text-sm">
+          <table className="w-full min-w-[860px] text-left text-sm">
             <thead className="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-5 py-3 w-20">Código</th>
-                <th className="px-5 py-3">Descripción</th>
-                <th className="px-5 py-3">Tipos</th>
-                <th className="px-5 py-3">Estado</th>
-                <th className="px-5 py-3">Registrado por</th>
-                <th className="px-5 py-3">Modificado el</th>
-                <th className="px-5 py-3 text-right">Acciones</th>
+                <th className="px-5 py-3">Empleado</th>
+                <th className="px-5 py-3">Tipos asignados</th>
+                <th className="px-5 py-3">Sección / Sucursal</th>
+                <th className="px-5 py-3">Última modificación</th>
+                <th className="px-5 py-3 text-right">Acción</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} className="px-5 py-8 text-center text-slate-400">Cargando…</td></tr>
+                <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-400">Cargando…</td></tr>
               ) : filtradas.length === 0 ? (
-                <tr><td colSpan={7} className="px-5 py-8 text-center text-slate-400">
-                  Sin asignaciones. Tocá &quot;+ Crear&quot; para registrar la primera.
+                <tr><td colSpan={5} className="px-5 py-8 text-center text-slate-400">
+                  {empleados.length === 0
+                    ? "Todavía no hay empleados. Cargá primero el alta en /rrhh/empleados."
+                    : "Sin resultados."}
                 </td></tr>
               ) : (
-                filtradas.map((a) => (
-                  <tr key={a.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
-                    <td className="px-5 py-3 tabular-nums text-slate-500">{a.codigo}</td>
-                    <td className="px-5 py-3 font-medium text-slate-800">{a.descripcion}</td>
+                filtradas.map((f) => (
+                  <tr key={f.empleado.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/50">
+                    <td className="px-5 py-3">
+                      <div className="font-medium text-slate-800">{f.empleado.nombre}</div>
+                      {f.empleado.cargo && (
+                        <div className="text-xs text-slate-400">{f.empleado.cargo}</div>
+                      )}
+                    </td>
                     <td className="px-5 py-3">
                       <div className="flex flex-wrap gap-1.5">
-                        {(a.tipos ?? []).length === 0 ? (
-                          <span className="text-xs text-slate-400">—</span>
+                        {!f.asignacion || (f.asignacion.tipos ?? []).length === 0 ? (
+                          <span className="text-xs text-slate-400">— Sin asignar —</span>
                         ) : (
-                          (a.tipos ?? []).map((t) => (
+                          (f.asignacion.tipos ?? []).map((t) => (
                             <span key={t} className="rounded-full bg-[#E4F5F4] px-2.5 py-0.5 text-[11px] font-medium text-[#104A4E]">
                               {TIPOS_LABEL[t] ?? t}
                             </span>
@@ -180,35 +180,21 @@ export default function AsignacionesTipoEmpleadoPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-5 py-3">
-                      {a.activo ? (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold uppercase text-emerald-700">Activo</span>
-                      ) : (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase text-slate-500">Inactivo</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-3 text-xs text-slate-500">
-                      {a.created_by_nombre || "—"}
-                      <br />
-                      <span className="text-slate-400">{new Date(a.created_at).toLocaleDateString("es-PY")}</span>
+                    <td className="px-5 py-3 text-xs text-slate-600">
+                      {[f.asignacion?.seccion, f.asignacion?.sucursal].filter(Boolean).join(" · ") || "—"}
                     </td>
                     <td className="px-5 py-3 text-xs text-slate-500 tabular-nums">
-                      {new Date(a.updated_at).toLocaleString("es-PY")}
+                      {f.asignacion
+                        ? new Date(f.asignacion.updated_at).toLocaleDateString("es-PY")
+                        : "—"}
                     </td>
-                    <td className="px-5 py-3 text-right space-x-1">
+                    <td className="px-5 py-3 text-right">
                       <button
                         type="button"
-                        onClick={() => setEditando(a)}
+                        onClick={() => setEditando(f)}
                         className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors hover:border-[#4FAEB2] hover:text-[#104A4E]"
                       >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void borrar(a)}
-                        className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-400 hover:bg-red-50"
-                      >
-                        Eliminar
+                        {f.asignacion ? "Editar" : "Asignar"}
                       </button>
                     </td>
                   </tr>
@@ -219,43 +205,42 @@ export default function AsignacionesTipoEmpleadoPage() {
         </div>
       </div>
 
-      {(creando || editando) && (
+      {editando && (
         <FormModal
-          asignacion={editando}
-          onClose={() => { setEditando(null); setCreando(false); }}
-          onSaved={() => { setEditando(null); setCreando(false); void cargar(); }}
+          empleado={editando.empleado}
+          asignacion={editando.asignacion}
+          onClose={() => setEditando(null)}
+          onSaved={() => { setEditando(null); void cargar(); }}
         />
       )}
     </div>
   );
 }
 
-// ── Modal crear / editar ───────────────────────────────────────────────────────
+// ── Modal de asignación / edición ──────────────────────────────────────────────
 
 function FormModal({
+  empleado,
   asignacion,
   onClose,
   onSaved,
 }: {
+  empleado: Empleado;
   asignacion: Asignacion | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const esEdicion = asignacion !== null;
-  const [form, setForm] = useState(() => {
-    if (!asignacion) return { ...FORM_INICIAL, tipos: new Set<string>() };
-    return {
-      descripcion: asignacion.descripcion,
-      seccion: asignacion.seccion ?? "",
-      sucursal: asignacion.sucursal ?? "",
-      activo: asignacion.activo,
-      tipos: new Set<string>(asignacion.tipos ?? []),
-      chofer_habilitacion: asignacion.chofer_habilitacion ?? "",
-      chofer_fecha_venc: asignacion.chofer_fecha_venc ?? "",
-      chofer_km: asignacion.chofer_km != null ? String(asignacion.chofer_km) : "",
-      chofer_observacion: asignacion.chofer_observacion ?? "",
-    };
-  });
+  const [form, setForm] = useState(() => ({
+    seccion: asignacion?.seccion ?? "",
+    sucursal: asignacion?.sucursal ?? "",
+    activo: asignacion?.activo ?? true,
+    tipos: new Set<string>(asignacion?.tipos ?? []),
+    chofer_habilitacion: asignacion?.chofer_habilitacion ?? "",
+    chofer_fecha_venc: asignacion?.chofer_fecha_venc ?? "",
+    chofer_km: asignacion?.chofer_km != null ? String(asignacion.chofer_km) : "",
+    chofer_observacion: asignacion?.chofer_observacion ?? "",
+  }));
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -272,14 +257,11 @@ function FormModal({
 
   async function guardar() {
     setError(null);
-    if (!form.descripcion.trim()) {
-      setError("La descripción es obligatoria.");
-      return;
-    }
     setGuardando(true);
     try {
       const payload: Record<string, unknown> = {
-        descripcion: form.descripcion.trim(),
+        descripcion: empleado.nombre,
+        empleado_id: empleado.id,
         seccion: form.seccion.trim() || null,
         sucursal: form.sucursal.trim() || null,
         activo: form.activo,
@@ -316,29 +298,18 @@ function FormModal({
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              {esEdicion ? `Editar · Código ${asignacion!.codigo}` : "Nueva asignación"}
+              {esEdicion ? `Editar asignación · Código ${asignacion!.codigo}` : "Asignar tipo"}
             </p>
-            <h2 className="text-lg font-semibold text-slate-900">
-              {esEdicion ? asignacion!.descripcion : "Crear asignación de tipo"}
-            </h2>
+            <h2 className="text-lg font-semibold text-slate-900">{empleado.nombre}</h2>
+            {empleado.cargo && <p className="text-xs text-slate-400">{empleado.cargo}</p>}
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Cerrar">✕</button>
         </div>
 
         <div className="max-h-[70vh] space-y-6 overflow-y-auto px-6 py-5">
-          {/* Datos básicos */}
+          {/* Sección/Sucursal */}
           <section className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Datos</h3>
-            <div>
-              <label className={labelClass}>Descripción <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                value={form.descripcion}
-                onChange={(e) => setForm((p) => ({ ...p, descripcion: e.target.value }))}
-                placeholder="Ej: Juan Pérez — Capataz"
-                className={inputClass}
-              />
-            </div>
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Asignación</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Sección</label>
@@ -368,7 +339,7 @@ function FormModal({
                 onChange={(e) => setForm((p) => ({ ...p, activo: !e.target.checked }))}
                 className="h-4 w-4 rounded border-slate-300 text-[#104A4E] focus:ring-[#4FAEB2]"
               />
-              ¿Inactivo?
+              ¿Asignación inactiva?
             </label>
           </section>
 
@@ -490,7 +461,7 @@ function FormModal({
             disabled={guardando}
             className="rounded-lg bg-[#104A4E] px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#0d3d40] disabled:opacity-50"
           >
-            {guardando ? "Guardando…" : esEdicion ? "Aplicar cambios" : "Crear"}
+            {guardando ? "Guardando…" : esEdicion ? "Aplicar cambios" : "Asignar"}
           </button>
         </div>
       </div>
