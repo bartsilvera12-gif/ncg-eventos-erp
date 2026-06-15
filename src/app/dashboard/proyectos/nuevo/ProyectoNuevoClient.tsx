@@ -48,6 +48,37 @@ export default function ProyectoNuevoClient() {
   const [saasObservaciones, setSaasObservaciones] = useState("");
   const [saasModuloIds, setSaasModuloIds] = useState<string[]>([]);
 
+  // Alta rápida de tipo de proyecto desde el selector.
+  const [creandoTipo, setCreandoTipo] = useState(false);
+  const [nuevoTipoNombre, setNuevoTipoNombre] = useState("");
+  const [guardandoTipo, setGuardandoTipo] = useState(false);
+
+  async function crearTipo() {
+    const nombre = nuevoTipoNombre.trim();
+    if (!nombre) return;
+    setGuardandoTipo(true);
+    try {
+      const r = await fetchWithSupabaseSession("/api/proyectos/tipos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre }),
+      });
+      const j = (await r.json().catch(() => ({}))) as { success?: boolean; data?: Tipo; error?: string };
+      if (!r.ok || !j.success || !j.data) {
+        setErr(j.error ?? "No se pudo crear el tipo");
+        return;
+      }
+      const nuevo = j.data;
+      setTipos((prev) => [...prev, nuevo].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+      setTipoId(nuevo.id);
+      setNuevoTipoNombre("");
+      setCreandoTipo(false);
+      setErr(null);
+    } finally {
+      setGuardandoTipo(false);
+    }
+  }
+
   const tipoCodigo = useMemo(() => tipos.find((t) => t.id === tipoId)?.codigo ?? "", [tipos, tipoId]);
   const esWeb = tipoCodigo === "web";
   const esSaas = tipoCodigo === "saas";
@@ -165,13 +196,22 @@ export default function ProyectoNuevoClient() {
               onChange={(e) => setTitulo(e.target.value)}
             />
           </label>
-          <label className="block text-sm">
+          <div className="block text-sm">
             <span className="font-medium text-slate-700">Tipo</span>
             <select
               required
               className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
-              value={tipoId}
-              onChange={(e) => setTipoId(e.target.value)}
+              value={creandoTipo ? "__nuevo__" : tipoId}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "__nuevo__") {
+                  setCreandoTipo(true);
+                  setTipoId("");
+                } else {
+                  setCreandoTipo(false);
+                  setTipoId(v);
+                }
+              }}
             >
               <option value="">Seleccionar…</option>
               {tipos.map((t) => (
@@ -179,8 +219,32 @@ export default function ProyectoNuevoClient() {
                   {t.nombre}
                 </option>
               ))}
+              <option value="__nuevo__">+ Agregar nuevo tipo…</option>
             </select>
-          </label>
+            {creandoTipo && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-dashed border-slate-300 bg-slate-50 p-2">
+                <input
+                  autoFocus
+                  className="min-w-0 flex-1 basis-48 rounded-md border border-slate-200 px-2 py-1.5 text-sm"
+                  placeholder="Nombre del nuevo tipo (ej. Reforma, Mantenimiento)"
+                  value={nuevoTipoNombre}
+                  onChange={(e) => setNuevoTipoNombre(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") { e.preventDefault(); void crearTipo(); }
+                    if (e.key === "Escape") { setCreandoTipo(false); setNuevoTipoNombre(""); }
+                  }}
+                />
+                <button type="button" onClick={() => void crearTipo()} disabled={guardandoTipo || !nuevoTipoNombre.trim()}
+                  className="rounded-md bg-[#4FAEB2] px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50">
+                  {guardandoTipo ? "Creando…" : "Crear"}
+                </button>
+                <button type="button" onClick={() => { setCreandoTipo(false); setNuevoTipoNombre(""); }}
+                  className="rounded-md border border-slate-200 px-3 py-1.5 text-xs text-slate-600">
+                  Cancelar
+                </button>
+              </div>
+            )}
+          </div>
           <ClienteSearchSelect clientes={clientes} value={clienteId} onChange={setClienteId} />
           <label className="block text-sm">
             <span className="font-medium text-slate-700">Estado inicial (opcional)</span>
