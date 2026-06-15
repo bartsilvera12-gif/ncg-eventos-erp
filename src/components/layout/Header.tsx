@@ -88,7 +88,7 @@ export default function Header() {
   return (
     <header
       id="neura-header"
-      className="z-40 flex h-20 shrink-0 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-3 sm:px-6 shadow-[inset_0_-1px_0_0_rgba(10,37,64,0.05)] backdrop-blur-sm"
+      className="z-40 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-3 sm:px-6 shadow-[inset_0_-1px_0_0_rgba(10,37,64,0.05)] backdrop-blur-sm"
     >
       {/* Botón hamburger (mobile + tablet: abre el sidebar como drawer hasta lg) */}
       <button
@@ -100,23 +100,8 @@ export default function Header() {
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Banner central del header. Toggle por env var NEXT_PUBLIC_HEADER_BANNER:
-          - "on" (o vacío/no definido) → banner visible
-          - "off" → rollback, vuelve al spacer vacío original
-          Se sigue manteniendo el spacer alrededor para empujar el bloque
-          derecho (notificaciones + usuario) al final. */}
-      {process.env.NEXT_PUBLIC_HEADER_BANNER !== "off" ? (
-        <div className="hidden lg:flex lg:flex-1 lg:self-stretch lg:items-stretch lg:px-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/banner2.png"
-            alt="Banner"
-            className="h-full w-full object-contain object-center rounded-md"
-          />
-        </div>
-      ) : (
-        <div className="hidden lg:block lg:flex-1" />
-      )}
+      {/* Spacer en desktop para empujar el resto a la derecha */}
+      <div className="hidden lg:block lg:flex-1" />
 
       <div className="flex items-center gap-2">
         {/* Notificaciones */}
