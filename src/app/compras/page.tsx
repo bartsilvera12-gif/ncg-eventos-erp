@@ -222,7 +222,7 @@ export default function ComprasPage() {
                 <th className="py-3 pr-4 font-medium">Proveedor</th>
                 <th className="py-3 pr-4 font-medium">Producto</th>
                 <th className="py-3 pr-4 font-medium text-right">Cant.</th>
-                <th className="py-3 pr-4 font-medium text-right hidden lg:table-cell">Costo unit.</th>
+                <th className="py-3 pr-4 font-medium text-right hidden lg:table-cell">Coste u. (sin IVA)</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">IVA</th>
                 <th className="py-3 pr-4 font-medium text-right">Total</th>
                 <th className="py-3 pr-4 font-medium text-right hidden lg:table-cell">Margen</th>

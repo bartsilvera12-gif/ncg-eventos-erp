@@ -665,7 +665,9 @@ export default function NuevaCompraPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <label className={labelSmClass}>Coste unitario ({header.moneda === "USD" ? "USD" : "€"})</label>
+                  <label className={labelSmClass}>
+                    Coste unitario sin IVA ({header.moneda === "USD" ? "USD" : "€"})
+                  </label>
                   <MontoInput value={linea.costo_input}
                     onChange={(n) => { setErrorLinea(null); setLinea((p) => ({ ...p, costo_input: String(n) })); }}
                     placeholder={header.moneda === "USD" ? "Ej: 12" : "Ej: 35,50"}
@@ -688,13 +690,13 @@ export default function NuevaCompraPage() {
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="text-xs text-gray-500 flex gap-3">
+                <div className="text-xs text-gray-500 flex gap-3 flex-wrap">
                   {header.moneda === "USD" && costoEur > 0 && <span>≈ {formatEur(costoEur)}/u</span>}
                   {lineaSubtotal > 0 && (
                     <>
-                      <span>Subtotal: <strong className="text-gray-700">{formatEur(lineaSubtotal)}</strong></span>
-                      <span>IVA: <strong className="text-gray-700">{linea.iva_tipo === "exenta" ? "—" : formatEur(lineaIvaMonto)}</strong></span>
-                      <span>Total: <strong className="text-gray-900">{formatEur(lineaTotal)}</strong></span>
+                      <span>Base imponible: <strong className="text-gray-700">{formatEur(lineaSubtotal)}</strong></span>
+                      <span>IVA soportado: <strong className="text-gray-700">{linea.iva_tipo === "exenta" ? "—" : formatEur(lineaIvaMonto)}</strong></span>
+                      <span>Total a pagar: <strong className="text-gray-900">{formatEur(lineaTotal)}</strong></span>
                     </>
                   )}
                 </div>
@@ -775,10 +777,10 @@ export default function NuevaCompraPage() {
                     <tr className="bg-slate-50 text-slate-600 text-xs font-semibold">
                       <th className="py-2.5 pr-3 font-medium">Material</th>
                       <th className="py-2.5 pr-3 font-medium text-right">Cant.</th>
-                      <th className="py-2.5 pr-3 font-medium text-right">Coste u.</th>
+                      <th className="py-2.5 pr-3 font-medium text-right">Coste u. (sin IVA)</th>
                       <th className="py-2.5 pr-3 font-medium text-center hidden sm:table-cell">IVA</th>
-                      <th className="py-2.5 pr-3 font-medium text-right hidden sm:table-cell">Subtotal</th>
-                      <th className="py-2.5 pr-3 font-medium text-right">Total</th>
+                      <th className="py-2.5 pr-3 font-medium text-right hidden sm:table-cell">Base imp.</th>
+                      <th className="py-2.5 pr-3 font-medium text-right">Total c/IVA</th>
                       <th className="py-2.5 font-medium"></th>
                     </tr>
                   </thead>
@@ -810,16 +812,23 @@ export default function NuevaCompraPage() {
                 </table>
 
                 <div className="mt-4 flex justify-end">
-                  <div className="w-full sm:w-72 space-y-1.5">
+                  <div className="w-full sm:w-80 space-y-1.5">
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>Subtotal</span><span className="tabular-nums font-medium">{formatEur(totalSubtotal)}</span>
+                      <span>Base imponible</span>
+                      <span className="tabular-nums font-medium">{formatEur(totalSubtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>IVA</span><span className="tabular-nums font-medium">{totalIva > 0 ? formatEur(totalIva) : "—"}</span>
+                      <span>IVA soportado</span>
+                      <span className="tabular-nums font-medium">{totalIva > 0 ? formatEur(totalIva) : "—"}</span>
                     </div>
                     <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
-                      <span>TOTAL</span><span className="tabular-nums">{formatEur(totalGeneral)}</span>
+                      <span>TOTAL A PAGAR</span>
+                      <span className="tabular-nums">{formatEur(totalGeneral)}</span>
                     </div>
+                    <p className="pt-2 text-[11px] text-slate-400 leading-relaxed">
+                      El inventario se valora a la <strong>base imponible</strong> ({formatEur(totalSubtotal)}).
+                      El IVA soportado queda registrado aparte para la deducción trimestral.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -868,7 +877,7 @@ export default function NuevaCompraPage() {
           {items.length > 0 && (
             <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-xs text-green-700">
               <span className="mt-0.5 text-base leading-none">✓</span>
-              <span>Al guardar se registrará una entrada de inventario por cada una de las <strong>{items.length} líneas</strong> (stock + coste promedio por material).</span>
+              <span>Al guardar se registrará una entrada de inventario por cada una de las <strong>{items.length} líneas</strong>. El stock se valora a la <strong>base imponible</strong> (sin IVA) — el IVA soportado se contabiliza por separado.</span>
             </div>
           )}
 

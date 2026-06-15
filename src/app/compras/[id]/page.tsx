@@ -202,7 +202,7 @@ export default function CompraDetallePage() {
                 <th className="py-2.5 pr-4 font-medium">Producto</th>
                 <th className="py-2.5 pr-4 font-medium">SKU</th>
                 <th className="py-2.5 pr-4 font-medium text-right">Cant.</th>
-                <th className="py-2.5 pr-4 font-medium text-right">Costo unit.</th>
+                <th className="py-2.5 pr-4 font-medium text-right">Coste u. (sin IVA)</th>
                 <th className="py-2.5 pr-4 font-medium">IVA</th>
                 <th className="py-2.5 pr-4 font-medium text-right">Subtotal</th>
                 <th className="py-2.5 font-medium text-right">Total línea</th>
