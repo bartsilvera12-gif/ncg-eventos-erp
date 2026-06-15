@@ -69,7 +69,7 @@ const FORM_INICIAL = {
 
 const ESTADO_CIVIL_OPTS = ["soltero/a", "casado/a", "divorciado/a", "viudo/a", "unión libre"];
 const GRUPO_SANG_OPTS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const TIPO_DOC_OPTS = ["CI", "RUC", "Pasaporte", "Otro"];
+const TIPO_DOC_OPTS = ["CI", "DNI", "RUC", "Pasaporte", "Otro"];
 const TIPO_EMP_OPTS = ["CONTRATADO", "PERMANENTE", "JORNALERO", "PASANTE"];
 const TIPO_PERIODO_OPTS = [
   { value: "mensual",   label: "Mensual" },
