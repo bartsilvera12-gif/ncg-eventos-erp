@@ -74,6 +74,7 @@ export default function AsignacionesTipoEmpleadoPage() {
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
   const [editando, setEditando] = useState<Fila | null>(null);
+  const [creandoLibre, setCreandoLibre] = useState(false);
 
   async function cargar() {
     setLoading(true);
@@ -133,9 +134,18 @@ export default function AsignacionesTipoEmpleadoPage() {
               className={inputClass}
             />
           </div>
-          <span className="text-xs text-slate-500">
-            {filtradas.length} de {empleados.length} empleados
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-500">
+              {filtradas.length} de {empleados.length} empleados
+            </span>
+            <button
+              type="button"
+              onClick={() => setCreandoLibre(true)}
+              className="rounded-lg bg-[#104A4E] px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[#0d3d40]"
+            >
+              + Crear
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -213,6 +223,14 @@ export default function AsignacionesTipoEmpleadoPage() {
           onSaved={() => { setEditando(null); void cargar(); }}
         />
       )}
+      {creandoLibre && (
+        <FormModal
+          empleado={null}
+          asignacion={null}
+          onClose={() => setCreandoLibre(false)}
+          onSaved={() => { setCreandoLibre(false); void cargar(); }}
+        />
+      )}
     </div>
   );
 }
@@ -225,12 +243,14 @@ function FormModal({
   onClose,
   onSaved,
 }: {
-  empleado: Empleado;
+  empleado: Empleado | null;
   asignacion: Asignacion | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const esEdicion = asignacion !== null;
+  const esCreacionLibre = empleado === null && asignacion === null;
+  const [descripcion, setDescripcion] = useState(asignacion?.descripcion ?? "");
   const [form, setForm] = useState(() => ({
     seccion: asignacion?.seccion ?? "",
     sucursal: asignacion?.sucursal ?? "",
@@ -257,11 +277,16 @@ function FormModal({
 
   async function guardar() {
     setError(null);
+    const desc = esCreacionLibre ? descripcion.trim() : empleado?.nombre ?? "";
+    if (!desc) {
+      setError("La descripción es obligatoria.");
+      return;
+    }
     setGuardando(true);
     try {
       const payload: Record<string, unknown> = {
-        descripcion: empleado.nombre,
-        empleado_id: empleado.id,
+        descripcion: desc,
+        empleado_id: empleado?.id ?? null,
         seccion: form.seccion.trim() || null,
         sucursal: form.sucursal.trim() || null,
         activo: form.activo,
@@ -298,15 +323,41 @@ function FormModal({
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              {esEdicion ? `Editar asignación · Código ${asignacion!.codigo}` : "Asignar tipo"}
+              {esEdicion
+                ? `Editar asignación · Código ${asignacion!.codigo}`
+                : esCreacionLibre
+                  ? "Nueva asignación"
+                  : "Asignar tipo"}
             </p>
-            <h2 className="text-lg font-semibold text-slate-900">{empleado.nombre}</h2>
-            {empleado.cargo && <p className="text-xs text-slate-400">{empleado.cargo}</p>}
+            <h2 className="text-lg font-semibold text-slate-900">
+              {esCreacionLibre ? "Crear asignación de tipo" : empleado?.nombre}
+            </h2>
+            {empleado?.cargo && <p className="text-xs text-slate-400">{empleado.cargo}</p>}
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600" aria-label="Cerrar">✕</button>
         </div>
 
         <div className="max-h-[70vh] space-y-6 overflow-y-auto px-6 py-5">
+          {/* Descripción libre (sólo al crear sin empleado vinculado) */}
+          {esCreacionLibre && (
+            <section className="space-y-3">
+              <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Datos</h3>
+              <div>
+                <label className={labelClass}>Descripción <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                  placeholder="Ej: Juan Pérez — Capataz externo"
+                  className={inputClass}
+                />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Para asignar a un empleado ya cargado, cerrá este modal y tocá &quot;Asignar&quot; en su fila.
+                </p>
+              </div>
+            </section>
+          )}
+
           {/* Sección/Sucursal */}
           <section className="space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-400">Asignación</h3>
