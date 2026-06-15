@@ -532,7 +532,7 @@ export default function NuevoProductoPage() {
           </div>
           <button
             type="button"
-            onClick={() => setTipoGastro(null)}
+            onClick={() => setTipoInventario(null)}
             className="text-xs text-amber-700 hover:text-amber-900 underline shrink-0"
           >
             Cambiar tipo
