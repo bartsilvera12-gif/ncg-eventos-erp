@@ -42,6 +42,15 @@ const TIPO_DOC_OPTS: { value: TipoDocumentoCompra; label: string }[] = [
   { value: "rectificativa", label: "Factura rectificativa" },
 ];
 
+/** Label, placeholder y obligatoriedad del N° de documento segun tipo. */
+const DOC_NUM_META: Record<TipoDocumentoCompra, { label: string; placeholder: string; required: boolean }> = {
+  factura:       { label: "N° de factura",                 placeholder: "Ej: F2026-000125",  required: true  },
+  albaran:       { label: "N° de albarán",                 placeholder: "Ej: A-000125",      required: false },
+  ticket:        { label: "N° de ticket / comprobante",    placeholder: "Ej: T-000125",      required: false },
+  presupuesto:   { label: "N° de presupuesto",             placeholder: "Ej: P-000125",      required: false },
+  rectificativa: { label: "N° de factura rectificativa",   placeholder: "Ej: FR-000125",     required: true  },
+};
+
 const ALMACEN_OPTS: { value: AlmacenDestino; label: string }[] = [
   { value: "deposito", label: "Depósito principal" },
   { value: "obra", label: "Obra" },
@@ -225,7 +234,10 @@ export default function NuevaCompraPage() {
   const totalGeneral = items.reduce((s, i) => s + i.total_linea, 0);
 
   const proveedorSel = proveedores.find((p) => String(p.id) === header.proveedor_id);
-  const compraValida = !!header.proveedor_id && !!header.nro_timbrado.trim() && items.length > 0;
+  const docMeta = DOC_NUM_META[header.tipo_documento];
+  const compraValida = !!header.proveedor_id
+    && (!docMeta.required || !!header.nro_timbrado.trim())
+    && items.length > 0;
 
   const precioSugeridoNum = parseFloat(formProducto.precio_venta_sugerido) || 0;
   const margenPreview =
@@ -284,7 +296,9 @@ export default function NuevaCompraPage() {
     e.preventDefault();
     setErrorSubmit(null);
     if (!header.proveedor_id) return setErrorSubmit("Seleccioná o agregá un proveedor.");
-    if (!header.nro_timbrado.trim()) return setErrorSubmit("Ingresá el N° de factura / albarán del proveedor.");
+    if (docMeta.required && !header.nro_timbrado.trim()) {
+      return setErrorSubmit(`Ingresá el ${docMeta.label.toLowerCase()} del proveedor.`);
+    }
     if (items.length === 0) return setErrorSubmit("Agregá al menos una línea de producto.");
     if (header.moneda === "USD" && tipoCambioNum <= 0) return setErrorSubmit("Cargá el tipo de cambio.");
     if (!proveedorSel) return setErrorSubmit("Proveedor no encontrado. Recargá e intentá de nuevo.");
@@ -425,12 +439,17 @@ export default function NuevaCompraPage() {
             </div>
 
             <div>
-              <label className={labelClass}>N° de factura / albarán <span className="text-red-500">*</span></label>
+              <label className={labelClass}>
+                {docMeta.label}
+                {docMeta.required
+                  ? <span className="text-red-500"> *</span>
+                  : <span className="ml-1 text-xs font-normal text-gray-400">(opcional)</span>}
+              </label>
               <input
                 type="text"
                 value={header.nro_timbrado}
                 onChange={(e) => setHeader((p) => ({ ...p, nro_timbrado: e.target.value }))}
-                placeholder="Ej: F2026-000125"
+                placeholder={docMeta.placeholder}
                 className={inputClass}
               />
             </div>

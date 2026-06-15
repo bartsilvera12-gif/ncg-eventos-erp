@@ -91,8 +91,16 @@ export async function POST(request: NextRequest) {
     const req = (k: string) => body[k] != null && String(body[k]).trim() !== "";
 
     if (!req("proveedor_id")) return NextResponse.json(errorResponse("Falta el proveedor."), { status: 400 });
-    if (!req("nro_timbrado"))
-      return NextResponse.json(errorResponse("Falta el N° de timbrado."), { status: 400 });
+
+    // nro_timbrado / N° de documento: obligatorio solo para factura y factura rectificativa.
+    // Para ticket / albaran / presupuesto puede venir vacio: se sustituye por "S/N" antes de
+    // insertar para no violar el NOT NULL en DB.
+    const TIPOS_DOC_NUM_REQUERIDO = ["factura", "rectificativa"];
+    const tipoDocRaw = typeof body.tipo_documento === "string" ? body.tipo_documento : "";
+    if (TIPOS_DOC_NUM_REQUERIDO.includes(tipoDocRaw) && !req("nro_timbrado")) {
+      return NextResponse.json(errorResponse("Falta el N° de documento del proveedor."), { status: 400 });
+    }
+    const nroDoc = req("nro_timbrado") ? String(body.nro_timbrado).trim().toUpperCase() : "S/N";
 
     const parsed = parseItems(body);
     if ("error" in parsed) return NextResponse.json(errorResponse(parsed.error), { status: 400 });
@@ -119,7 +127,7 @@ export async function POST(request: NextRequest) {
         tipo_pago: body.tipo_pago === "credito" ? "credito" : "contado",
         plazo_dias: body.plazo_dias != null && String(body.plazo_dias).trim() !== ""
           ? parseInt(String(body.plazo_dias), 10) || null : null,
-        nro_timbrado: String(body.nro_timbrado).trim().toUpperCase(),
+        nro_timbrado: nroDoc,
         created_by: ctx.auth.usuarioCatalogId ?? null,
         usuario_nombre: ctx.auth.usuarioNombre ?? ctx.auth.user?.email ?? null,
         items: parsed.items,
