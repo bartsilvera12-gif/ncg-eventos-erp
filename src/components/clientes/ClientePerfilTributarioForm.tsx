@@ -133,7 +133,7 @@ export function ClientePerfilTributarioForm({
         <>
           {tipoCliente === "empresa" && (
             <p className="text-xs text-slate-500 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2">
-              El <strong>RUC</strong> principal del cliente se registra en <strong>Datos de identificación</strong> arriba;
+              El <strong>NIF</strong> principal del cliente se registra en <strong>Datos de identificación</strong> arriba;
               aquí podés complementar <strong>dígito verificador</strong> y <strong>razón social fiscal</strong> si difieren del nombre comercial.
             </p>
           )}
@@ -146,7 +146,7 @@ export function ClientePerfilTributarioForm({
                 value={value.dv}
                 onChange={(e) => onChange({ ...value, dv: e.target.value })}
                 className={inputClass}
-                placeholder="Si aplica, separado del RUC"
+                placeholder="Si aplica, separado del NIF"
                 autoComplete="off"
               />
             </div>

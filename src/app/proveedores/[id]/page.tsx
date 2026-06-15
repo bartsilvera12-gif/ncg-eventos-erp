@@ -96,7 +96,7 @@ export default function ProveedorDetallePage() {
         <h2 className="text-base font-semibold text-slate-800 mb-4">Datos del proveedor</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-4">
           <DatoItem label="Nombre" value={proveedor.nombre} />
-          <DatoItem label="RUC" value={proveedor.ruc || "—"} />
+          <DatoItem label="NIF" value={proveedor.ruc || "—"} />
           <DatoItem label="Teléfono" value={proveedor.telefono || "—"} />
           <DatoItem label="Email" value={proveedor.email || "—"} />
           <DatoItem label="Contacto" value={proveedor.contacto || "—"} />

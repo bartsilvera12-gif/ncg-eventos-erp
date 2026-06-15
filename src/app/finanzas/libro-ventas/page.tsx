@@ -99,7 +99,7 @@ export default function LibroVentasPage() {
               <th className="px-4 py-3 font-semibold">Fecha</th>
               <th className="px-4 py-3 font-semibold">N° Control</th>
               <th className="px-4 py-3 font-semibold">Cliente</th>
-              <th className="px-4 py-3 font-semibold hidden md:table-cell">RUC</th>
+              <th className="px-4 py-3 font-semibold hidden md:table-cell">NIF</th>
               <th className="px-4 py-3 font-semibold hidden lg:table-cell">Tipo</th>
               <th className="px-4 py-3 font-semibold text-right">Subtotal</th>
               <th className="px-4 py-3 font-semibold text-right hidden md:table-cell">IVA</th>

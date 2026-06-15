@@ -172,7 +172,7 @@ function buildClienteColumns(mapNombreTipo: Record<string, string>): ClienteColu
               )}
             </div>
             {c.tipo_cliente === "empresa" && c.ruc && (
-              <p className="text-xs text-gray-400">RUC: {c.ruc}</p>
+              <p className="text-xs text-gray-400">NIF: {c.ruc}</p>
             )}
           </div>
         </div>
@@ -250,7 +250,7 @@ function buildClienteColumns(mapNombreTipo: Record<string, string>): ClienteColu
     },
     {
       key: "ruc_documento",
-      label: "RUC / documento",
+      label: "NIF / documento",
       visibleDefault: false,
       headerClassName: th,
       className: `${td} text-sm text-gray-600 whitespace-nowrap`,
@@ -418,7 +418,7 @@ export default function ClientesPage() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm ring-1 ring-[#4FAEB2]/15 p-4 flex flex-wrap gap-3 items-center">
         <input
           type="text"
-          placeholder="Buscar por nombre, código, email, RUC..."
+          placeholder="Buscar por nombre, código, email, NIF..."
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           className="flex-1 min-w-48 border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none transition-all"

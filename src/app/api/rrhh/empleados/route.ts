@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       empresa_id: ctx.auth.empresa_id,
       nombre,
       // Documento
-      tipo_documento: str("tipo_documento") ?? "CI",
+      tipo_documento: str("tipo_documento") ?? "DNI",
       documento: str("documento"),
       // Personales
       fecha_nacimiento: date("fecha_nacimiento"),

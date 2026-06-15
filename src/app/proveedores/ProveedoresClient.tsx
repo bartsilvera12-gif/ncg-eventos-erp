@@ -148,7 +148,7 @@ export default function ProveedoresClient({
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <input
             type="search"
-            placeholder="Buscar por nombre, RUC, email o categoría…"
+            placeholder="Buscar por nombre, NIF, email o categoría…"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="min-w-[200px] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-[#0EA5E9]"
@@ -183,7 +183,7 @@ export default function ProveedoresClient({
             <thead>
               <tr className="border-b border-slate-100 text-slate-600">
                 <th className="py-3 pr-4 font-semibold">Proveedor</th>
-                <th className="py-3 pr-4 font-semibold">RUC</th>
+                <th className="py-3 pr-4 font-semibold">NIF</th>
                 <th className="py-3 pr-4 font-semibold">Contacto</th>
                 <th className="py-3 pr-4 font-semibold">Categorías</th>
                 <th className="py-3 pr-4 font-semibold">Estado</th>

@@ -86,7 +86,7 @@ export default function ProveedorForm({
           </p>
         </div>
         <div>
-          <label className={labelClass}>RUC</label>
+          <label className={labelClass}>NIF</label>
           <input
             className={`${inputClass} uppercase`}
             value={values.ruc}

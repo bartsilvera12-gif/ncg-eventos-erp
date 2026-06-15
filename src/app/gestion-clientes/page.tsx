@@ -543,7 +543,7 @@ function ClienteBusquedaGlobal({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => setOpen(true)}
-            placeholder="Nombre, RUC, teléfono, correo, documento, código…"
+            placeholder="Nombre, NIF, teléfono, correo, documento, código…"
             className="min-w-0 flex-1 border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
             aria-label="Buscar cliente"
           />
@@ -591,7 +591,7 @@ function ClienteBusquedaGlobal({
                   <p className="truncate text-xs font-semibold text-slate-900">{clienteNombre(c)}</p>
                   <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
                     <span className="font-mono text-[10px] text-slate-400">{c.codigo_cliente}</span>
-                    {c.ruc ? <span className="text-[10px] text-slate-500">RUC {c.ruc}</span> : null}
+                    {c.ruc ? <span className="text-[10px] text-slate-500">NIF {c.ruc}</span> : null}
                     {c.telefono ? <span className="text-[10px] text-slate-500">{c.telefono}</span> : null}
                   </div>
                 </button>
@@ -820,7 +820,7 @@ function GestionClientesPageInner() {
             <div className="space-y-1 text-center">
               <p className="text-sm font-semibold text-slate-800">Buscá un cliente</p>
               <p className="mx-auto max-w-md text-xs leading-relaxed text-slate-500">
-                Un solo campo cubre nombre, razón social, RUC, teléfonos, correos, documento y código interno.
+                Un solo campo cubre nombre, razón social, NIF, teléfonos, correos, documento y código interno.
               </p>
             </div>
             <ClienteBusquedaGlobal
@@ -930,7 +930,7 @@ function GestionClientesPageInner() {
                     </h2>
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-slate-500">
                       <span className="font-mono text-slate-400">{selected.codigo_cliente}</span>
-                      {selected.ruc ? <span>· RUC {selected.ruc}</span> : null}
+                      {selected.ruc ? <span>· NIF {selected.ruc}</span> : null}
                       {selected.documento && !selected.ruc ? <span>· Doc. {selected.documento}</span> : null}
                     </div>
                   </div>
@@ -939,7 +939,7 @@ function GestionClientesPageInner() {
 
                 <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {[
-                    { label: "RUC", value: selected.ruc ?? "—" },
+                    { label: "NIF", value: selected.ruc ?? "—" },
                     { label: "Contacto", value: selected.nombre_contacto },
                     { label: "Correo", value: selected.email ?? "—" },
                     { label: "Teléfono", value: selected.telefono ?? "—" },

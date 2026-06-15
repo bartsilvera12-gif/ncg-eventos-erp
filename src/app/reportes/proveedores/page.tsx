@@ -79,7 +79,7 @@ export default function ProveedoresReportePage() {
                 <thead>
                   <tr className="border-b text-slate-500">
                     <th className="py-2.5 pr-4 font-medium">Proveedor</th>
-                    <th className="py-2.5 pr-4 font-medium">RUC</th>
+                    <th className="py-2.5 pr-4 font-medium">NIF</th>
                     <th className="py-2.5 pr-4 font-medium">Teléfono</th>
                     <th className="py-2.5 pr-4 font-medium text-right">Compras del mes</th>
                     <th className="py-2.5 pr-4 font-medium text-right">Total del mes</th>

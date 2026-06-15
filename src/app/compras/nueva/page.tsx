@@ -384,7 +384,7 @@ export default function NuevaCompraPage() {
               >
                 <option value="">Seleccionar proveedor...</option>
                 {proveedores.map((p) => (
-                  <option key={p.id} value={p.id}>{p.nombre} — RUC {p.ruc}</option>
+                  <option key={p.id} value={p.id}>{p.nombre} — NIF {p.ruc}</option>
                 ))}
               </select>
 
@@ -407,7 +407,7 @@ export default function NuevaCompraPage() {
                         placeholder="Ej: DISTRIBUIDORA DEL SUR S.A." className={`${inputSmClass} uppercase`} />
                     </div>
                     <div>
-                      <label className={labelSmClass}>RUC <span className="text-red-500">*</span></label>
+                      <label className={labelSmClass}>NIF <span className="text-red-500">*</span></label>
                       <input type="text" name="ruc" value={formProveedor.ruc} onChange={handleProveedorInputChange}
                         placeholder="Ej: 80012345-1" className={`${inputSmClass} ${errorRuc ? "border-red-300 bg-red-50" : ""}`} />
                       {errorRuc && <p className="mt-1 text-xs text-red-600">{errorRuc}</p>}

@@ -105,7 +105,7 @@ export default function CrearProveedorModal({ open, onClose, onCreated }: Props)
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelClass}>
-              RUC <span className="text-xs font-normal text-gray-400 ml-1">(opcional)</span>
+              NIF <span className="text-xs font-normal text-gray-400 ml-1">(opcional)</span>
             </label>
             <input
               type="text"

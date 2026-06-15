@@ -483,7 +483,7 @@ function NuevoClienteForm() {
               </div>
               <div>
                 <label className={labelClass}>
-                  {form.tipo_cliente === "empresa" ? "RUC" : "CI / Documento"}
+                  {form.tipo_cliente === "empresa" ? "NIF" : "DNI / NIE"}
                 </label>
                 {form.tipo_cliente === "empresa" ? (
                   <input

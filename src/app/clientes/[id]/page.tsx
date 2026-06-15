@@ -960,7 +960,7 @@ export default function ClienteDetailPage() {
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
                   <span className="text-gray-300 font-mono text-xs">{cliente.codigo_cliente}</span>
                   {cliente.ruc && (
-                    <span className="text-gray-300 text-xs">RUC: {cliente.ruc}</span>
+                    <span className="text-gray-300 text-xs">NIF: {cliente.ruc}</span>
                   )}
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                     cliente.estado === "activo"
@@ -1502,7 +1502,7 @@ export default function ClienteDetailPage() {
                     <input type="text" name="nombre_contacto" value={form.nombre_contacto} onChange={handleChange} className={`${inputClass} uppercase`} required />
                   </div>
                   <div>
-                    <label className={labelClass}>{form.tipo_cliente === "empresa" ? "RUC" : "CI / Documento"}</label>
+                    <label className={labelClass}>{form.tipo_cliente === "empresa" ? "NIF" : "DNI / NIE"}</label>
                     {form.tipo_cliente === "empresa" ? (
                       <input type="text" name="ruc" value={form.ruc} onChange={handleChange} className={inputClass} />
                     ) : (
@@ -1885,7 +1885,7 @@ export default function ClienteDetailPage() {
                         <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Opcional</p>
                         <p className="text-sm font-semibold text-slate-800 mt-0.5">Perfil tributario</p>
                         <p className="text-xs text-slate-500 mt-0.5 max-w-xl">
-                          Obligaciones, honorarios y vencimientos. El RUC principal sigue en Identificación.
+                          Obligaciones, honorarios y vencimientos. El NIF principal sigue en Identificación.
                         </p>
                       </div>
                       <span

@@ -161,7 +161,7 @@ export default function EmpresaForm() {
               />
             </div>
             <div>
-              <label className={fLabel}>RUC</label>
+              <label className={fLabel}>NIF</label>
               <input
                 type="text"
                 name="ruc"

@@ -41,7 +41,7 @@ type Empleado = {
 
 const FORM_INICIAL = {
   nombre: "",
-  tipo_documento: "CI",
+  tipo_documento: "DNI",
   documento: "",
   fecha_nacimiento: "",
   lugar_nacimiento: "",
@@ -70,7 +70,7 @@ const FORM_INICIAL = {
 
 const ESTADO_CIVIL_OPTS = ["soltero/a", "casado/a", "divorciado/a", "viudo/a", "unión libre"];
 const GRUPO_SANG_OPTS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const TIPO_DOC_OPTS = ["CI", "DNI", "RUC", "Pasaporte", "Otro"];
+const TIPO_DOC_OPTS = ["DNI", "NIE", "NIF", "Pasaporte", "Otro"];
 const TIPO_EMP_OPTS = ["CONTRATADO", "PERMANENTE", "JORNALERO", "PASANTE"];
 const TIPO_PERIODO_OPTS = [
   { value: "mensual",   label: "Mensual" },
@@ -310,7 +310,7 @@ type FormEmpleado = typeof FORM_INICIAL & { activo?: boolean };
 function empleadoToForm(e: Empleado): FormEmpleado {
   return {
     nombre: e.nombre,
-    tipo_documento: e.tipo_documento ?? "CI",
+    tipo_documento: e.tipo_documento ?? "DNI",
     documento: e.documento ?? "",
     fecha_nacimiento: e.fecha_nacimiento ?? "",
     lugar_nacimiento: e.lugar_nacimiento ?? "",
