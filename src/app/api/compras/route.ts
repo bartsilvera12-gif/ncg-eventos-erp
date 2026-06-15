@@ -160,8 +160,26 @@ export async function POST(request: NextRequest) {
           { status: 409 }
         );
       }
+      if (code === "23514") {
+        // CHECK constraint violation — devolver el detalle para diagnosticar
+        // (ej: iva_tipo viejo solo aceptaba 'exenta'/'5'/'10', tipo_documento
+        // sin valor permitido, etc).
+        return NextResponse.json(
+          errorResponse(`Restricción de la base no aceptó el valor: ${detail || msg || "ver logs"}`),
+          { status: 400 }
+        );
+      }
+      if (code === "42703") {
+        // undefined_column: la migración no se corrió o falta una columna.
+        return NextResponse.json(
+          errorResponse(`Columna inexistente en compras: ${msg}. ¿Corriste el ALTER TABLE?`),
+          { status: 500 }
+        );
+      }
+      // Modo diagnostico: incluir code+msg para que el usuario nos pase el error real.
+      const diag = [code, msg].filter(Boolean).join(" — ");
       return NextResponse.json(
-        errorResponse("No se pudo guardar la compra. Revisá los datos e intentá nuevamente."),
+        errorResponse(`No se pudo guardar la compra. ${diag || "Revisá los datos e intentá nuevamente."}`),
         { status: 500 }
       );
     }
