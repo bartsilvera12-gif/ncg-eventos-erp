@@ -201,7 +201,7 @@ export function UsuarioFormFields({
                   onChange={(n) => onSalarioBaseChange(n)}
                   placeholder="0"
                   className={fInput}
-                  decimals={false}
+                  decimals
                 />
               </div>
             )}

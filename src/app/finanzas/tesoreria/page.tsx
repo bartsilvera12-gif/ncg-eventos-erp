@@ -23,7 +23,7 @@ type Data = {
 };
 
 function fmtGs(n: number): string {
-  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 function fmtFecha(iso: string): string {
   try { return new Date(iso).toLocaleDateString("es-PY"); } catch { return iso.slice(0, 10); }

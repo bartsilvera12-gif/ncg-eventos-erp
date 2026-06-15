@@ -48,7 +48,7 @@ export default function ConfiguracionMetricasPage() {
                 value={form.meta_ventas_mensuales}
                 onChange={(n) => setForm((prev) => (prev ? { ...prev, meta_ventas_mensuales: n } : prev))}
                 className={F_INPUT}
-                decimals={false}
+                decimals
               />
               <ConfigHelpText>Ingreso total en ventas esperado cada mes.</ConfigHelpText>
             </div>
@@ -77,7 +77,7 @@ export default function ConfiguracionMetricasPage() {
                 value={form.meta_facturacion_mensual}
                 onChange={(n) => setForm((prev) => (prev ? { ...prev, meta_facturacion_mensual: n } : prev))}
                 className={F_INPUT}
-                decimals={false}
+                decimals
               />
               <ConfigHelpText>Monto total de facturas emitidas esperado al mes.</ConfigHelpText>
             </div>

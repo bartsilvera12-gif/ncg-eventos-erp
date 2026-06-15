@@ -180,7 +180,7 @@ export default function PagoDetalleModal({
         {/* Monto */}
         <div>
           <label className="mb-1 block text-xs text-slate-600">Monto (€) *</label>
-          <MontoInput value={monto} onChange={setMonto} decimals={false} className={inputClass} />
+          <MontoInput value={monto} onChange={setMonto} decimals className={inputClass} />
           <p className="mt-1 text-[11px] text-slate-400">
             Precargado con el total de la venta. Ajustalo si corresponde.
           </p>

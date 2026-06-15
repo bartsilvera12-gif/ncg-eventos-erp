@@ -1697,7 +1697,7 @@ export default function ClienteDetailPage() {
                   </div>
                   <div>
                     <label className={labelClass}>Valor anual estimado (€)</label>
-                    <MontoInput value={form.valor_cliente} onChange={(n) => setForm((p) => ({ ...p, valor_cliente: String(n) }))} className={inputClass} decimals={false} />
+                    <MontoInput value={form.valor_cliente} onChange={(n) => setForm((p) => ({ ...p, valor_cliente: String(n) }))} className={inputClass} decimals />
                   </div>
                 </div>
 

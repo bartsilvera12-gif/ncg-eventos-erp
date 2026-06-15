@@ -245,7 +245,7 @@ const PEDIDO_MODALIDAD_BADGE: Record<
 function fmtPedidoTotal(n: number | string | null | undefined): string {
   if (n == null) return "—";
   const v = typeof n === "string" ? Number(n) : n;
-  return "€ " + Math.round(v || 0).toLocaleString("es-PY");
+  return "€ " + (v || 0).toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 function fmtPedidoHora(s: string | null | undefined): string {

@@ -26,7 +26,7 @@ const ES_GASTRONOMIA =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_NEURA_VERTICAL?.trim().toLowerCase()) === "gastronomia";
 
 function formatGs(valor: number) {
-  return `€ ${Math.round(valor).toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 function calcIva(tipo: TipoIvaVenta, base: number) {
@@ -436,7 +436,7 @@ export default function NuevaVentaPage() {
                           onChange={(n) => setMontoRecibido(String(n))}
                           placeholder="Ej: 100.000"
                           className={inputClass}
-                          decimals={false}
+                          decimals
                         />
                       </div>
                       {montoRecibidoNum > 0 && (

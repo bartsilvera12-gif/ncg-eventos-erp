@@ -14,7 +14,7 @@ import { useIsAdmin } from "@/lib/auth/use-is-admin";
 import type { Proveedor, ResumenProveedores, ProveedorComprasStat } from "@/lib/proveedores/types";
 
 function formatGs(v: number) {
-  return `€ ${Math.round(v).toLocaleString("es-PY")}`;
+  return `€ ${(v).toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 function formatFechaCorta(iso: string | null): string {
   if (!iso) return "—";

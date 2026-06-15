@@ -11,7 +11,7 @@ import { mesActualAsuncion } from "@/lib/fechas/asuncion-bounds";
 import type { ProveedoresReporte } from "@/lib/reportes/types";
 
 function formatGs(v: number) {
-  return `€ ${Math.round(v).toLocaleString("es-PY")}`;
+  return `€ ${(v).toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 function formatFecha(iso: string | null) {
   if (!iso) return "—";

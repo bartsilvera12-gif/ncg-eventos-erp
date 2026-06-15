@@ -753,7 +753,7 @@ export default function EditarProductoPage() {
                 value={form.costo_promedio}
                 onChange={handleCostoChange}
                 className={inputClass}
-                decimals={false}
+                decimals
                 required
               />
             </div>
@@ -770,7 +770,7 @@ export default function EditarProductoPage() {
                         value={form.precio_minorista}
                         onChange={handleMinoristaChange}
                         className={inputClass}
-                        decimals={false}
+                        decimals
                         required={showPrecioVenta}
                       />
                     </div>
@@ -799,7 +799,7 @@ export default function EditarProductoPage() {
                         value={form.precio_mayorista}
                         onChange={handleMayoristaChange}
                         className={inputClass}
-                        decimals={false}
+                        decimals
                       />
                     </div>
                     <div>

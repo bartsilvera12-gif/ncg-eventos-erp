@@ -33,7 +33,7 @@ type Data = {
 type SortKey = "titulo" | "presupuestado" | "facturado" | "costo_total" | "margen" | "margen_pct";
 
 function fmtGs(n: number): string {
-  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 function fmtPct(n: number): string {
   return `${n.toFixed(1)}%`;

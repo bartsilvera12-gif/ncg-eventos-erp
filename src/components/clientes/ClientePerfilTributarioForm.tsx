@@ -213,7 +213,7 @@ export function ClientePerfilTributarioForm({
                 value={value.honorario_mensual}
                 onChange={(n) => onChange({ ...value, honorario_mensual: String(n) })}
                 className={inputClass}
-                decimals={false}
+                decimals
               />
             </div>
             <div>
@@ -222,7 +222,7 @@ export function ClientePerfilTributarioForm({
                 value={value.honorario_anual}
                 onChange={(n) => onChange({ ...value, honorario_anual: String(n) })}
                 className={inputClass}
-                decimals={false}
+                decimals
               />
             </div>
           </div>

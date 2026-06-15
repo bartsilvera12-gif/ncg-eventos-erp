@@ -8,7 +8,7 @@ import { getCompraDetalle, getFacturaSignedUrl } from "@/lib/compras/storage";
 import type { CompraDetalle } from "@/lib/compras/types";
 
 function formatGs(valor: number) {
-  return `€ ${Math.round(valor).toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 function formatFecha(iso: string) {

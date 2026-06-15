@@ -14,7 +14,7 @@ import type { MetodoValuacion, Producto } from "@/lib/inventario/types";
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatGs(valor: number) {
-  return `€ ${Math.round(valor).toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 function ivaRate(t: TipoIva) {
@@ -467,7 +467,7 @@ export default function NuevaCompraPage() {
                 <label className={labelClass}>Tipo de cambio (USD → €) <span className="text-red-500">*</span></label>
                 <MontoInput value={header.tipo_cambio}
                   onChange={(n) => setHeader((p) => ({ ...p, tipo_cambio: String(n) }))}
-                  placeholder="Ej: 7500" className={inputClass} decimals={false} />
+                  placeholder="Ej: 7500" className={inputClass} decimals />
               </div>
             )}
           </section>
@@ -579,7 +579,7 @@ export default function NuevaCompraPage() {
                       <label className={labelSmClass}>Precio de venta sugerido (€)</label>
                       <MontoInput value={formProducto.precio_venta_sugerido}
                         onChange={(n) => setFormProducto((prev) => ({ ...prev, precio_venta_sugerido: String(n) }))}
-                        placeholder="Ej: 75000" className={inputSmClass} decimals={false} />
+                        placeholder="Ej: 75000" className={inputSmClass} decimals />
                       {margenPreview !== null && (
                         <p className="mt-1 text-xs text-gray-500">
                           Margen s/venta: {margenPreview.toFixed(2)}% (costo línea: {formatGs(costoPYG)})

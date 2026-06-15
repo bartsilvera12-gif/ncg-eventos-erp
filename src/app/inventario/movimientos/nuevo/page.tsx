@@ -213,7 +213,7 @@ export default function NuevoMovimientoPage() {
                 onChange={(n) => setForm((prev) => ({ ...prev, costo_unitario: String(n) }))}
                 placeholder="Ej: 35000"
                 className={inputClass}
-                decimals={false}
+                decimals
                 required
               />
             </div>

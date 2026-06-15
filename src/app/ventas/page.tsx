@@ -15,7 +15,7 @@ import PresupuestoActions from "@/components/ventas/PresupuestoActions";
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatGs(valor: number) {
-  return `€ ${Math.round(valor).toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 function formatFecha(iso: string) {
@@ -234,7 +234,7 @@ export default function VentasPage() {
             label="Ticket promedio"
             value={
               metricas.ticketPromedio > 0
-                ? `€ ${Math.round(metricas.ticketPromedio).toLocaleString("es-PY")}`
+                ? `€ ${metricas.ticketPromedio.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
                 : "—"
             }
             sub="Por orden de venta"

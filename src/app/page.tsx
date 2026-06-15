@@ -118,7 +118,7 @@ function formatGsFull(n: number): string {
     const b = num / 1_000_000_000;
     return `${b.toFixed(2).replace(".", ",")} MM`;
   }
-  return Math.round(num).toLocaleString("es-PY");
+  return num.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 /** Formato abreviado (mantengo para charts/ejes donde el espacio es limitado). */

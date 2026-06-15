@@ -22,7 +22,7 @@ type Fila = {
 type Data = { filas: Fila[]; totales: { cantidad: number; compras: number; gastos: number; saldo: number } };
 
 function fmtGs(n: number): string {
-  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 function fmtFecha(iso: string | null): string {
   if (!iso) return "—";

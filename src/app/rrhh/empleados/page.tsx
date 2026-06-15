@@ -80,7 +80,7 @@ const TIPO_PERIODO_OPTS = [
 ];
 
 function fmtGs(n: number): string {
-  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 export default function EmpleadosPage() {
@@ -510,11 +510,11 @@ function EmpleadoFormFields({
 
       <Section titulo="Compensación">
         <Field label="Salario base (€)">
-          <MontoInput className={inputCls} decimals={false} value={form.salario_base}
+          <MontoInput className={inputCls} decimals value={form.salario_base}
             onChange={(n) => set("salario_base", String(n))} placeholder="0" />
         </Field>
         <Field label="Salario complementario (€)" hint="Bonos, antigüedad, etc.">
-          <MontoInput className={inputCls} decimals={false} value={form.salario_complementario}
+          <MontoInput className={inputCls} decimals value={form.salario_complementario}
             onChange={(n) => set("salario_complementario", String(n))} placeholder="0" />
         </Field>
         <Field label="Costo por hora (€)" hint="Se usa para imputar mano de obra a las obras.">
