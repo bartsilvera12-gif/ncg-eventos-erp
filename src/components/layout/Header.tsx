@@ -88,7 +88,7 @@ export default function Header() {
   return (
     <header
       id="neura-header"
-      className="z-40 flex h-16 shrink-0 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-3 sm:px-6 shadow-[inset_0_-1px_0_0_rgba(10,37,64,0.05)] backdrop-blur-sm"
+      className="z-40 flex h-20 shrink-0 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-3 sm:px-6 shadow-[inset_0_-1px_0_0_rgba(10,37,64,0.05)] backdrop-blur-sm"
     >
       {/* Botón hamburger (mobile + tablet: abre el sidebar como drawer hasta lg) */}
       <button
@@ -111,7 +111,7 @@ export default function Header() {
           <img
             src="/banner2.png"
             alt="Banner"
-            className="h-full w-full object-cover object-center rounded-md opacity-60"
+            className="h-full w-full object-contain object-center rounded-md"
           />
         </div>
       ) : (
