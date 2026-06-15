@@ -130,7 +130,7 @@ export default function NuevaRecetaPage() {
             >
               {productos.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.nombre} ({p.sku}) — Gs. {Number(p.precio_venta).toLocaleString("es-PY")}
+                  {p.nombre} ({p.sku}) — € {Number(p.precio_venta).toLocaleString("es-PY")}
                 </option>
               ))}
             </select>

@@ -27,7 +27,7 @@ function badge(tipo: ReturnType<typeof classifyProducto>) {
 }
 
 function fmtGs(n: number) {
-  return "Gs. " + Number(n || 0).toLocaleString("es-PY", { maximumFractionDigits: 0 });
+  return "€ " + Number(n || 0).toLocaleString("es-PY", { maximumFractionDigits: 0 });
 }
 
 export default function GastroInventoryView({

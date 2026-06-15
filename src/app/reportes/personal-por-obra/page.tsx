@@ -18,7 +18,7 @@ type Obra = {
 type Data = { obras: Obra[]; totales: { horas: number; costo: number }; cantidad: number };
 
 function fmtGs(n: number): string {
-  return `Gs. ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
 }
 
 export default function PersonalPorObraPage() {

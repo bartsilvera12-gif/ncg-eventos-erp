@@ -195,7 +195,7 @@ export function UsuarioFormFields({
           <div className="grid grid-cols-2 gap-4">
             {showSalario && (
               <div>
-                <label className={fLabel}>Salario base (Gs.)</label>
+                <label className={fLabel}>Salario base (€)</label>
                 <MontoInput
                   value={form.salario_base}
                   onChange={(n) => onSalarioBaseChange(n)}

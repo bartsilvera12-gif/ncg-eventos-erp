@@ -53,7 +53,7 @@ type Producto = {
 
 function fmtGs(n: number | null | undefined) {
   if (n == null) return "—";
-  return "Gs. " + Number(n).toLocaleString("es-PY", { maximumFractionDigits: 0 });
+  return "€ " + Number(n).toLocaleString("es-PY", { maximumFractionDigits: 0 });
 }
 
 export default function EditarRecetaPage() {

@@ -79,7 +79,7 @@ function escapeHtml(s: string): string {
 }
 
 function formatGs(v: number): string {
-  return `Gs. ${Math.round(v).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(v).toLocaleString("es-PY")}`;
 }
 
 function formatFecha(iso: string): string {

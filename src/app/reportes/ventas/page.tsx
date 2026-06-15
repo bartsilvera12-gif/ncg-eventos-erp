@@ -10,7 +10,7 @@ import { mesActualAsuncion } from "@/lib/fechas/asuncion-bounds";
 import type { VentasReporte } from "@/lib/reportes/types";
 
 function formatGs(v: number) {
-  return `Gs. ${Math.round(v).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(v).toLocaleString("es-PY")}`;
 }
 function formatFecha(iso: string) {
   try {

@@ -119,7 +119,7 @@ export default function NotaCreditoDetalleClient() {
           <div>
             <dt className="text-slate-400 text-xs">Monto NC</dt>
             <dd className="font-bold text-amber-900 tabular-nums">
-              {moneda === "USD" ? "USD" : "Gs."} {Number(nc.monto).toLocaleString(moneda === "USD" ? "en-US" : "es-PY")}
+              {moneda === "USD" ? "USD" : "€"} {Number(nc.monto).toLocaleString(moneda === "USD" ? "en-US" : "es-PY")}
             </dd>
           </div>
           <div>

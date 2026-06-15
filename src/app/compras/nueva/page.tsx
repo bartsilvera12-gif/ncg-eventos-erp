@@ -14,7 +14,7 @@ import type { MetodoValuacion, Producto } from "@/lib/inventario/types";
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatGs(valor: number) {
-  return `Gs. ${Math.round(valor).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(valor).toLocaleString("es-PY")}`;
 }
 
 function ivaRate(t: TipoIva) {
@@ -464,7 +464,7 @@ export default function NuevaCompraPage() {
             )}
             {header.moneda === "USD" && (
               <div>
-                <label className={labelClass}>Tipo de cambio (USD → Gs.) <span className="text-red-500">*</span></label>
+                <label className={labelClass}>Tipo de cambio (USD → €) <span className="text-red-500">*</span></label>
                 <MontoInput value={header.tipo_cambio}
                   onChange={(n) => setHeader((p) => ({ ...p, tipo_cambio: String(n) }))}
                   placeholder="Ej: 7500" className={inputClass} decimals={false} />
@@ -495,7 +495,7 @@ export default function NuevaCompraPage() {
                     placeholder="Ej: 50" className={inputClass} />
                 </div>
                 <div className="md:col-span-2">
-                  <label className={labelSmClass}>Costo ({header.moneda === "USD" ? "USD" : "Gs."})</label>
+                  <label className={labelSmClass}>Costo ({header.moneda === "USD" ? "USD" : "€"})</label>
                   <MontoInput value={linea.costo_input}
                     onChange={(n) => { setErrorLinea(null); setLinea((p) => ({ ...p, costo_input: String(n) })); }}
                     placeholder={header.moneda === "USD" ? "Ej: 12" : "Ej: 35000"}
@@ -576,7 +576,7 @@ export default function NuevaCompraPage() {
                         placeholder="Ej: 5" min={0} className={inputSmClass} />
                     </div>
                     <div className="col-span-2">
-                      <label className={labelSmClass}>Precio de venta sugerido (Gs.)</label>
+                      <label className={labelSmClass}>Precio de venta sugerido (€)</label>
                       <MontoInput value={formProducto.precio_venta_sugerido}
                         onChange={(n) => setFormProducto((prev) => ({ ...prev, precio_venta_sugerido: String(n) }))}
                         placeholder="Ej: 75000" className={inputSmClass} decimals={false} />

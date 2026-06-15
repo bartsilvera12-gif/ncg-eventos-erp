@@ -762,7 +762,7 @@ function NuevoClienteForm() {
                 {formContado.emitir_factura && (
                   <>
                     <div>
-                      <label className={labelClass}>Monto (Gs.)</label>
+                      <label className={labelClass}>Monto (€)</label>
                       <MontoInput
                         value={formContado.monto}
                         onChange={(n) => setFormContado((p) => ({ ...p, monto: String(n) }))}
@@ -790,7 +790,7 @@ function NuevoClienteForm() {
               <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
                 <SectionTitle>Configuración de suscripción</SectionTitle>
                 <div>
-                  <label className={labelClass}>Precio (Gs.)</label>
+                  <label className={labelClass}>Precio (€)</label>
                   <MontoInput
                     value={formSusc.precio}
                     onChange={(n) => setFormSusc((p) => ({ ...p, precio: String(n) }))}

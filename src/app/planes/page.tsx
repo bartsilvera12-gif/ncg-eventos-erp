@@ -13,7 +13,7 @@ function formatGs(n: number) {
 
 function formatPrecio(p: Plan) {
   if (p.moneda === "USD") return `USD ${p.precio.toLocaleString("en-US")}`;
-  return `Gs. ${formatGs(p.precio)}`;
+  return `€ ${formatGs(p.precio)}`;
 }
 
 function limiteLabel(v: number | null) {

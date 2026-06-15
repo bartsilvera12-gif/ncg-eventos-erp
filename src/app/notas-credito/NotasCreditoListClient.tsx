@@ -309,7 +309,7 @@ export default function NotasCreditoListClient() {
                       </Link>
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums font-medium">
-                      {nc.moneda_snapshot === "USD" ? "USD" : "Gs."} {formatGs(nc.monto, nc.moneda_snapshot)}
+                      {nc.moneda_snapshot === "USD" ? "USD" : "€"} {formatGs(nc.monto, nc.moneda_snapshot)}
                     </td>
                     <td className="px-3 py-2">
                       <span className={badgeErp(nc.estado_erp)}>{nc.estado_erp}</span>

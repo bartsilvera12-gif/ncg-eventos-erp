@@ -182,7 +182,7 @@ export function FacturaCorreccionFiscalNC({
   } | null>(null);
   const [sifenPrevueloFactura, setSifenPrevueloFactura] = useState<SifenPrevueloFacturaNcDTO | null>(null);
 
-  const monedaLabel = moneda === "USD" ? "USD" : "Gs.";
+  const monedaLabel = moneda === "USD" ? "USD" : "€";
 
   const reload = useCallback(async () => {
     setLoading(true);

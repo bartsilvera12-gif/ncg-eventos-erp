@@ -208,7 +208,7 @@ export function ClientePerfilTributarioForm({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Honorario mensual (Gs.)</label>
+              <label className={labelClass}>Honorario mensual (€)</label>
               <MontoInput
                 value={value.honorario_mensual}
                 onChange={(n) => onChange({ ...value, honorario_mensual: String(n) })}
@@ -217,7 +217,7 @@ export function ClientePerfilTributarioForm({
               />
             </div>
             <div>
-              <label className={labelClass}>Honorario anual (Gs.)</label>
+              <label className={labelClass}>Honorario anual (€)</label>
               <MontoInput
                 value={value.honorario_anual}
                 onChange={(n) => onChange({ ...value, honorario_anual: String(n) })}

@@ -135,7 +135,7 @@ export function ModalCambioPlanGestion({
                 <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3 text-sm text-slate-800">
                   <p>
                     <span className="font-medium text-slate-600">Plan actual:</span> {ctx.suscripcion.plan_nombre} —{" "}
-                    {ctx.suscripcion.moneda === "USD" ? "US$" : "Gs."}{" "}
+                    {ctx.suscripcion.moneda === "USD" ? "US$" : "€"}{" "}
                     {ctx.suscripcion.moneda === "GS" ? formatGs(ctx.suscripcion.precio) : ctx.suscripcion.precio}
                   </p>
                   {ctx.suscripcion.plan_pendiente_id && ctx.suscripcion.plan_pendiente_vigente_desde ? (
@@ -156,13 +156,13 @@ export function ModalCambioPlanGestion({
                       {ctx.factura_monto != null
                         ? ctx.factura_moneda === "USD" || (ctx.factura_moneda == null && ctx.suscripcion?.moneda === "USD")
                           ? `US$ ${ctx.factura_monto}`
-                          : `Gs. ${formatGs(ctx.factura_monto)}`
+                          : `€ ${formatGs(ctx.factura_monto)}`
                         : "—"}{" "}
                       · saldo:{" "}
                       {ctx.factura_saldo != null
                         ? ctx.factura_moneda === "USD" || (ctx.factura_moneda == null && ctx.suscripcion?.moneda === "USD")
                           ? `US$ ${ctx.factura_saldo}`
-                          : `Gs. ${formatGs(ctx.factura_saldo)}`
+                          : `€ ${formatGs(ctx.factura_saldo)}`
                         : "—"}
                     </p>
                   ) : null}
@@ -201,7 +201,7 @@ export function ModalCambioPlanGestion({
                     >
                       {ctx.planes.map((p) => (
                         <option key={p.id} value={p.id}>
-                          {p.nombre} — {p.moneda === "USD" ? "US$" : "Gs."} {p.moneda === "GS" ? formatGs(p.precio) : p.precio} / {p.moneda}
+                          {p.nombre} — {p.moneda === "USD" ? "US$" : "€"} {p.moneda === "GS" ? formatGs(p.precio) : p.precio} / {p.moneda}
                         </option>
                       ))}
                     </select>
@@ -210,7 +210,7 @@ export function ModalCambioPlanGestion({
                     <p className="text-sm text-slate-700">
                       <span className="text-slate-500">Precio (plan):</span>{" "}
                       <span className="font-semibold">
-                        {planElegido.moneda === "USD" ? "US$ " : "Gs. "}
+                        {planElegido.moneda === "USD" ? "US$ " : "€ "}
                         {planElegido.moneda === "GS" ? formatGs(planElegido.precio) : planElegido.precio} {planElegido.moneda}
                       </span>
                     </p>

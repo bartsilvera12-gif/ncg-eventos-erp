@@ -26,7 +26,7 @@ const ES_GASTRONOMIA =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_NEURA_VERTICAL?.trim().toLowerCase()) === "gastronomia";
 
 function formatGs(valor: number) {
-  return `Gs. ${Math.round(valor).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(valor).toLocaleString("es-PY")}`;
 }
 
 function calcIva(tipo: TipoIvaVenta, base: number) {
@@ -322,7 +322,7 @@ export default function NuevaVentaPage() {
                       <th className="py-2.5 pr-3 font-medium text-right">Precio unit.</th>
                       <th className="py-2.5 pr-3 font-medium text-center hidden md:table-cell">IVA</th>
                       <th className="py-2.5 pr-3 font-medium text-right hidden lg:table-cell">Subtotal</th>
-                      <th className="py-2.5 pr-3 font-medium text-right hidden lg:table-cell">IVA Gs.</th>
+                      <th className="py-2.5 pr-3 font-medium text-right hidden lg:table-cell">IVA €</th>
                       <th className="py-2.5 pr-3 font-medium text-right">Total</th>
                       <th className="py-2.5 font-medium"></th>
                     </tr>
@@ -429,7 +429,7 @@ export default function NuevaVentaPage() {
                       </div>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">
-                          Monto recibido (Gs.)
+                          Monto recibido (€)
                         </label>
                         <MontoInput
                           value={montoRecibido}

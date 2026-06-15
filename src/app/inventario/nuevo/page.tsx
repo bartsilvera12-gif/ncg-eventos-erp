@@ -741,7 +741,7 @@ export default function NuevoProductoPage() {
 
             {/* Costo promedio */}
             <div className="sm:max-w-xs">
-              <label className={labelClass}>Costo promedio (Gs.)</label>
+              <label className={labelClass}>Costo promedio (€)</label>
               <MontoInput
                 value={form.costo_promedio}
                 onChange={handleCostoChange}
@@ -759,7 +759,7 @@ export default function NuevoProductoPage() {
                   <p className="text-xs font-semibold text-slate-700 mb-3">Minorista (público)</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className={labelClass}>Precio (Gs.)</label>
+                      <label className={labelClass}>Precio (€)</label>
                       <MontoInput
                         value={form.precio_minorista}
                         onChange={handleMinoristaChange}
@@ -793,7 +793,7 @@ export default function NuevoProductoPage() {
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className={labelClass}>Precio (Gs.)</label>
+                      <label className={labelClass}>Precio (€)</label>
                       <MontoInput
                         value={form.precio_mayorista}
                         onChange={handleMayoristaChange}
@@ -863,7 +863,7 @@ export default function NuevoProductoPage() {
                     <p className={`text-xs mt-0.5 ${esPerdida ? "text-red-400" : "text-green-400"}`}>
                       {esPerdida
                         ? "Este precio genera pérdida neta en cada venta"
-                        : `De cada Gs. vendido, ${margenVentaCalc.toFixed(0)}% es ganancia`}
+                        : `De cada € vendido, ${margenVentaCalc.toFixed(0)}% es ganancia`}
                     </p>
                   </div>
                 </div>

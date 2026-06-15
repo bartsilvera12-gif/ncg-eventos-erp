@@ -515,7 +515,7 @@ export default function EditProspectoPage() {
 
           {/* Valor estimado */}
           <div>
-            <label className={labelClass}>Valor estimado (Gs.)</label>
+            <label className={labelClass}>Valor estimado (€)</label>
             <input
               type="text"
               readOnly

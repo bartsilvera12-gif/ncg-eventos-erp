@@ -748,7 +748,7 @@ export default function EditarProductoPage() {
 
             {/* Costo promedio */}
             <div className="sm:max-w-xs">
-              <label className={labelClass}>Costo promedio (Gs.)</label>
+              <label className={labelClass}>Costo promedio (€)</label>
               <MontoInput
                 value={form.costo_promedio}
                 onChange={handleCostoChange}
@@ -765,7 +765,7 @@ export default function EditarProductoPage() {
                   <p className="text-xs font-semibold text-slate-700 mb-3">Minorista (público)</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className={labelClass}>Precio (Gs.)</label>
+                      <label className={labelClass}>Precio (€)</label>
                       <MontoInput
                         value={form.precio_minorista}
                         onChange={handleMinoristaChange}
@@ -794,7 +794,7 @@ export default function EditarProductoPage() {
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className={labelClass}>Precio (Gs.)</label>
+                      <label className={labelClass}>Precio (€)</label>
                       <MontoInput
                         value={form.precio_mayorista}
                         onChange={handleMayoristaChange}

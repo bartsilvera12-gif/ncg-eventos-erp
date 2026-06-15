@@ -278,7 +278,7 @@ export default function NuevoProspectoPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className={labelClass}>Valor estimado (Gs.)</label>
+                <label className={labelClass}>Valor estimado (€)</label>
                 <input
                   type="text"
                   readOnly

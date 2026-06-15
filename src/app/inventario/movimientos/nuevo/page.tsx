@@ -207,7 +207,7 @@ export default function NuevoMovimientoPage() {
             </div>
 
             <div>
-              <label className={labelClass}>Costo unitario (Gs.)</label>
+              <label className={labelClass}>Costo unitario (€)</label>
               <MontoInput
                 value={form.costo_unitario}
                 onChange={(n) => setForm((prev) => ({ ...prev, costo_unitario: String(n) }))}

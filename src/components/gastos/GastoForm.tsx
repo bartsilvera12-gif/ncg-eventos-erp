@@ -104,7 +104,7 @@ export default function GastoForm({ gasto, onSuccess }: Props) {
             />
           </div>
           <div>
-            <label className={fLabel}>Monto (Gs.) *</label>
+            <label className={fLabel}>Monto (€) *</label>
             <MontoInput
               value={form.monto}
               onChange={(n) => setForm((prev) => ({ ...prev, monto: n }))}

@@ -26,7 +26,7 @@ type Data = {
 };
 
 function fmtGs(n: number): string {
-  return `Gs. ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
 }
 
 export default function StockBajoPage() {
@@ -78,7 +78,7 @@ export default function StockBajoPage() {
               <th className="px-4 py-3 font-semibold text-right">Stock actual</th>
               <th className="px-4 py-3 font-semibold text-right">Mínimo</th>
               <th className="px-4 py-3 font-semibold text-right">Déficit</th>
-              <th className="px-4 py-3 font-semibold text-right hidden lg:table-cell">Reposición Gs.</th>
+              <th className="px-4 py-3 font-semibold text-right hidden lg:table-cell">Reposición €</th>
               <th className="px-4 py-3 font-semibold text-center">Estado</th>
             </tr>
           </thead>

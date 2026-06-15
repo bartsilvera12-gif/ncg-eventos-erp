@@ -44,7 +44,7 @@ const FORM_INICIAL = {
   documento: "",
   fecha_nacimiento: "",
   lugar_nacimiento: "",
-  nacionalidad: "Paraguaya",
+  nacionalidad: "Española",
   estado_civil: "",
   grupo_sanguineo: "",
   direccion: "",
@@ -79,7 +79,7 @@ const TIPO_PERIODO_OPTS = [
 ];
 
 function fmtGs(n: number): string {
-  return `Gs. ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
 }
 
 export default function EmpleadosPage() {
@@ -274,7 +274,7 @@ function empleadoToForm(e: Empleado): FormEmpleado {
     documento: e.documento ?? "",
     fecha_nacimiento: e.fecha_nacimiento ?? "",
     lugar_nacimiento: e.lugar_nacimiento ?? "",
-    nacionalidad: e.nacionalidad ?? "Paraguaya",
+    nacionalidad: e.nacionalidad ?? "Española",
     estado_civil: e.estado_civil ?? "",
     grupo_sanguineo: e.grupo_sanguineo ?? "",
     direccion: e.direccion ?? "",
@@ -469,15 +469,15 @@ function EmpleadoFormFields({
       </Section>
 
       <Section titulo="Compensación">
-        <Field label="Salario base (Gs.)">
+        <Field label="Salario base (€)">
           <input type="number" inputMode="numeric" className={inputCls} value={form.salario_base}
             onChange={(e) => set("salario_base", e.target.value)} />
         </Field>
-        <Field label="Salario complementario (Gs.)" hint="Bonos, antigüedad, etc.">
+        <Field label="Salario complementario (€)" hint="Bonos, antigüedad, etc.">
           <input type="number" inputMode="numeric" className={inputCls} value={form.salario_complementario}
             onChange={(e) => set("salario_complementario", e.target.value)} />
         </Field>
-        <Field label="Costo por hora (Gs.)" hint="Se usa para imputar mano de obra a las obras.">
+        <Field label="Costo por hora (€)" hint="Se usa para imputar mano de obra a las obras.">
           <input type="number" inputMode="numeric" className={inputCls} value={form.costo_hora}
             onChange={(e) => set("costo_hora", e.target.value)} />
         </Field>

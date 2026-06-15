@@ -18,7 +18,7 @@ type Asignacion = {
 };
 
 function fmtGs(n: number): string {
-  return `Gs. ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
 }
 
 function fmtFecha(iso: string): string {

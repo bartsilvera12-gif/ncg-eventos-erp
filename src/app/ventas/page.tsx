@@ -15,7 +15,7 @@ import PresupuestoActions from "@/components/ventas/PresupuestoActions";
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatGs(valor: number) {
-  return `Gs. ${Math.round(valor).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(valor).toLocaleString("es-PY")}`;
 }
 
 function formatFecha(iso: string) {
@@ -221,7 +221,7 @@ export default function VentasPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Facturación de hoy"
-            value={`Gs. ${metricas.facturacion.toLocaleString("es-PY")}`}
+            value={`€ ${metricas.facturacion.toLocaleString("es-PY")}`}
             sub="Total incl. IVA"
             accent
           />
@@ -234,7 +234,7 @@ export default function VentasPage() {
             label="Ticket promedio"
             value={
               metricas.ticketPromedio > 0
-                ? `Gs. ${Math.round(metricas.ticketPromedio).toLocaleString("es-PY")}`
+                ? `€ ${Math.round(metricas.ticketPromedio).toLocaleString("es-PY")}`
                 : "—"
             }
             sub="Por orden de venta"

@@ -506,7 +506,7 @@ function UsuarioDetailContent() {
               {[
                 { label: "Fecha de ingreso", value: formatFecha(usuario.fecha_ingreso) },
                 { label: "Tipo de contrato", value: labelTipoContrato(usuario.tipo_contrato) },
-                { label: "Salario base (Gs.)", value: fmtGs(usuario.salario_base ?? undefined) },
+                { label: "Salario base (€)", value: fmtGs(usuario.salario_base ?? undefined) },
                 {
                   label: "Comisión (%)",
                   value:

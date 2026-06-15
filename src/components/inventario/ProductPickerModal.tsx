@@ -58,7 +58,7 @@ interface Props {
 }
 
 function formatGs(v: number): string {
-  return `Gs. ${Math.round(v).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(v).toLocaleString("es-PY")}`;
 }
 
 /**
@@ -393,7 +393,7 @@ export default function ProductPickerModal({
                     </div>
                     <div>
                       <label className="block text-[11px] uppercase text-slate-400 mb-1">
-                        Precio ({moneda === "USD" ? "USD" : "Gs."})
+                        Precio ({moneda === "USD" ? "USD" : "€"})
                       </label>
                       <input
                         type="number" min={0}

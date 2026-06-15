@@ -21,7 +21,7 @@ const metodoTone: Record<MetodoValuacion, BadgeTone> = {
 };
 
 function formatGs(valor: number) {
-  return `Gs. ${valor.toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-PY")}`;
 }
 
 function foldText(s: string): string {

@@ -80,7 +80,7 @@ export default function ChartCobradoPorDia({
               <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 shadow-lg">
                 <p className="font-medium text-slate-500">{formatFecha(row.fecha)}</p>
                 <p className="mt-1.5 text-sm font-semibold tabular-nums text-slate-900">
-                  Gs. {formatGs(row.monto)}
+                  € {formatGs(row.monto)}
                 </p>
                 <p className="mt-1 text-[11px] text-slate-500">
                   {row.count} pago{row.count === 1 ? "" : "s"}

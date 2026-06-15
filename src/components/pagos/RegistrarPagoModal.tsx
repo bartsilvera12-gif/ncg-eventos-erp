@@ -25,7 +25,7 @@ function saldoDescripcion(f: RegistrarPagoFacturaRef) {
       maximumFractionDigits: 2,
     })}`;
   }
-  return `Factura ${f.numero_factura} — Saldo: Gs. ${f.saldo.toLocaleString("es-PY")}`;
+  return `Factura ${f.numero_factura} — Saldo: € ${f.saldo.toLocaleString("es-PY")}`;
 }
 
 export function RegistrarPagoModal({

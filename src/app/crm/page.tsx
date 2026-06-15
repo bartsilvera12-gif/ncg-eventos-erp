@@ -141,7 +141,7 @@ function ProspectoCard({
         </div>
       </div>
       <p className="text-[10px] text-gray-500 line-clamp-1 mb-0.5">{prospecto.servicio}</p>
-      <p className="text-xs font-bold text-gray-900 tabular-nums mb-1">Gs. {prospecto.valor_estimado.toLocaleString("es-PY")}</p>
+      <p className="text-xs font-bold text-gray-900 tabular-nums mb-1">€ {prospecto.valor_estimado.toLocaleString("es-PY")}</p>
       <div className="text-[10px] text-gray-600 truncate mb-1">👤 {prospecto.contacto}</div>
       {prospecto.proxima_accion && (
         <div className="flex items-start gap-0.5 bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5 mb-1">
@@ -236,7 +236,7 @@ function Columna({
             <span className={`font-semibold text-xs ${cfg.headerText}`}>{etapa.nombre}</span>
             <span className="text-[10px] bg-white/70 text-gray-600 px-1 py-0.5 rounded font-semibold">{prospectos.length}</span>
           </div>
-          {total > 0 && <span className="text-[10px] text-gray-500 tabular-nums font-semibold">Gs. {formatGs(total)}</span>}
+          {total > 0 && <span className="text-[10px] text-gray-500 tabular-nums font-semibold">€ {formatGs(total)}</span>}
         </div>
       </div>
       <div className="flex-1 p-1.5 space-y-1.5 overflow-y-auto min-h-16 max-h-[calc(100vh-260px)]">
@@ -395,7 +395,7 @@ export default function CrmPage() {
         <MetricCard label="Leads Hoy" value={leadsHoy} sub="creados hoy" color="border-slate-200" icon={Users} />
         <MetricCard label="Leads del Mes" value={leadsMes} sub="creados en el mes" color="border-slate-200" icon={Calendar} />
         <TopProductosWidget items={topProductos} total={valorNegociacion} />
-        <MetricCard label="Valor en Negociación" value={`Gs. ${formatGs(valorNegociacion)}`} sub="pipeline activo" color="border-amber-200" icon={DollarSign} />
+        <MetricCard label="Valor en Negociación" value={`€ ${formatGs(valorNegociacion)}`} sub="pipeline activo" color="border-amber-200" icon={DollarSign} />
         <MetricCard label="Ganados Hoy" value={ganadosHoy} sub="cierres del día" color="border-green-200" icon={Trophy} />
         <MetricCard label="Ganados del Mes" value={ganadosMes} sub="cierres del mes" color="border-green-200" icon={Trophy} />
       </div>

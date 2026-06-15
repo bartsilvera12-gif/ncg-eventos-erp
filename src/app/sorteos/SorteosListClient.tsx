@@ -8,7 +8,7 @@ import type { Sorteo } from "@/lib/sorteos/types";
 
 function formatGs(n: number) {
   const s = Math.round(n).toLocaleString("es-PY", { maximumFractionDigits: 0 });
-  return `Gs. ${s}`;
+  return `€ ${s}`;
 }
 
 function formatFecha(iso: string | null) {

@@ -106,8 +106,8 @@ function getRangoFechas(periodo: Periodo): { desde: Date; hasta: Date } {
 
 /**
  * Formato de monto guaraní con separadores de miles.
- * Ej: 268000 -> "Gs. 268.000"
- *     1250000 -> "Gs. 1.250.000"
+ * Ej: 268000 -> "€ 268.000"
+ *     1250000 -> "€ 1.250.000"
  *
  * Antes habia dos funciones: formatGs (completo) y formatGsCompact (K/M/MM).
  * El usuario prefiere ver el numero real ("268.000" en vez de "268 K"),
@@ -116,7 +116,7 @@ function getRangoFechas(periodo: Periodo): { desde: Date; hasta: Date } {
  * reintroducir el compact selectivamente.
  */
 function formatGs(n: number): string {
-  return `Gs. ${Math.round(n).toLocaleString("es-PY")}`;
+  return `€ ${Math.round(n).toLocaleString("es-PY")}`;
 }
 
 function formatTime(iso: string): string {

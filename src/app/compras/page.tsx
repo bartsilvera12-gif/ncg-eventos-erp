@@ -18,7 +18,7 @@ const inputFilterClass =
   "border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none bg-white";
 
 function formatGs(valor: number) {
-  return `Gs. ${valor.toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-PY")}`;
 }
 
 function formatFecha(iso: string) {

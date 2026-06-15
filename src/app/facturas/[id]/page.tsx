@@ -157,7 +157,7 @@ function FacturaDetalleInner() {
     );
   }
 
-  const monedaLabel = factura.moneda === "USD" ? "USD" : "Gs.";
+  const monedaLabel = factura.moneda === "USD" ? "USD" : "€";
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 py-6 px-4 sm:px-6 print:px-0 w-full">

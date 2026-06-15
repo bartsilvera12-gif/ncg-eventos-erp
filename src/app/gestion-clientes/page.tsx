@@ -345,7 +345,7 @@ function ModalFacturacion({
           <p className="text-sm text-gray-500 mt-0.5">{nombreCliente}</p>
           {data?.suscripcion && (
             <p className="text-sm font-medium text-gray-700 mt-2">
-              Suscripción mensual — {data.suscripcion.moneda === "USD" ? "USD" : "Gs."} {data.suscripcion.precio.toLocaleString("es-PY")}
+              Suscripción mensual — {data.suscripcion.moneda === "USD" ? "USD" : "€"} {data.suscripcion.precio.toLocaleString("es-PY")}
             </p>
           )}
         </div>
@@ -380,7 +380,7 @@ function ModalFacturacion({
                       </span>
                     </div>
                     <div className="shrink-0 text-sm font-semibold text-gray-700 tabular-nums">
-                      {data.suscripcion?.moneda === "USD" ? "USD" : "Gs."} {(data.suscripcion?.precio ?? 0).toLocaleString("es-PY")}
+                      {data.suscripcion?.moneda === "USD" ? "USD" : "€"} {(data.suscripcion?.precio ?? 0).toLocaleString("es-PY")}
                     </div>
                     <div className="shrink-0">
                       {item.estado === "proyectada" && (
@@ -1007,7 +1007,7 @@ function GestionClientesPageInner() {
                       {facturasOrdenadas.length} docs
                     </span>
                     <span className="rounded-md bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-slate-700 ring-1 ring-slate-200/80">
-                      Saldo Gs. {formatGs(totalSaldo)}
+                      Saldo € {formatGs(totalSaldo)}
                     </span>
                     {cntVencidas > 0 ? (
                       <span className="rounded-md bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 ring-1 ring-red-100">
@@ -1030,7 +1030,7 @@ function GestionClientesPageInner() {
                         </div>
                         <div className="rounded-lg border border-slate-100 bg-white px-2 py-1.5">
                           <p className="text-[10px] text-slate-400">Monto total</p>
-                          <p className="text-[11px] font-bold tabular-nums leading-snug text-slate-800">Gs. {formatGs(totalMonto)}</p>
+                          <p className="text-[11px] font-bold tabular-nums leading-snug text-slate-800">€ {formatGs(totalMonto)}</p>
                         </div>
                         <div className="rounded-lg border border-slate-100 bg-white px-2 py-1.5">
                           <p className="text-[10px] text-slate-400">Saldo pend.</p>
@@ -1039,7 +1039,7 @@ function GestionClientesPageInner() {
                               totalSaldo > 0 ? "text-red-600" : "text-emerald-600"
                             }`}
                           >
-                            Gs. {formatGs(totalSaldo)}
+                            € {formatGs(totalSaldo)}
                           </p>
                         </div>
                         <div className="rounded-lg border border-red-100 bg-white px-2 py-1.5">
@@ -1125,14 +1125,14 @@ function GestionClientesPageInner() {
                                   {formatFecha(f.fecha_vencimiento)}
                                 </td>
                                 <td className="whitespace-nowrap px-2 py-2 text-xs tabular-nums text-slate-800 sm:px-3">
-                                  {f.moneda === "GS" ? `Gs. ${formatGs(f.monto)}` : `USD ${f.monto.toLocaleString("en-US")}`}
+                                  {f.moneda === "GS" ? `€ ${formatGs(f.monto)}` : `USD ${f.monto.toLocaleString("en-US")}`}
                                 </td>
                                 <td
                                   className={`whitespace-nowrap px-2 py-2 text-xs tabular-nums font-semibold sm:px-3 ${
                                     f.saldo > 0 ? "text-red-600" : "text-slate-400"
                                   }`}
                                 >
-                                  {f.moneda === "GS" ? `Gs. ${formatGs(f.saldo)}` : `USD ${f.saldo.toLocaleString("en-US")}`}
+                                  {f.moneda === "GS" ? `€ ${formatGs(f.saldo)}` : `USD ${f.saldo.toLocaleString("en-US")}`}
                                 </td>
                                 <td className="px-2 py-2 text-center text-xs sm:px-3">
                                   {f._diasMora > 0 ? (
@@ -1177,11 +1177,11 @@ function GestionClientesPageInner() {
                           {facturasFiltradas.length !== facturas.length ? <span className="text-slate-400"> (filtradas)</span> : null}
                         </span>
                         <span className="tabular-nums">
-                          Total: <span className="font-semibold text-slate-700">Gs. {formatGs(totalMonto)}</span>
+                          Total: <span className="font-semibold text-slate-700">€ {formatGs(totalMonto)}</span>
                         </span>
                         <span className="tabular-nums">
                           Saldo:{" "}
-                          <span className={`font-semibold ${totalSaldo > 0 ? "text-red-600" : "text-emerald-700"}`}>Gs. {formatGs(totalSaldo)}</span>
+                          <span className={`font-semibold ${totalSaldo > 0 ? "text-red-600" : "text-emerald-700"}`}>€ {formatGs(totalSaldo)}</span>
                         </span>
                       </div>
                     ) : null}
