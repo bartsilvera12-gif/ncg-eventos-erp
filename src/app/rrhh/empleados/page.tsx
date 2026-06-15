@@ -89,8 +89,13 @@ export default function EmpleadosPage() {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editando, setEditando] = useState<Empleado | null>(null);
+  const [verInactivos, setVerInactivos] = useState(false);
 
   const [form, setForm] = useState(FORM_INICIAL);
+
+  const activos = empleados.filter((e) => e.activo);
+  const inactivos = empleados.filter((e) => !e.activo);
+  const empleadosFiltrados = verInactivos ? inactivos : activos;
 
   async function load() {
     setLoading(true);
@@ -184,6 +189,36 @@ export default function EmpleadosPage() {
         </form>
       )}
 
+      {/* Tabs Activos / Inactivos */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-1">
+        <button type="button"
+          onClick={() => setVerInactivos(false)}
+          className={`relative -mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            !verInactivos
+              ? "border-[#4FAEB2] text-[#3F8E91]"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Activos
+          <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+            !verInactivos ? "bg-[#E5F4F4] text-[#3F8E91]" : "bg-slate-100 text-slate-500"
+          }`}>{activos.length}</span>
+        </button>
+        <button type="button"
+          onClick={() => setVerInactivos(true)}
+          className={`relative -mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
+            verInactivos
+              ? "border-amber-500 text-amber-700"
+              : "border-transparent text-slate-500 hover:text-slate-700"
+          }`}
+        >
+          Desactivados
+          <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+            verInactivos ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-500"
+          }`}>{inactivos.length}</span>
+        </button>
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full min-w-[860px] text-left text-sm">
           <thead>
@@ -200,11 +235,13 @@ export default function EmpleadosPage() {
           <tbody className="divide-y divide-slate-200">
             {loading ? (
               <tr><td colSpan={7} className="py-10 text-center text-gray-400">Cargando…</td></tr>
-            ) : empleados.length === 0 ? (
-              <tr><td colSpan={7} className="py-10 text-center text-gray-400">No hay empleados registrados</td></tr>
+            ) : empleadosFiltrados.length === 0 ? (
+              <tr><td colSpan={7} className="py-10 text-center text-gray-400">
+                {verInactivos ? "No hay empleados desactivados" : "No hay empleados activos"}
+              </td></tr>
             ) : (
-              empleados.map((e) => (
-                <tr key={e.id} className={`hover:bg-[#4FAEB2]/[0.04] ${!e.activo ? "opacity-60" : ""}`}>
+              empleadosFiltrados.map((e) => (
+                <tr key={e.id} className={`hover:bg-[#4FAEB2]/[0.04] ${!e.activo ? "opacity-70" : ""}`}>
                   <td className="px-5 py-3.5 font-medium text-gray-800">{e.nombre}</td>
                   <td className="px-5 py-3.5 text-gray-600 hidden md:table-cell">{e.cargo ?? "—"}</td>
                   <td className="px-5 py-3.5 text-gray-500 hidden lg:table-cell">{e.documento ?? "—"}</td>
