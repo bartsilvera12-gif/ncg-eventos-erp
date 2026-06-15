@@ -159,66 +159,65 @@ export default function ConfiguracionPage() {
               href="/configuracion/tableros"
             />
           </li>
-          <li>
-            <SettingsModuleCard
-              title="Canales y comunicación"
-              subtitle="OMNICANAL · MENSAJERÍA"
-              description="WhatsApp, redes y email: credenciales y estado de conexión."
-              icon={MessageCircle}
-              badge={omnicanalModuleBadge}
-              href={hasConversacionesModulo ? "/configuracion/canales" : undefined}
-              disabled={!hasConversacionesModulo}
-              actionLabel={hasConversacionesModulo ? "Editar" : "Sin acceso"}
-            />
-          </li>
-          <li>
-            <SettingsModuleCard
-              title="Colas y enrutamiento"
-              subtitle="OMNICANAL · ROUTING"
-              description="Reglas de asignación y prioridad de conversaciones entrantes."
-              icon={Inbox}
-              badge={omnicanalModuleBadge}
-              href={hasConversacionesModulo ? "/configuracion/colas" : undefined}
-              disabled={!hasConversacionesModulo}
-              actionLabel={hasConversacionesModulo ? "Editar" : "Sin acceso"}
-            />
-          </li>
-          <li>
-            <SettingsModuleCard
-              title="Flujos conversacionales"
-              subtitle="OMNICANAL · AUTOMACIÓN"
-              description="Automatizaciones del hilo conversacional y ramas por canal."
-              icon={GitBranch}
-              badge={omnicanalModuleBadge}
-              href={hasConversacionesModulo ? "/configuracion/conversaciones/flujos" : undefined}
-              disabled={!hasConversacionesModulo}
-              actionLabel={hasConversacionesModulo ? "Editar" : "Sin acceso"}
-            />
-          </li>
-          <li>
-            <SettingsModuleCard
-              title="Equipos y supervisión"
-              subtitle="OMNICANAL · EQUIPOS"
-              description="Relaciones supervisor → agente para monitoreo y reporting operativo."
-              icon={UsersRound}
-              badge={omnicanalModuleBadge}
-              href={hasConversacionesModulo ? "/configuracion/omnicanal-equipos" : undefined}
-              disabled={!hasConversacionesModulo}
-              actionLabel={hasConversacionesModulo ? "Editar" : "Sin acceso"}
-            />
-          </li>
-          <li>
-            <SettingsModuleCard
-              title="Horarios de trabajo omnicanal"
-              subtitle="OMNICANAL · TURNOS"
-              description="Franjas y días reutilizables para agentes y futuras reglas de asignación y métricas."
-              icon={CalendarClock}
-              badge={omnicanalModuleBadge}
-              href={hasConversacionesModulo ? "/configuracion/omnicanal-horarios" : undefined}
-              disabled={!hasConversacionesModulo}
-              actionLabel={hasConversacionesModulo ? "Editar" : "Sin acceso"}
-            />
-          </li>
+          {hasConversacionesModulo && (
+            <>
+              <li>
+                <SettingsModuleCard
+                  title="Canales y comunicación"
+                  subtitle="OMNICANAL · MENSAJERÍA"
+                  description="WhatsApp, redes y email: credenciales y estado de conexión."
+                  icon={MessageCircle}
+                  badge={omnicanalModuleBadge}
+                  href="/configuracion/canales"
+                  actionLabel="Editar"
+                />
+              </li>
+              <li>
+                <SettingsModuleCard
+                  title="Colas y enrutamiento"
+                  subtitle="OMNICANAL · ROUTING"
+                  description="Reglas de asignación y prioridad de conversaciones entrantes."
+                  icon={Inbox}
+                  badge={omnicanalModuleBadge}
+                  href="/configuracion/colas"
+                  actionLabel="Editar"
+                />
+              </li>
+              <li>
+                <SettingsModuleCard
+                  title="Flujos conversacionales"
+                  subtitle="OMNICANAL · AUTOMACIÓN"
+                  description="Automatizaciones del hilo conversacional y ramas por canal."
+                  icon={GitBranch}
+                  badge={omnicanalModuleBadge}
+                  href="/configuracion/conversaciones/flujos"
+                  actionLabel="Editar"
+                />
+              </li>
+              <li>
+                <SettingsModuleCard
+                  title="Equipos y supervisión"
+                  subtitle="OMNICANAL · EQUIPOS"
+                  description="Relaciones supervisor → agente para monitoreo y reporting operativo."
+                  icon={UsersRound}
+                  badge={omnicanalModuleBadge}
+                  href="/configuracion/omnicanal-equipos"
+                  actionLabel="Editar"
+                />
+              </li>
+              <li>
+                <SettingsModuleCard
+                  title="Horarios de trabajo omnicanal"
+                  subtitle="OMNICANAL · TURNOS"
+                  description="Franjas y días reutilizables para agentes y futuras reglas de asignación y métricas."
+                  icon={CalendarClock}
+                  badge={omnicanalModuleBadge}
+                  href="/configuracion/omnicanal-horarios"
+                  actionLabel="Editar"
+                />
+              </li>
+            </>
+          )}
         </ul>
       </section>
     </div>
