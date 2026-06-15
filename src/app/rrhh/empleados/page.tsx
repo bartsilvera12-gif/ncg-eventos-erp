@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/ui/PageHeader";
+import MontoInput from "@/components/ui/MontoInput";
 import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
 
 export const dynamic = "force-dynamic";
@@ -507,16 +508,16 @@ function EmpleadoFormFields({
 
       <Section titulo="Compensación">
         <Field label="Salario base (€)">
-          <input type="number" inputMode="numeric" className={inputCls} value={form.salario_base}
-            onChange={(e) => set("salario_base", e.target.value)} />
+          <MontoInput className={inputCls} decimals={false} value={form.salario_base}
+            onChange={(n) => set("salario_base", String(n))} placeholder="0" />
         </Field>
         <Field label="Salario complementario (€)" hint="Bonos, antigüedad, etc.">
-          <input type="number" inputMode="numeric" className={inputCls} value={form.salario_complementario}
-            onChange={(e) => set("salario_complementario", e.target.value)} />
+          <MontoInput className={inputCls} decimals={false} value={form.salario_complementario}
+            onChange={(n) => set("salario_complementario", String(n))} placeholder="0" />
         </Field>
         <Field label="Costo por hora (€)" hint="Se usa para imputar mano de obra a las obras.">
-          <input type="number" inputMode="numeric" className={inputCls} value={form.costo_hora}
-            onChange={(e) => set("costo_hora", e.target.value)} />
+          <MontoInput className={inputCls} decimals value={form.costo_hora}
+            onChange={(n) => set("costo_hora", String(n))} placeholder="0" />
         </Field>
       </Section>
 
