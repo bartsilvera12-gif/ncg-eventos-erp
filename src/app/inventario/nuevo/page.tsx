@@ -12,9 +12,18 @@ import { productoExiste, saveProducto } from "@/lib/inventario/storage";
 import { generarEan13 } from "@/lib/inventario/ean13";
 import type { MetodoValuacion } from "@/lib/inventario/types";
 
-// Opciones estándar de unidad de medida para gastro
+// Opciones de unidad de medida para construcción NCG.
+// Orden por frecuencia de uso: lo más utilizado al principio.
 const UNIDADES_OPCIONES = [
-  "UNIDAD","KG","G","LT","ML","CAJA","BOLSA","PAQUETE","DOCENA","LATA","BOTELLA","PORCION","COMBO",
+  "UNIDAD",
+  "M²",
+  "ML / Metro lineal",
+  "ROLLO",
+  "CAJA",
+  "BOLSA",
+  "LT",
+  "KG",
+  "PAQUETE",
 ] as const;
 
 const TIPO_SUMMARY = {
