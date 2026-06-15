@@ -754,9 +754,9 @@ export default function NuevoProductoPage() {
               <MontoInput
                 value={form.costo_promedio}
                 onChange={handleCostoChange}
-                placeholder="Ej: 52000"
+                placeholder="Ej: 52,30"
                 className={inputClass}
-                decimals={false}
+                decimals
                 required
               />
             </div>
@@ -772,9 +772,9 @@ export default function NuevoProductoPage() {
                       <MontoInput
                         value={form.precio_minorista}
                         onChange={handleMinoristaChange}
-                        placeholder="Ej: 78000"
+                        placeholder="Ej: 78,50"
                         className={inputClass}
-                        decimals={false}
+                        decimals
                         required={showPrecioVenta}
                       />
                     </div>
@@ -806,9 +806,9 @@ export default function NuevoProductoPage() {
                       <MontoInput
                         value={form.precio_mayorista}
                         onChange={handleMayoristaChange}
-                        placeholder="Ej: 70000"
+                        placeholder="Ej: 70,00"
                         className={inputClass}
-                        decimals={false}
+                        decimals
                       />
                     </div>
                     <div>
