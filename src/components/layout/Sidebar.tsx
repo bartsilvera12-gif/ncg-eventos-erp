@@ -15,11 +15,10 @@ import {
   UserCog,
   Building2,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Star,
   Sparkles,
-  PanelLeftClose,
-  PanelLeft,
   Search,
   Receipt,
   Megaphone,
@@ -524,7 +523,7 @@ export default function Sidebar() {
           className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-[color:var(--zentra-sidebar-hover)] hover:text-white"
           aria-label={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
         >
-          {collapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+          {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
         </button>
       </div>
 
