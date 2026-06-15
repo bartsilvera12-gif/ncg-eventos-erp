@@ -46,10 +46,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       "tipo_documento","documento","lugar_nacimiento","nacionalidad","estado_civil",
       "grupo_sanguineo","direccion","email","telefono","cargo","tipo_empleado","tipo_periodo",
       "departamento","seccion","supervisor","banco","numero_cuenta",
+      "sucursal","chofer_habilitacion","chofer_observacion",
     ];
-    const DATE_FIELDS = ["fecha_nacimiento","fecha_ingreso","fecha_baja"];
-    const NUM_FIELDS = ["salario_base","salario_complementario","costo_hora"];
+    const DATE_FIELDS = ["fecha_nacimiento","fecha_ingreso","fecha_baja","chofer_fecha_venc"];
+    const NUM_FIELDS = ["salario_base","salario_complementario","costo_hora","chofer_km"];
     const BOOL_FIELDS = ["cobrar_con_cheque","excluir_liquidaciones","activo"];
+
+    // tipos[] es un array de strings (jsonb en DB)
+    if (body.tipos !== undefined) {
+      if (!Array.isArray(body.tipos)) {
+        return NextResponse.json(errorResponse("tipos debe ser un array de strings"), { status: 400 });
+      }
+      update.tipos = body.tipos.map((t) => String(t).trim()).filter(Boolean);
+    }
 
     if (body.nombre !== undefined) {
       const n = String(body.nombre).trim();
