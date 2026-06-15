@@ -651,9 +651,18 @@ export default function NuevaCompraPage() {
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelSmClass}>Cantidad</label>
-                  <input type="number" min={1} step={1} value={linea.cantidad}
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    step="any"
+                    value={linea.cantidad}
                     onChange={(e) => { setErrorLinea(null); setLinea((p) => ({ ...p, cantidad: e.target.value })); }}
-                    placeholder="Ej: 50" className={inputClass} />
+                    onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    onKeyDown={(e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") e.preventDefault(); }}
+                    placeholder="Ej: 50"
+                    className={inputClass}
+                  />
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelSmClass}>Coste unitario ({header.moneda === "USD" ? "USD" : "€"})</label>
