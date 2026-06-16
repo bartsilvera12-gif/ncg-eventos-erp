@@ -16,6 +16,7 @@ import type { MetodoValuacion } from "@/lib/inventario/types";
 // Orden por frecuencia de uso: lo más utilizado al principio.
 const UNIDADES_OPCIONES = [
   "UNIDAD",
+  "PAR",
   "M²",
   "ML / Metro lineal",
   "ROLLO",
