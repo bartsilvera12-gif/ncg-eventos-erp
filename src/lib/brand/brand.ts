@@ -8,11 +8,11 @@
  */
 export const BRAND = {
   /** Nombre completo — títulos, `alt` de logo, white-label de cara al cliente. */
-  name: "NCG Cubiertas de Estructura Ligera",
+  name: "NCG Eventos",
   /** Forma corta para los eyebrows de sección ("NCG · Operaciones"). */
   shortName: "NCG",
   /** Inicial para el mark cuadrado del dashboard. */
   initial: "N",
   /** Logo oficial de la marca (archivo en /public). */
-  logo: "/brand/ncg-logo.jpg",
+  logo: "/logo.png",
 } as const;

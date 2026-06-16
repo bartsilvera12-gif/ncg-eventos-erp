@@ -20,8 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NCG Cubiertas de Estructura Ligera",
-  description: "Sistema de gestión — NCG Cubiertas de Estructura Ligera",
+  title: "NCG Eventos",
+  description: "Sistema de gestión — NCG Eventos",
 };
 
 export default function RootLayout({
