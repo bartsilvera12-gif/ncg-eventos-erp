@@ -43,7 +43,6 @@ import { supabase } from "@/lib/supabase";
 import type { ModuloEmpresa } from "@/lib/empresas/actions";
 import { getFavoritos, toggleFavorito } from "@/lib/favorites";
 import { canAccessSidebarSlug } from "@/lib/modulos/route-slug-map";
-import { BRAND } from "@/lib/brand/brand";
 import { useBoot } from "@/components/BootContext";
 import { getModuleAccessCached } from "@/lib/modulos/module-access-cache";
 
@@ -508,8 +507,8 @@ export default function Sidebar() {
             className={`relative flex items-center justify-center ${collapsed ? "h-11 w-11" : "h-[4.5rem] w-full max-w-[200px]"}`}
           >
             <Image
-              src={BRAND.logo}
-              alt={BRAND.name}
+              src={collapsed ? "/brand/zentra-icon.png" : "/brand/zentra-logo-official.png"}
+              alt="ZENTRA"
               width={400}
               height={220}
               sizes={collapsed ? "44px" : "200px"}
