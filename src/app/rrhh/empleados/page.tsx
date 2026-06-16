@@ -430,6 +430,57 @@ function Section({ titulo, children }: { titulo: string; children: React.ReactNo
 }
 
 /**
+ * Selector de Departamento. Lee del catálogo configurable
+ * (/api/rrhh/departamentos-catalogo). Conserva valores libres viejos:
+ * si el `value` actual no está en el catálogo, lo muestra como opción
+ * adicional para no perderlo silenciosamente.
+ */
+function DepartamentoSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [opts, setOpts] = useState<{ slug: string; nombre: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancel = false;
+    setLoading(true);
+    fetchWithSupabaseSession("/api/rrhh/departamentos-catalogo", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: { tipos?: { slug: string; nombre: string; activo: boolean; orden: number }[] } }) => {
+        if (cancel) return;
+        const list = (j.data?.tipos ?? [])
+          .filter((t) => t.activo)
+          .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+          .map((t) => ({ slug: t.slug, nombre: t.nombre }));
+        setOpts(list);
+      })
+      .catch(() => { /* tolerante */ })
+      .finally(() => { if (!cancel) setLoading(false); });
+    return () => { cancel = true; };
+  }, []);
+
+  // Reconciliar value libre: si el value es un nombre que no está en el catálogo,
+  // lo mostramos como opción "huerfana" para que el usuario lo vea y pueda elegir
+  // un departamento del catálogo sin perderlo por accidente.
+  const valueEnCatalogo = !value || opts.some((o) => o.nombre === value);
+
+  return (
+    <select
+      className={inputCls}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={loading}
+    >
+      <option value="">{loading ? "Cargando…" : "— Sin departamento —"}</option>
+      {opts.map((o) => (
+        <option key={o.slug} value={o.nombre}>{o.nombre}</option>
+      ))}
+      {!valueEnCatalogo && (
+        <option value={value}>{value} (no en catálogo)</option>
+      )}
+    </select>
+  );
+}
+
+/**
  * Combo de supervisor: input editable + dropdown filtrable.
  * Reemplaza el <datalist> nativo (poco confiable y no se abre al focus).
  * Acepta nombres libres (no obliga a elegir de la lista).
@@ -595,9 +646,11 @@ function EmpleadoFormFields({
             opciones={supervisores}
           />
         </Field>
-        <Field label="Departamento">
-          <input className={inputCls} value={form.departamento}
-            onChange={(e) => set("departamento", e.target.value)} placeholder="Ej. Operaciones" />
+        <Field label="Departamento" hint="Editá el listado en Configuración · Empleados.">
+          <DepartamentoSelect
+            value={form.departamento}
+            onChange={(v) => set("departamento", v)}
+          />
         </Field>
         <Field label="Sección / Equipo">
           <input className={inputCls} value={form.seccion}
