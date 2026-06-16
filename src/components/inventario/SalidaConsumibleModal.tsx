@@ -29,14 +29,35 @@ interface Props {
 
 type Motivo = "uso_obra" | "consumo_interno" | "rotura" | "ajuste" | "entrega_cuadrilla" | "transferencia_vehiculo";
 
-const MOTIVO_OPTS: { value: Motivo; label: string }[] = [
-  { value: "uso_obra", label: "Uso en obra" },
-  { value: "consumo_interno", label: "Consumo interno" },
-  { value: "rotura", label: "Rotura / pérdida" },
-  { value: "ajuste", label: "Ajuste de inventario" },
-  { value: "entrega_cuadrilla", label: "Entrega a cuadrilla" },
-  { value: "transferencia_vehiculo", label: "Transferencia a vehículo" },
+/**
+ * Cuatro destinos contables principales (los del flujo NCG), más dos
+ * sub-opciones de trazabilidad operativa que se siguen contabilizando como
+ * "consumo interno" hasta que se imputen a una obra.
+ */
+const MOTIVO_OPTS: { value: Motivo; label: string; group: "principal" | "operativo" }[] = [
+  { value: "uso_obra",                label: "Obra / proyecto",         group: "principal" },
+  { value: "consumo_interno",         label: "Consumo interno",         group: "principal" },
+  { value: "rotura",                  label: "Pérdida / rotura",        group: "principal" },
+  { value: "ajuste",                  label: "Ajuste de inventario",    group: "principal" },
+  { value: "entrega_cuadrilla",       label: "Entrega a cuadrilla",     group: "operativo" },
+  { value: "transferencia_vehiculo",  label: "Transferencia a vehículo", group: "operativo" },
 ];
+
+/** Texto que explica el efecto contable según destino. */
+const MOTIVO_EFECTO: Record<Motivo, string> = {
+  uso_obra:
+    "Descuenta stock y suma el costo (cant × costo prom. sin IVA) a la obra elegida. No se duplica como gasto.",
+  consumo_interno:
+    "Descuenta stock y queda registrado como consumo interno (gasto operativo). No se duplica con la compra.",
+  rotura:
+    "Descuenta stock y registra una pérdida de inventario por el costo promedio.",
+  ajuste:
+    "Descuenta stock como ajuste de inventario. Usalo para corregir diferencias detectadas en conteo.",
+  entrega_cuadrilla:
+    "Descuenta stock para entrega operativa a una cuadrilla. Se contabiliza como consumo interno hasta imputarlo a obra.",
+  transferencia_vehiculo:
+    "Descuenta stock por traslado a vehículo. Se contabiliza como consumo interno hasta imputarlo a obra.",
+};
 
 const inputCls =
   "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#4FAEB2]/30 focus:border-[#4FAEB2]/50";
@@ -153,10 +174,20 @@ export default function SalidaConsumibleModal({ producto, onClose, onSaved }: Pr
               )}
             </div>
             <div>
-              <label className={labelCls}>Motivo <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Destino del consumo <span className="text-red-500">*</span></label>
               <select className={inputCls} value={motivo} onChange={(e) => setMotivo(e.target.value as Motivo)}>
-                {MOTIVO_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                <optgroup label="Destinos contables">
+                  {MOTIVO_OPTS.filter((o) => o.group === "principal").map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Operativos (trazabilidad)">
+                  {MOTIVO_OPTS.filter((o) => o.group === "operativo").map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
               </select>
+              <p className="mt-1 text-[11px] text-slate-500 leading-snug">{MOTIVO_EFECTO[motivo]}</p>
             </div>
 
             <div className={motivo === "uso_obra" ? "md:col-span-2" : ""}>
