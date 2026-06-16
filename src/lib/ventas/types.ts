@@ -19,6 +19,10 @@ export interface LineaVenta {
   subtotal:              number;  // precio_venta × cantidad
   monto_iva:             number;
   total_linea:           number;  // subtotal + monto_iva
+  /** Tipo de partida: 'producto' (inventario) | 'mano_obra' | 'servicio' | 'transporte' | 'otro'. */
+  tipo_partida?:         string;
+  /** Descripción libre (obligatoria para partidas manuales sin producto). */
+  descripcion?:          string;
 }
 
 /** Cabecera de venta: condiciones comerciales + totales consolidados. */

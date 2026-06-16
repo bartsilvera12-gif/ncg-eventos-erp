@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MontoInput from "@/components/ui/MontoInput";
@@ -81,6 +82,19 @@ export default function NuevaVentaPage() {
   // ── Estado global ──────────────────────────────────────────────────────────
   const [items, setItems]           = useState<LineaVenta[]>([]);
   const [errorVenta, setErrorVenta] = useState<string | null>(null);
+
+  // ── Datos de la obra (solo presupuesto) ──────────────────────────────────
+  const [obraMeta, setObraMeta] = useState<ObraMeta>({
+    titulo_obra: "",
+    tipo_obra_id: "",
+    ubicacion: "",
+    superficie_m2: "",
+    descripcion: "",
+    validez_dias: "15",
+    condiciones: "",
+  });
+  // Modal de partida manual (solo presupuesto)
+  const [partidaManualOpen, setPartidaManualOpen] = useState(false);
 
   // ── Condiciones de la venta (fijas para En lo de Mari) ────────────────────
   // Instancia dedicada: siempre Guaraníes + Contado.
@@ -167,7 +181,8 @@ export default function NuevaVentaPage() {
     if (modalidad === "delivery") return pedidoClienteTelefono.trim().length > 0 && pedidoDireccion.trim().length > 0;
     return true; // local + carry_out: todos opcionales
   })();
-  const ventaValida   = items.length > 0 && pedidoValido;
+  const presupuestoValido = !esPresupuesto || (obraMeta.titulo_obra.trim().length > 0);
+  const ventaValida   = items.length > 0 && pedidoValido && presupuestoValido;
 
   // Vuelto (solo informativo, no se persiste)
   const montoRecibidoNum = parseImporte(montoRecibido);
@@ -221,7 +236,10 @@ export default function NuevaVentaPage() {
       },
       esPresupuesto ? undefined : buildPedidoCocina(),
       esPresupuesto ? null : pagoDetalle,
-      { tipoDocumento: esPresupuesto ? "presupuesto" : "venta" }
+      {
+        tipoDocumento: esPresupuesto ? "presupuesto" : "venta",
+        presupuestoMeta: esPresupuesto ? obraMetaToPayload(obraMeta) : null,
+      }
     );
     if (resultado.success) {
       if (!esPresupuesto) {
@@ -272,9 +290,9 @@ export default function NuevaVentaPage() {
 
       <PageHeader
         eyebrow={esPresupuesto ? "NCG · Comercial" : "NCG · Operaciones"}
-        title={esPresupuesto ? "Nuevo presupuesto" : "Nueva venta"}
+        title={esPresupuesto ? "Nuevo presupuesto de obra" : "Nueva venta de material"}
         description={esPresupuesto
-          ? "Cotización para el cliente. No descuenta stock ni genera movimientos. Si el cliente aprueba, podés convertirlo en obra desde la lista de ventas."
+          ? "Cotización de obra para el cliente. No descuenta stock ni genera movimientos. Al aprobarse puede convertirse en obra."
           : undefined}
         backHref="/ventas"
         backLabel="Ventas"
@@ -282,34 +300,51 @@ export default function NuevaVentaPage() {
 
       {esPresupuesto && (
         <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
-          <strong>Modo presupuesto:</strong> esta operación se guarda como presupuesto pendiente
-          de aprobación. No afecta el stock ni genera ticket de cobro.
+          <strong>Modo presupuesto de obra:</strong> esta operación se guarda como presupuesto
+          pendiente de aprobación. No afecta el stock ni genera ticket de cobro.
         </div>
+      )}
+
+      {esPresupuesto && (
+        <DatosObraSection meta={obraMeta} setMeta={setObraMeta} />
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6 max-w-7xl">
 
         {/* ── SECCIÓN 3: Carrito + totales + confirmar ─────────────────────── */}
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 sm:p-6">
-          <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
-              Productos en esta venta
+              {esPresupuesto ? "Partidas del presupuesto" : "Productos en esta venta"}
             </p>
-            <button
-              type="button"
-              onClick={() => setPickerOpen(true)}
-              className="shrink-0 inline-flex items-center gap-1.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm active:scale-95"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
-                <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-              </svg>
-              Agregar producto
-            </button>
+            <div className="flex items-center gap-2">
+              {esPresupuesto && (
+                <button
+                  type="button"
+                  onClick={() => setPartidaManualOpen(true)}
+                  className="shrink-0 inline-flex items-center gap-1.5 bg-white border border-[#0EA5E9] text-[#0EA5E9] hover:bg-sky-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors active:scale-95"
+                >
+                  + Partida manual
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setPickerOpen(true)}
+                className="shrink-0 inline-flex items-center gap-1.5 bg-[#0EA5E9] hover:bg-[#0284C7] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm active:scale-95"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0">
+                  <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+                </svg>
+                {esPresupuesto ? "Agregar material" : "Agregar producto"}
+              </button>
+            </div>
           </div>
 
           {items.length === 0 ? (
             <div className="py-10 text-center text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">
-              Todavía no agregaste productos a esta venta.
+              {esPresupuesto
+                ? "Todavía no agregaste partidas al presupuesto."
+                : "Todavía no agregaste productos a esta venta."}
             </div>
           ) : (
             <>
@@ -407,7 +442,7 @@ export default function NuevaVentaPage() {
                     </div>
                   </div>
 
-                  {tipoVenta === "CONTADO" && (
+                  {tipoVenta === "CONTADO" && !esPresupuesto && (
                     <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 space-y-2">
                       <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
                         Cobro
@@ -645,7 +680,7 @@ export default function NuevaVentaPage() {
               disabled={!ventaValida}
               className="bg-[#0EA5E9] hover:bg-[#0284C7] text-white px-6 py-3 rounded-lg text-sm font-medium transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 min-h-[48px] w-full sm:w-auto"
             >
-              Confirmar venta
+              {esPresupuesto ? "Guardar presupuesto" : "Confirmar venta"}
             </button>
           </div>
 
@@ -676,6 +711,226 @@ export default function NuevaVentaPage() {
         }}
         onConfirmar={confirmarConDetalle}
       />
+
+      {esPresupuesto && partidaManualOpen && (
+        <PartidaManualModal
+          onClose={() => setPartidaManualOpen(false)}
+          onAgregar={(linea) => { setItems((p) => [...p, linea]); setPartidaManualOpen(false); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Datos de la obra (sección del presupuesto) ─────────────────────────────
+
+type ObraMeta = {
+  titulo_obra: string;
+  tipo_obra_id: string;
+  ubicacion: string;
+  superficie_m2: string;
+  descripcion: string;
+  validez_dias: string;
+  condiciones: string;
+};
+
+function obraMetaToPayload(m: ObraMeta): Record<string, unknown> {
+  return {
+    titulo_obra: m.titulo_obra.trim() || null,
+    tipo_obra_id: m.tipo_obra_id || null,
+    ubicacion: m.ubicacion.trim() || null,
+    superficie_m2: m.superficie_m2.trim() !== "" ? Number(m.superficie_m2) || null : null,
+    descripcion: m.descripcion.trim() || null,
+    validez_dias: m.validez_dias.trim() !== "" ? Number(m.validez_dias) || null : null,
+    condiciones: m.condiciones.trim() || null,
+  };
+}
+
+function DatosObraSection({ meta, setMeta }: { meta: ObraMeta; setMeta: React.Dispatch<React.SetStateAction<ObraMeta>> }) {
+  const [tipos, setTipos] = React.useState<{ id: string; nombre: string }[]>([]);
+  React.useEffect(() => {
+    fetch("/api/proyectos/tipos", { credentials: "include", cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: Array<{ id: string; nombre: string }> }) => {
+        if (j.success && Array.isArray(j.data)) setTipos(j.data.map((t) => ({ id: t.id, nombre: t.nombre })));
+      })
+      .catch(() => { /* tolerante */ });
+  }, []);
+  const setField = <K extends keyof ObraMeta>(k: K, v: ObraMeta[K]) => setMeta((p) => ({ ...p, [k]: v }));
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 sm:p-6 max-w-7xl">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Datos de la obra</p>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Título de la obra <span className="text-red-500">*</span></label>
+          <input value={meta.titulo_obra} onChange={(e) => setField("titulo_obra", e.target.value)}
+            placeholder="Ej. Impermeabilización cubierta vivienda Pérez"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Tipo de obra</label>
+          <select value={meta.tipo_obra_id} onChange={(e) => setField("tipo_obra_id", e.target.value)}
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]">
+            <option value="">— Tipo por defecto —</option>
+            {tipos.map((t) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Ubicación / zona</label>
+          <input value={meta.ubicacion} onChange={(e) => setField("ubicacion", e.target.value)}
+            placeholder="Ej. Madrid Centro"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Superficie estimada (m²)</label>
+          <input type="text" inputMode="decimal"
+            value={meta.superficie_m2} onChange={(e) => setField("superficie_m2", e.target.value.replace(/[^\d.,-]/g, ""))}
+            placeholder="80"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]" />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Descripción del trabajo</label>
+          <textarea value={meta.descripcion} onChange={(e) => setField("descripcion", e.target.value)} rows={2}
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Validez del presupuesto (días)</label>
+          <input type="number" min={1} value={meta.validez_dias}
+            onChange={(e) => setField("validez_dias", e.target.value)}
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Observaciones / condiciones</label>
+          <input value={meta.condiciones} onChange={(e) => setField("condiciones", e.target.value)}
+            placeholder="Ej. 30% al iniciar, 70% al entregar"
+            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Modal de partida manual ─────────────────────────────────────────────────
+
+const TIPO_PARTIDA_OPTS: { value: string; label: string }[] = [
+  { value: "mano_obra", label: "Mano de obra" },
+  { value: "servicio", label: "Servicio" },
+  { value: "transporte", label: "Transporte" },
+  { value: "otro", label: "Otro gasto" },
+];
+
+function PartidaManualModal({ onClose, onAgregar }: { onClose: () => void; onAgregar: (l: LineaVenta) => void }) {
+  const [tipo, setTipo] = React.useState<string>("mano_obra");
+  const [descripcion, setDescripcion] = React.useState("");
+  const [cantidad, setCantidad] = React.useState("1");
+  const [unidad, setUnidad] = React.useState("UNIDAD");
+  const [precio, setPrecio] = React.useState("");
+  const [iva, setIva] = React.useState<TipoIvaVenta>("21%");
+  const [precioIncluyeIva, setPrecioIncluyeIva] = React.useState(false);
+
+  const cantNum = parseImporte(cantidad);
+  const precioNum = parseImporte(precio);
+  const tasa = iva === "21%" ? 0.21 : iva === "10%" ? 0.10 : iva === "5%" ? 0.05 : iva === "4%" ? 0.04 : 0;
+  const bruto = cantNum * precioNum;
+  const subtotal = tasa > 0 && precioIncluyeIva ? bruto / (1 + tasa) : bruto;
+  const ivaMonto = tasa > 0 ? (precioIncluyeIva ? bruto - subtotal : subtotal * tasa) : 0;
+  const totalLinea = subtotal + ivaMonto;
+  const valida = descripcion.trim() && cantNum > 0 && precioNum > 0;
+
+  function handleAgregar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!valida) return;
+    const linea: LineaVenta = {
+      producto_id: "",
+      producto_nombre: descripcion.trim(),
+      sku: unidad.trim().toUpperCase() || "UNIDAD",
+      cantidad: cantNum,
+      precio_venta_original: precioNum,
+      precio_venta: precioNum,
+      tipo_iva: iva,
+      tipo_precio: "minorista",
+      subtotal,
+      monto_iva: ivaMonto,
+      total_linea: totalLinea,
+      tipo_partida: tipo,
+      descripcion: descripcion.trim(),
+    };
+    onAgregar(linea);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={onClose}>
+      <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-slate-900">Agregar partida manual</h2>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700">✕</button>
+        </div>
+        <form onSubmit={handleAgregar} className="space-y-4 p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Tipo</label>
+              <select value={tipo} onChange={(e) => setTipo(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                {TIPO_PARTIDA_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Unidad</label>
+              <input value={unidad} onChange={(e) => setUnidad(e.target.value)}
+                placeholder="UNIDAD / HORA / KM"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Descripción <span className="text-red-500">*</span></label>
+              <input value={descripcion} onChange={(e) => setDescripcion(e.target.value)}
+                placeholder="Ej. Mano de obra instalación lámina impermeabilizante"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Cantidad <span className="text-red-500">*</span></label>
+              <input type="text" inputMode="decimal" value={cantidad}
+                onChange={(e) => setCantidad(e.target.value.replace(/[^\d.,-]/g, ""))}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                {precioIncluyeIva ? "Precio unitario con IVA" : "Precio unitario sin IVA"} <span className="text-red-500">*</span>
+              </label>
+              <input type="text" inputMode="decimal" value={precio}
+                onChange={(e) => setPrecio(e.target.value.replace(/[^\d.,-]/g, ""))}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+              <label className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer">
+                <input type="checkbox" checked={precioIncluyeIva}
+                  onChange={(e) => setPrecioIncluyeIva(e.target.checked)} />
+                El precio ingresado incluye IVA
+              </label>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">IVA</label>
+              <div className="flex border border-slate-200 rounded-lg overflow-hidden">
+                {(["EXENTA", "4%", "10%", "21%"] as TipoIvaVenta[]).map((opt) => (
+                  <button key={opt} type="button" onClick={() => setIva(opt)}
+                    className={`flex-1 py-1.5 text-xs font-medium ${iva === opt ? "bg-[#0EA5E9] text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}>
+                    {opt === "EXENTA" ? "Exento" : opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600 space-y-0.5">
+            <div className="flex justify-between"><span>Subtotal sin IVA</span><span className="tabular-nums">{formatGs(subtotal)}</span></div>
+            <div className="flex justify-between"><span>IVA {iva === "EXENTA" ? "" : iva}</span><span className="tabular-nums">{ivaMonto > 0 ? formatGs(ivaMonto) : "—"}</span></div>
+            <div className="flex justify-between font-semibold text-slate-800 border-t border-slate-200 pt-1"><span>Total</span><span className="tabular-nums">{formatGs(totalLinea)}</span></div>
+          </div>
+          <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
+            <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">Cancelar</button>
+            <button type="submit" disabled={!valida}
+              className="rounded-lg bg-[#0EA5E9] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#0284C7] disabled:opacity-40">
+              Agregar partida
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

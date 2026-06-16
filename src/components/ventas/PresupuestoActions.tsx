@@ -10,21 +10,27 @@ type Estado = "pendiente" | "aprobado" | "rechazado" | "convertido" | null;
 /**
  * Render del badge + acciones para tipo_documento / estado_presupuesto de una venta.
  *
- * - Si tipo='venta': badge "Venta" + botón "Marcar como presupuesto".
+ * - Si tipo='venta': solo badge "Venta directa". No se puede convertir a
+ *   presupuesto después: una venta real ya descontó stock y generó movimientos.
+ *   El presupuesto debe nacer desde "Nuevo presupuesto de obra".
  * - Si tipo='presupuesto':
- *    - badge "Presupuesto" + badge de estado.
+ *    - badge "Presupuesto de obra" + badge de estado.
  *    - pendiente → botones [Aprobar] [Rechazar].
  *    - aprobado  → botón [Convertir en obra].
- *    - convertido / rechazado → solo badge.
+ *    - convertido → link [Ver obra].
+ *    - rechazado  → solo badge.
  */
 export default function PresupuestoActions({
   id,
   tipo,
   estado,
+  proyectoId,
 }: {
   id: string;
   tipo: Tipo;
   estado: Estado;
+  /** Si está vinculado a una obra (después de convertir), se usa para el botón "Ver obra". */
+  proyectoId?: string | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -83,26 +89,18 @@ export default function PresupuestoActions({
         {tipo === "presupuesto" ? (
           <>
             <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-700">
-              Presupuesto
+              Presupuesto de obra
             </span>
             {estado && <EstadoBadge estado={estado} />}
           </>
         ) : (
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-            Venta
+            Venta directa
           </span>
         )}
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {tipo === "venta" && (
-          <button type="button" disabled={busy}
-            onClick={() => patchWorkflow({ tipo_documento: "presupuesto" })}
-            className="text-[11px] text-slate-500 hover:text-slate-700 underline disabled:opacity-50">
-            marcar presupuesto
-          </button>
-        )}
-
         {tipo === "presupuesto" && estado === "pendiente" && (
           <>
             <button type="button" disabled={busy}
@@ -124,6 +122,13 @@ export default function PresupuestoActions({
             className="text-[11px] font-medium text-[#3F8E91] hover:text-[#2F6F72] underline disabled:opacity-50">
             convertir en obra
           </button>
+        )}
+
+        {tipo === "presupuesto" && estado === "convertido" && proyectoId && (
+          <a href={`/dashboard/proyectos/${proyectoId}`}
+            className="text-[11px] font-medium text-[#3F8E91] hover:text-[#2F6F72] underline">
+            ver obra
+          </a>
         )}
       </div>
 

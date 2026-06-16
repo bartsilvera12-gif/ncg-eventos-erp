@@ -8,7 +8,9 @@ import { successResponse, errorResponse } from "@/lib/api/response";
 import { API_ERRORS } from "@/lib/api/errors";
 import type { Venta, LineaVenta } from "@/lib/ventas/types";
 
-function asItems(body: unknown): CreateVentaItemInput[] | null {
+const TIPO_PARTIDA_OK = new Set(["producto", "mano_obra", "servicio", "transporte", "otro"]);
+
+function asItems(body: unknown, esPresupuesto: boolean): CreateVentaItemInput[] | null {
   if (!body || typeof body !== "object") return null;
   const raw = (body as { items?: unknown }).items;
   if (!Array.isArray(raw) || raw.length === 0) return null;
@@ -18,11 +20,12 @@ function asItems(body: unknown): CreateVentaItemInput[] | null {
     const r = x as Record<string, unknown>;
     const tipoIva = r.tipo_iva;
     if (tipoIva !== "EXENTA" && tipoIva !== "4%" && tipoIva !== "5%" && tipoIva !== "10%" && tipoIva !== "21%") return null;
-    // tipo_precio: valores exactos del CHECK; default seguro 'minorista'
-    // (ventas viejas / payloads sin el campo quedan como minorista).
     const tp = r.tipo_precio;
     const tipoPrecio: "minorista" | "mayorista" | "costo" =
       tp === "mayorista" || tp === "costo" ? tp : "minorista";
+    const tipoPartidaRaw = typeof r.tipo_partida === "string" ? r.tipo_partida : "producto";
+    const tipo_partida = TIPO_PARTIDA_OK.has(tipoPartidaRaw) ? tipoPartidaRaw : "producto";
+    const descripcion = typeof r.descripcion === "string" ? r.descripcion.trim() : "";
     out.push({
       producto_id: String(r.producto_id ?? ""),
       producto_nombre: String(r.producto_nombre ?? ""),
@@ -35,9 +38,21 @@ function asItems(body: unknown): CreateVentaItemInput[] | null {
       subtotal: Number(r.subtotal),
       monto_iva: Number(r.monto_iva),
       total_linea: Number(r.total_linea),
+      tipo_partida,
+      descripcion,
     });
   }
-  if (out.some((i) => !i.producto_id || !(i.cantidad > 0))) return null;
+  // En venta común: producto_id obligatorio. En presupuesto: si es partida
+  // manual (no 'producto'), basta con descripcion y cantidad/precio.
+  for (const i of out) {
+    if (!(i.cantidad > 0)) return null;
+    if (i.tipo_partida === "producto") {
+      if (!i.producto_id) return null;
+    } else {
+      if (!esPresupuesto) return null; // partidas manuales solo en presupuesto
+      if (!i.descripcion) return null;
+    }
+  }
   return out;
 }
 
@@ -103,12 +118,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(errorResponse("JSON inválido."), { status: 400 });
     }
 
-    const items = asItems(body);
+    const oTmp = body as Record<string, unknown>;
+    const esPresupuesto = String(oTmp.tipo_documento ?? "").toLowerCase() === "presupuesto";
+    const items = asItems(body, esPresupuesto);
     if (!items) {
       return NextResponse.json(errorResponse("Payload inválido: items requeridos."), { status: 400 });
     }
 
-    const o = body as Record<string, unknown>;
+    const o = oTmp;
     const moneda = o.moneda === "USD" ? "USD" : "GS";
     const tipoCambio = Number(o.tipo_cambio) || 1;
     const tipoVenta = o.tipo_venta === "CREDITO" ? "CREDITO" : "CONTADO";
@@ -240,6 +257,29 @@ export async function POST(request: NextRequest) {
     const tipoDocumento: "venta" | "presupuesto" =
       String(o.tipo_documento ?? "").trim().toLowerCase() === "presupuesto" ? "presupuesto" : "venta";
 
+    // Metadata específica del presupuesto de obra (titulo, ubicación, etc.).
+    let presupuestoMeta: Record<string, unknown> | null = null;
+    if (tipoDocumento === "presupuesto") {
+      const pm = (o.presupuesto_meta ?? null) as Record<string, unknown> | null;
+      if (pm && typeof pm === "object") {
+        const trim = (v: unknown) => (typeof v === "string" ? v.trim() || null : null);
+        const num = (v: unknown) => {
+          if (v == null || v === "") return null;
+          const n = Number(v);
+          return Number.isFinite(n) ? n : null;
+        };
+        presupuestoMeta = {
+          titulo_obra: trim(pm.titulo_obra),
+          tipo_obra_id: trim(pm.tipo_obra_id),
+          ubicacion: trim(pm.ubicacion),
+          superficie_m2: num(pm.superficie_m2),
+          descripcion: trim(pm.descripcion),
+          validez_dias: num(pm.validez_dias),
+          condiciones: trim(pm.condiciones),
+        };
+      }
+    }
+
     const { ventaId, numeroControl, fechaIso } = await createVentaTransaccionalPg({
       schema,
       empresaId: auth.empresa_id,
@@ -258,6 +298,7 @@ export async function POST(request: NextRequest) {
       usuarioCatalogId: auth.usuarioCatalogId ?? null,
       usuarioNombre: auth.usuarioNombre ?? auth.user?.email ?? null,
       tipoDocumento,
+      presupuestoMeta,
     });
 
     // Detalle de pago (transferencia/tarjeta) → ventas_pagos_detalle (raw-PG).

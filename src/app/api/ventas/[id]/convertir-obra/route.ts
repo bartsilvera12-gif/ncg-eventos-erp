@@ -25,7 +25,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // 1. Cargar la venta
     const { data: venta, error: e1 } = await ctx.supabase
       .from("ventas")
-      .select("id, numero_control, cliente_id, total, tipo_documento, estado_presupuesto, proyecto_id")
+      .select("id, numero_control, cliente_id, total, subtotal, monto_iva, tipo_documento, estado_presupuesto, proyecto_id, presupuesto_meta, fecha")
       .eq("id", id)
       .eq("empresa_id", empresaId)
       .maybeSingle();
@@ -37,9 +37,22 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       numero_control: string | null;
       cliente_id: string | null;
       total: number | string;
+      subtotal: number | string;
+      monto_iva: number | string;
       tipo_documento: string | null;
       estado_presupuesto: string | null;
       proyecto_id: string | null;
+      presupuesto_meta: Record<string, unknown> | null;
+      fecha: string;
+    };
+    const meta = (v.presupuesto_meta ?? {}) as {
+      titulo_obra?: string;
+      tipo_obra_id?: string | null;
+      ubicacion?: string | null;
+      superficie_m2?: number | null;
+      descripcion?: string | null;
+      validez_dias?: number | null;
+      condiciones?: string | null;
     };
 
     if (v.tipo_documento !== "presupuesto") {
@@ -72,24 +85,51 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (tipoQ.error) return NextResponse.json(errorResponse(tipoQ.error.message), { status: 400 });
 
     const estadoId = (estadoQ.data ?? [])[0]?.id as string | undefined;
-    const tipoId = (tipoQ.data ?? [])[0]?.id as string | undefined;
+    const tipoIdDefault = (tipoQ.data ?? [])[0]?.id as string | undefined;
     if (!estadoId) return NextResponse.json(errorResponse("Falta configurar al menos un estado inicial activo."), { status: 400 });
-    if (!tipoId) return NextResponse.json(errorResponse("Falta configurar al menos un tipo de proyecto."), { status: 400 });
+    if (!tipoIdDefault) return NextResponse.json(errorResponse("Falta configurar al menos un tipo de proyecto."), { status: 400 });
 
     const body = (await request.json().catch(() => ({}))) as { titulo?: string };
     const tituloProp = body.titulo?.trim();
-    const titulo = tituloProp || `Obra (de presupuesto ${v.numero_control ?? id.slice(0, 8)})`;
+    // Prioridad de título: body > meta.titulo_obra > fallback al numero_control.
+    const titulo = tituloProp
+      || (meta.titulo_obra ?? "").toString().trim()
+      || `Obra (de presupuesto ${v.numero_control ?? id.slice(0, 8)})`;
+    // Si el presupuesto tiene un tipo_obra_id válido para esta empresa, usarlo.
+    let tipoId = tipoIdDefault;
+    if (meta.tipo_obra_id) {
+      const tipoCheck = await ctx.supabase
+        .from("proyecto_tipos")
+        .select("id")
+        .eq("empresa_id", empresaId)
+        .eq("id", meta.tipo_obra_id)
+        .eq("activo", true)
+        .maybeSingle();
+      if (tipoCheck.data) tipoId = (tipoCheck.data as { id: string }).id;
+    }
 
-    // 3. Crear el proyecto
-    const insertProy = {
+    // 3. Crear el proyecto, copiando datos del presupuesto.
+    const brief_data = {
+      origen: "presupuesto" as const,
+      venta_id: v.id,
+      numero_control: v.numero_control,
+      fecha_presupuesto: v.fecha,
+      subtotal: Number(v.subtotal) || 0,
+      iva: Number(v.monto_iva) || 0,
+      total: Number(v.total) || 0,
+      meta,
+    };
+    const insertProy: Record<string, unknown> = {
       empresa_id: empresaId,
       cliente_id: v.cliente_id ?? null,
       tipo_id: tipoId,
       estado_id: estadoId,
       titulo,
+      descripcion: meta.descripcion ?? null,
       prioridad: "normal",
       monto_vendido: Number(v.total) || 0,
       fecha_ingreso: new Date().toISOString(),
+      brief_data,
     };
 
     const { data: nuevoProy, error: e2 } = await ctx.supabase

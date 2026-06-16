@@ -199,14 +199,14 @@ export default function VentasPage() {
       <PageHeader
         eyebrow="NCG · Operaciones"
         title="Ventas"
-        description="Registro de ventas y salidas de inventario"
+        description="Ventas directas de materiales y presupuestos de obra"
         actions={
           <div className="flex flex-wrap gap-2">
             <Button href="/ventas/nueva?tipo=presupuesto" size="sm" variant="secondary">
-              <span aria-hidden>+</span> Nuevo presupuesto
+              <span aria-hidden>+</span> Nuevo presupuesto de obra
             </Button>
             <Button href="/ventas/nueva" size="sm">
-              <span aria-hidden>+</span> Nueva venta
+              <span aria-hidden>+</span> Nueva venta de material
             </Button>
           </div>
         }
@@ -345,6 +345,7 @@ export default function VentasPage() {
                           id={v.id}
                           tipo={v.tipo_documento ?? "venta"}
                           estado={v.estado_presupuesto ?? null}
+                          proyectoId={v.proyecto_id ?? null}
                         />
                       </td>
                       <td className="py-4 pr-4 align-middle">

@@ -49,7 +49,7 @@ export async function saveVenta(
   datos: Omit<Venta, "id" | "numero_control" | "fecha">,
   pedidoCocina?: PedidoCocinaInput,
   pagoDetalle?: PagoDetalleVenta | null,
-  opts?: { tipoDocumento?: "venta" | "presupuesto" }
+  opts?: { tipoDocumento?: "venta" | "presupuesto"; presupuestoMeta?: Record<string, unknown> | null; clienteId?: string | null }
 ): Promise<ResultadoGuardarVenta> {
   if (!datos.items || datos.items.length === 0) {
     return { success: false, error: "La venta debe tener al menos un producto." };
@@ -69,11 +69,12 @@ export async function saveVenta(
         tipo_venta: datos.tipo_venta,
         plazo_dias: datos.plazo_dias,
         metodo_pago: datos.metodo_pago,
-        cliente_id: null,
+        cliente_id: opts?.clienteId ?? null,
         observaciones: null,
         pedido_cocina: pedidoCocina ?? null,
         pago_detalle: pagoDetalle ?? null,
         tipo_documento: opts?.tipoDocumento ?? "venta",
+        presupuesto_meta: opts?.presupuestoMeta ?? null,
       }),
     });
 

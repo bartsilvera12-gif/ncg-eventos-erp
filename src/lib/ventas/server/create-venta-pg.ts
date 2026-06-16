@@ -13,6 +13,10 @@ export interface CreateVentaItemInput {
   subtotal: number;
   monto_iva: number;
   total_linea: number;
+  /** Tipo de partida: 'producto' usa inventario; el resto son líneas manuales del presupuesto. */
+  tipo_partida?: string;
+  /** Descripción libre (obligatoria en partidas manuales sin producto_id). */
+  descripcion?: string;
 }
 
 export interface CreateVentaPedidoCocinaInput {
@@ -57,6 +61,8 @@ export interface CreateVentaPgParams {
    *  - NO se crea pedido cocina
    */
   tipoDocumento?: "venta" | "presupuesto";
+  /** Metadata específica del presupuesto de obra (titulo, ubicación, etc.). Solo si tipoDocumento='presupuesto'. */
+  presupuestoMeta?: Record<string, unknown> | null;
 }
 
 function recalcTotals(items: CreateVentaItemInput[]) {
@@ -102,8 +108,12 @@ export async function createVentaTransaccionalPg(
     throw new Error("Los totales no coinciden con los ítems; revisá el carrito.");
   }
 
+  // En presupuestos pueden venir partidas manuales (mano de obra, servicio, transporte, otro)
+  // sin producto_id. Solo agregamos a qtyByProduct las que sí tienen producto real.
   const qtyByProduct = new Map<string, number>();
   for (const it of items) {
+    const esProductoReal = (it.tipo_partida ?? "producto") === "producto" && !!it.producto_id;
+    if (!esProductoReal) continue;
     qtyByProduct.set(it.producto_id, (qtyByProduct.get(it.producto_id) ?? 0) + it.cantidad);
   }
 
@@ -116,41 +126,42 @@ export async function createVentaTransaccionalPg(
     if (!ck.data) throw new Error("Cliente no encontrado en esta empresa.");
   }
 
-  // 2) Cargar productos del carrito — TODOS los que existan y pertenezcan a la empresa, sin filtrar controla_stock ni stock>0.
-  const ids = [...qtyByProduct.keys()];
-  const prodQ = await sb
-    .from("productos")
-    .select("id, stock_actual, costo_promedio, nombre, sku, controla_stock")
-    .eq("empresa_id", params.empresaId)
-    .in("id", ids);
-  if (prodQ.error) throw new Error(prodQ.error.message);
-  const prodRows = (prodQ.data ?? []) as unknown as Array<{
-    id: string;
-    stock_actual: number | string;
-    costo_promedio: number | string;
-    nombre: string;
-    sku: string;
-    controla_stock: boolean | null;
-  }>;
-
-  if (prodRows.length !== ids.length) {
-    const found = new Set(prodRows.map((r) => r.id));
-    const faltantes = ids.filter((id) => !found.has(id));
-    throw new Error(
-      `Uno o más productos no existen o no pertenecen a esta empresa. IDs no encontrados: ${faltantes.join(", ")}`
-    );
-  }
-
+  // 2) Cargar productos del carrito — solo si hay producto_id reales.
   type ProdMeta = { stock: number; costo: number; nombre: string; sku: string; controlaStock: boolean };
   const stockMap = new Map<string, ProdMeta>();
-  for (const r of prodRows) {
-    stockMap.set(r.id, {
-      stock: Number(r.stock_actual),
-      costo: Number(r.costo_promedio),
-      nombre: r.nombre,
-      sku: r.sku,
-      controlaStock: r.controla_stock !== false,
-    });
+  const ids = [...qtyByProduct.keys()];
+  if (ids.length > 0) {
+    const prodQ = await sb
+      .from("productos")
+      .select("id, stock_actual, costo_promedio, nombre, sku, controla_stock")
+      .eq("empresa_id", params.empresaId)
+      .in("id", ids);
+    if (prodQ.error) throw new Error(prodQ.error.message);
+    const prodRows = (prodQ.data ?? []) as unknown as Array<{
+      id: string;
+      stock_actual: number | string;
+      costo_promedio: number | string;
+      nombre: string;
+      sku: string;
+      controla_stock: boolean | null;
+    }>;
+
+    if (prodRows.length !== ids.length) {
+      const found = new Set(prodRows.map((r) => r.id));
+      const faltantes = ids.filter((id) => !found.has(id));
+      throw new Error(
+        `Uno o más productos no existen o no pertenecen a esta empresa. IDs no encontrados: ${faltantes.join(", ")}`
+      );
+    }
+    for (const r of prodRows) {
+      stockMap.set(r.id, {
+        stock: Number(r.stock_actual),
+        costo: Number(r.costo_promedio),
+        nombre: r.nombre,
+        sku: r.sku,
+        controlaStock: r.controla_stock !== false,
+      });
+    }
   }
 
   const esPresupuesto = params.tipoDocumento === "presupuesto";
@@ -204,6 +215,7 @@ export async function createVentaTransaccionalPg(
       observaciones: params.observaciones,
       tipo_documento: esPresupuesto ? "presupuesto" : "venta",
       estado_presupuesto: esPresupuesto ? "pendiente" : null,
+      presupuesto_meta: esPresupuesto ? (params.presupuestoMeta ?? null) : null,
       // CONTADO: se cobra al instante; CREDITO/presupuesto: queda pendiente.
       monto_cobrado: !esPresupuesto && params.tipoVenta === "CONTADO" ? calc.total : 0,
       fecha_cobro: !esPresupuesto && params.tipoVenta === "CONTADO" ? fechaIso : null,
@@ -227,22 +239,27 @@ export async function createVentaTransaccionalPg(
   };
 
   try {
-    // 6) Insertar items (bulk)
-    const itemsRows = items.map((line) => ({
-      empresa_id: params.empresaId,
-      venta_id: ventaId,
-      producto_id: line.producto_id,
-      producto_nombre: line.producto_nombre,
-      sku: line.sku,
-      cantidad: line.cantidad,
-      precio_venta_original: line.precio_venta_original,
-      precio_venta: line.precio_venta,
-      tipo_iva: line.tipo_iva,
-      tipo_precio: line.tipo_precio ?? "minorista",
-      subtotal: line.subtotal,
-      monto_iva: line.monto_iva,
-      total_linea: line.total_linea,
-    }));
+    // 6) Insertar items (bulk). Partidas manuales: producto_id null + descripcion.
+    const itemsRows = items.map((line) => {
+      const tipo_partida = line.tipo_partida ?? "producto";
+      return {
+        empresa_id: params.empresaId,
+        venta_id: ventaId,
+        producto_id: tipo_partida === "producto" && line.producto_id ? line.producto_id : null,
+        producto_nombre: line.producto_nombre || (line.descripcion ?? ""),
+        sku: line.sku ?? "",
+        cantidad: line.cantidad,
+        precio_venta_original: line.precio_venta_original,
+        precio_venta: line.precio_venta,
+        tipo_iva: line.tipo_iva,
+        tipo_precio: line.tipo_precio ?? "minorista",
+        subtotal: line.subtotal,
+        monto_iva: line.monto_iva,
+        total_linea: line.total_linea,
+        tipo_partida,
+        descripcion: line.descripcion ?? null,
+      };
+    });
     const insItems = await sb.from("ventas_items").insert(itemsRows);
     if (insItems.error) throw new Error(insItems.error.message);
 
@@ -250,6 +267,7 @@ export async function createVentaTransaccionalPg(
     //    Para presupuestos NO se toca stock ni se crean movimientos.
     if (!esPresupuesto) {
       for (const line of items) {
+        if ((line.tipo_partida ?? "producto") !== "producto" || !line.producto_id) continue;
         const p = stockMap.get(line.producto_id)!;
         if (!p.controlaStock) continue;
         const nuevoStock = p.stock - line.cantidad;
