@@ -369,7 +369,11 @@ export default function ProductPickerModal({
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <DetailItem label="Precio venta" value={formatGs(sel.precio_venta)} highlight />
+                  <DetailItem
+                    label="Precio venta"
+                    value={`${formatGs(sel.precio_venta)} ${precioIncluyeIva ? "c/IVA" : "s/IVA"}`}
+                    highlight
+                  />
                   {sel.controla_stock !== false ? (
                     <DetailItem label="Stock disp." value={`${dispSel} ${sel.unidad_medida}`} highlight />
                   ) : (
@@ -416,7 +420,7 @@ export default function ProductPickerModal({
                     </div>
                     <div>
                       <label className="block text-[11px] uppercase text-slate-400 mb-1">
-                        Precio ({moneda === "USD" ? "USD" : "€"})
+                        {precioIncluyeIva ? "Precio final con IVA" : "Precio sin IVA"} ({moneda === "USD" ? "USD" : "€"})
                       </label>
                       <input
                         type="number" min={0}
@@ -450,21 +454,24 @@ export default function ProductPickerModal({
                         onChange={(e) => setPrecioIncluyeIva(e.target.checked)}
                         className="h-3.5 w-3.5 rounded border-slate-300 text-[#0EA5E9] focus:ring-[#0EA5E9]"
                       />
-                      Precio incluye IVA
+                      El precio ingresado incluye IVA
                     </label>
                   </div>
 
                   <div className="text-xs text-slate-500 space-y-0.5 pt-1">
                     <div className="flex justify-between">
-                      <span>Subtotal sin IVA</span>
+                      <span>{precioIncluyeIva ? "Base imponible" : "Subtotal sin IVA"}</span>
                       <span className="tabular-nums">{formatGs(baseImponible)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>IVA repercutido</span>
+                      <span>
+                        {precioIncluyeIva ? "IVA incluido" : "IVA repercutido"}
+                        {tasaIva > 0 ? ` ${Math.round(tasaIva * 100)}%` : ""}
+                      </span>
                       <span className="tabular-nums">{ivaMonto > 0 ? formatGs(ivaMonto) : "—"}</span>
                     </div>
                     <div className="flex justify-between font-bold text-slate-800 pt-1 border-t border-slate-200">
-                      <span>Total con IVA</span>
+                      <span>Total a cobrar</span>
                       <span className="tabular-nums">{formatGs(totalLinea)}</span>
                     </div>
                   </div>
