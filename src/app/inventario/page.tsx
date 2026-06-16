@@ -69,7 +69,7 @@ export default function InventarioPage() {
   const [toast,            setToast]            = useState<string | null>(null);
   // Herramientas: estado de modales y resumen de "última asignación" por producto.
   const [herrModal, setHerrModal] = useState<{ tipo: "asignar" | "devolver" | "finmant" | "baja"; herr: HerramientaResumen } | null>(null);
-  const [ultAsign,  setUltAsign]  = useState<Map<string, { responsable: string | null; proyecto_titulo: string | null }>>(new Map());
+  const [ultAsign,  setUltAsign]  = useState<Map<string, { responsable: string | null; obra: string | null }>>(new Map());
 
   async function handleEliminarProducto(id: string, nombre: string) {
     if (eliminandoId) return; // evitar doble click
@@ -120,34 +120,111 @@ export default function InventarioPage() {
     return () => { cancelled = true; };
   }, [refreshKey]);
 
-  // Última asignación por herramienta (solo cuando estamos en ese tab).
-  // Hace UN GET de movimientos y arma un Map producto_id -> {responsable, obra}.
+  // Estado vigente por herramienta (responsable, obra).
+  //
+  // Algoritmo: por cada producto, mantiene saldos por par (responsable|obra)
+  // procesando movimientos en orden cronológico ASC.
+  //   - ASIGNACION suma al bucket de su (responsable, obra).
+  //   - DEVOLUCION con responsable/obra resta de ese bucket; si no alcanza,
+  //     derrama con FIFO sobre las otras asignaciones abiertas más viejas.
+  //   - DEVOLUCION sin responsable/obra → FIFO puro.
+  //   - BAJA NO cierra asignaciones (la rotura ya viene con DEVOLUCION).
+  // Al final, por producto:
+  //   - 0 buckets con saldo>0 → "—"
+  //   - 1 responsable o 1 obra única → ese valor
+  //   - varios → "Varios" / "Varias obras"
   useEffect(() => {
     if (tab !== "herramienta") return;
     let cancel = false;
-    fetchWithSupabaseSession("/api/inventario/movimientos", { cache: "no-store" })
+    // Pido un limite alto para reconstruir saldos sin truncar. El endpoint actual
+    // ya limita a 500, esto se respeta del lado server pero documenta la intención.
+    fetchWithSupabaseSession("/api/inventario/movimientos?limit=1000", { cache: "no-store" })
       .then((r) => r.json())
-      .then((j: { success?: boolean; data?: { movimientos?: Array<{ producto_id: string; tipo: string; usuario_nombre: string | null; proyecto_titulo: string | null; fecha: string }> } }) => {
+      .then((j: { success?: boolean; data?: { movimientos?: Array<{ producto_id: string; tipo: string; cantidad: number | string; usuario_nombre: string | null; proyecto_titulo: string | null; fecha: string }> } }) => {
         if (cancel) return;
-        const ult = new Map<string, { responsable: string | null; proyecto_titulo: string | null }>();
-        const movs = j.data?.movimientos ?? [];
-        // movimientos vienen ordenados por fecha desc; el primer ASIGNACION por producto
-        // que tenga su par DEVOLUCION posterior se descarta.
-        const asignaciones = new Map<string, { fecha: string; responsable: string | null; proyecto_titulo: string | null }>();
-        const devoluciones = new Map<string, string>(); // producto_id -> ultima_fecha_devolucion
-        for (const m of movs) {
-          if (m.tipo === "ASIGNACION" && !asignaciones.has(m.producto_id)) {
-            asignaciones.set(m.producto_id, { fecha: m.fecha, responsable: m.usuario_nombre, proyecto_titulo: m.proyecto_titulo });
+        const movsDesc = j.data?.movimientos ?? [];
+        const movsAsc = [...movsDesc].reverse();
+
+        // Por producto, buckets: key segura via JSON.stringify.
+        type Bucket = { responsable: string | null; obra: string | null; saldo: number; primeraFecha: string };
+        const buckets = new Map<string, Map<string, Bucket>>();
+
+        const keyOf = (resp: string | null, obra: string | null) =>
+          JSON.stringify([resp ?? "", obra ?? ""]);
+
+        // FIFO sobre buckets abiertos del producto (saldo > 0), ordenados por primeraFecha ASC.
+        const drenarFifo = (pid: string, cantidad: number) => {
+          const map = buckets.get(pid);
+          if (!map) return;
+          const abiertos = Array.from(map.values())
+            .filter((b) => b.saldo > 0)
+            .sort((a, b) => a.primeraFecha.localeCompare(b.primeraFecha));
+          let pend = cantidad;
+          for (const b of abiertos) {
+            if (pend <= 0) break;
+            const take = Math.min(b.saldo, pend);
+            b.saldo -= take;
+            pend -= take;
           }
-          if ((m.tipo === "DEVOLUCION" || m.tipo === "BAJA") && !devoluciones.has(m.producto_id)) {
-            devoluciones.set(m.producto_id, m.fecha);
+        };
+
+        for (const m of movsAsc) {
+          const cant = Number(m.cantidad ?? 0);
+          if (!Number.isFinite(cant) || cant <= 0) continue;
+          const pid = m.producto_id;
+
+          if (m.tipo === "ASIGNACION") {
+            const k = keyOf(m.usuario_nombre, m.proyecto_titulo);
+            const map = buckets.get(pid) ?? new Map<string, Bucket>();
+            const ex = map.get(k);
+            if (ex) {
+              ex.saldo += cant;
+              // primeraFecha se mantiene (la más vieja del par).
+            } else {
+              map.set(k, {
+                responsable: m.usuario_nombre,
+                obra: m.proyecto_titulo,
+                saldo: cant,
+                primeraFecha: m.fecha,
+              });
+            }
+            buckets.set(pid, map);
+          } else if (m.tipo === "DEVOLUCION") {
+            const map = buckets.get(pid);
+            if (!map) continue;
+            const tienePar = m.usuario_nombre || m.proyecto_titulo;
+            if (tienePar) {
+              const k = keyOf(m.usuario_nombre, m.proyecto_titulo);
+              const ex = map.get(k);
+              let pend = cant;
+              if (ex && ex.saldo > 0) {
+                const take = Math.min(ex.saldo, pend);
+                ex.saldo -= take;
+                pend -= take;
+              }
+              if (pend > 0) drenarFifo(pid, pend);
+            } else {
+              drenarFifo(pid, cant);
+            }
           }
+          // BAJA: no cierra asignaciones.
         }
-        for (const [pid, info] of asignaciones) {
-          const devFecha = devoluciones.get(pid);
-          if (!devFecha || devFecha < info.fecha) {
-            ult.set(pid, { responsable: info.responsable, proyecto_titulo: info.proyecto_titulo });
+
+        // Resumir por producto.
+        const ult = new Map<string, { responsable: string | null; obra: string | null }>();
+        for (const [pid, map] of buckets) {
+          const abiertos = Array.from(map.values()).filter((b) => b.saldo > 0);
+          if (abiertos.length === 0) continue;
+          const respSet = new Set<string>();
+          const obraSet = new Set<string>();
+          for (const b of abiertos) {
+            if (b.responsable) respSet.add(b.responsable);
+            if (b.obra) obraSet.add(b.obra);
           }
+          ult.set(pid, {
+            responsable: respSet.size === 0 ? null : respSet.size === 1 ? Array.from(respSet)[0] : "Varios",
+            obra:        obraSet.size === 0 ? null : obraSet.size === 1 ? Array.from(obraSet)[0] : "Varias obras",
+          });
         }
         setUltAsign(ult);
       })
@@ -552,7 +629,7 @@ export default function InventarioPage() {
                     )}
                     <td className="py-4 pr-4 hidden lg:table-cell">
                       {tab === "herramienta" ? (
-                        <span className="text-xs text-gray-700">{ultAsign.get(p.id)?.proyecto_titulo ?? <span className="text-gray-300">—</span>}</span>
+                        <span className="text-xs text-gray-700">{ultAsign.get(p.id)?.obra ?? <span className="text-gray-300">—</span>}</span>
                       ) : tab === "consumible" ? (
                         <span className="tabular-nums font-semibold text-gray-800">
                           {formatGs(p.stock_actual * p.costo_promedio)}
