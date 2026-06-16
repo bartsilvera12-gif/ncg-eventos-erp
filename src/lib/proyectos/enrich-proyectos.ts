@@ -67,7 +67,7 @@ export async function enrichProyectosRows(
 
   const catalog = createServiceRoleClient();
 
-  const [tiposR, estadosR, clientesR, usersR, historialR] = await Promise.all([
+  const [tiposR, estadosR, clientesR, usersR, empleadosR, historialR] = await Promise.all([
     tipoIds.length
       ? sb.from("proyecto_tipos").select("id,nombre,codigo").eq("empresa_id", empresaId).in("id", tipoIds)
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
@@ -83,6 +83,9 @@ export async function enrichProyectosRows(
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     userIds.length
       ? catalog.from("usuarios").select("id,nombre").eq("empresa_id", empresaId).in("id", userIds)
+      : Promise.resolve({ data: [] as Record<string, unknown>[] }),
+    userIds.length
+      ? sb.from("empleados").select("id,nombre").eq("empresa_id", empresaId).in("id", userIds)
       : Promise.resolve({ data: [] as Record<string, unknown>[] }),
     proyectoIds.length
       ? sb
@@ -118,6 +121,15 @@ export async function enrichProyectosRows(
       return [row.id, row] as const;
     })
   );
+  // Empleados: en NCG el responsable comercial/tecnico de un proyecto puede
+  // ser un empleado (no un usuario del sistema). Buscamos ambos catalogos
+  // contra el mismo set de IDs.
+  const empleadosMap = new Map(
+    (empleadosR.data ?? []).map((t) => {
+      const row = t as { id: string };
+      return [row.id, row] as const;
+    })
+  );
   const historialPorProyecto = new Map<string, Record<string, unknown>[]>();
   for (const h of historialR.data ?? []) {
     const row = h as Record<string, unknown>;
@@ -141,11 +153,11 @@ export async function enrichProyectosRows(
     if (estado_id) out.proyecto_estado = (estadosMap.get(estado_id) as ProyectoEnriquecido["proyecto_estado"]) ?? null;
     if (cliente_id) out.cliente = (clientesMap.get(cliente_id) as ProyectoEnriquecido["cliente"]) ?? null;
     if (rc) {
-      const u = usersMap.get(rc) as { id: string; nombre?: string } | undefined;
+      const u = (usersMap.get(rc) ?? empleadosMap.get(rc)) as { id: string; nombre?: string } | undefined;
       out.responsable_comercial = u ? { id: u.id, nombre: u.nombre ?? null } : { id: rc, nombre: null };
     }
     if (rt) {
-      const u = usersMap.get(rt) as { id: string; nombre?: string } | undefined;
+      const u = (usersMap.get(rt) ?? empleadosMap.get(rt)) as { id: string; nombre?: string } | undefined;
       out.responsable_tecnico = u ? { id: u.id, nombre: u.nombre ?? null } : { id: rt, nombre: null };
     }
     const estado = out.proyecto_estado;

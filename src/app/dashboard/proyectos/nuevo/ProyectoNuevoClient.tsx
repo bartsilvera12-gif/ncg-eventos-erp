@@ -20,6 +20,15 @@ type Tipo = { id: string; nombre: string; codigo: string };
 type Estado = { id: string; nombre: string };
 type Cliente = { id: string; empresa?: string | null; nombre_contacto?: string | null };
 type Usuario = { id: string; nombre?: string | null };
+type Empleado = { id: string; nombre: string; cargo?: string | null; activo?: boolean };
+type Asignacion = { empleado_id: string | null; tipos: string[] | null; activo: boolean };
+
+/**
+ * Slugs del catálogo de tipos que se consideran "comercial" o "técnico" para
+ * filtrar los empleados en los selectores Resp. comercial / Resp. técnico.
+ */
+const SLUGS_COMERCIAL = new Set(["vendedor", "cobrador", "comercial"]);
+const SLUGS_TECNICO = new Set(["tecnico", "técnico"]);
 
 export default function ProyectoNuevoClient() {
   const router = useRouter();
@@ -27,6 +36,8 @@ export default function ProyectoNuevoClient() {
   const [estados, setEstados] = useState<Estado[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+  const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
   const [modulosCatalogo, setModulosCatalogo] = useState<ModuloCatalogo[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,6 +91,28 @@ export default function ProyectoNuevoClient() {
   }
 
   const tipoCodigo = useMemo(() => tipos.find((t) => t.id === tipoId)?.codigo ?? "", [tipos, tipoId]);
+
+  /** Empleados activos elegibles para "Resp. comercial" / "Resp. técnico"
+   *  según los tipos que tengan asignados en /rrhh/tipos-empleado. */
+  const empleadosComerciales = useMemo(() => {
+    const set = new Set(
+      asignaciones
+        .filter((a) => a.activo && (a.tipos ?? []).some((t) => SLUGS_COMERCIAL.has(t)))
+        .map((a) => a.empleado_id)
+        .filter((v): v is string => Boolean(v)),
+    );
+    return empleados.filter((e) => set.has(e.id) && e.activo !== false);
+  }, [empleados, asignaciones]);
+
+  const empleadosTecnicos = useMemo(() => {
+    const set = new Set(
+      asignaciones
+        .filter((a) => a.activo && (a.tipos ?? []).some((t) => SLUGS_TECNICO.has(t)))
+        .map((a) => a.empleado_id)
+        .filter((v): v is string => Boolean(v)),
+    );
+    return empleados.filter((e) => set.has(e.id) && e.activo !== false);
+  }, [empleados, asignaciones]);
   const esWeb = tipoCodigo === "web";
   const esSaas = tipoCodigo === "saas";
   const saasModulosSeleccionados = useMemo<ProyectoModuloSnapshot[]>(
@@ -93,18 +126,22 @@ export default function ProyectoNuevoClient() {
   useEffect(() => {
     let cancel = false;
     (async () => {
-      const [rT, rE, rC, rU, rM] = await Promise.all([
+      const [rT, rE, rC, rU, rM, rEmp, rAsig] = await Promise.all([
         fetchWithSupabaseSession("/api/proyectos/tipos", { cache: "no-store" }),
         fetchWithSupabaseSession("/api/proyectos/estados", { cache: "no-store" }),
         fetchWithSupabaseSession("/api/clientes", { cache: "no-store" }),
         fetchWithSupabaseSession("/api/usuarios/empresa-activos", { cache: "no-store" }),
         fetchWithSupabaseSession("/api/proyectos/modulos-catalogo", { cache: "no-store" }),
+        fetchWithSupabaseSession("/api/rrhh/empleados", { cache: "no-store" }),
+        fetchWithSupabaseSession("/api/rrhh/asignaciones-tipo", { cache: "no-store" }),
       ]);
       const jT = (await rT.json()) as { success?: boolean; data?: Tipo[] };
       const jE = (await rE.json()) as { success?: boolean; data?: Estado[] };
       const jC = (await rC.json()) as { success?: boolean; data?: Cliente[] };
       const jUsers = (await rU.json()) as { usuarios?: Usuario[] };
       const jModulos = (await rM.json()) as { success?: boolean; data?: ModuloCatalogo[] };
+      const jEmp = (await rEmp.json()) as { success?: boolean; data?: { empleados?: Empleado[] } };
+      const jAsig = (await rAsig.json()) as { success?: boolean; data?: { asignaciones?: Asignacion[] } };
       if (cancel) return;
       if (jT.success && jT.data) {
         setTipos(jT.data);
@@ -115,6 +152,8 @@ export default function ProyectoNuevoClient() {
       if (jC.success && jC.data) setClientes(jC.data);
       setUsuarios(jUsers.usuarios ?? []);
       if (jModulos.success && jModulos.data) setModulosCatalogo(jModulos.data);
+      if (jEmp.success) setEmpleados(jEmp.data?.empleados ?? []);
+      if (jAsig.success) setAsignaciones(jAsig.data?.asignaciones ?? []);
       setLoading(false);
     })();
     return () => {
@@ -282,12 +321,21 @@ export default function ProyectoNuevoClient() {
               onChange={(e) => setRc(e.target.value)}
             >
               <option value="">—</option>
-              {usuarios.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.nombre ?? u.id.slice(0, 8)}
-                </option>
-              ))}
+              {empleadosComerciales.length === 0 ? (
+                <option value="" disabled>Sin empleados comerciales asignados</option>
+              ) : (
+                empleadosComerciales.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.nombre}{e.cargo ? ` — ${e.cargo}` : ""}
+                  </option>
+                ))
+              )}
             </select>
+            {empleadosComerciales.length === 0 && (
+              <p className="mt-1 text-[11px] text-slate-400">
+                Asigná el tipo &quot;Vendedor&quot; o &quot;Cobrador&quot; en RRHH → Asignación de tipo de empleado.
+              </p>
+            )}
           </label>
           <label className="block text-sm">
             <span className="font-medium text-slate-700">Resp. técnico</span>
@@ -297,12 +345,21 @@ export default function ProyectoNuevoClient() {
               onChange={(e) => setRt(e.target.value)}
             >
               <option value="">—</option>
-              {usuarios.map((u) => (
-                <option key={`t-${u.id}`} value={u.id}>
-                  {u.nombre ?? u.id.slice(0, 8)}
-                </option>
-              ))}
+              {empleadosTecnicos.length === 0 ? (
+                <option value="" disabled>Sin empleados técnicos asignados</option>
+              ) : (
+                empleadosTecnicos.map((e) => (
+                  <option key={`t-${e.id}`} value={e.id}>
+                    {e.nombre}{e.cargo ? ` — ${e.cargo}` : ""}
+                  </option>
+                ))
+              )}
             </select>
+            {empleadosTecnicos.length === 0 && (
+              <p className="mt-1 text-[11px] text-slate-400">
+                Asigná el tipo &quot;Técnico&quot; en RRHH → Asignación de tipo de empleado.
+              </p>
+            )}
           </label>
           <label className="block text-sm">
             <span className="font-medium text-slate-700">Fecha ingreso</span>
