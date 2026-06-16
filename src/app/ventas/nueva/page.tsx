@@ -8,6 +8,7 @@ import ProductPickerModal, { type AgregarVentaPayload } from "@/components/inven
 import PagoDetalleModal from "@/components/ventas/PagoDetalleModal";
 import { saveVenta } from "@/lib/ventas/storage";
 import type { TipoIvaVenta, TipoVenta, MonedaVenta, LineaVenta, MetodoPago, TipoPrecioVenta, PagoDetalleVenta } from "@/lib/ventas/types";
+import { parseImporte } from "@/lib/utils/money";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -169,7 +170,7 @@ export default function NuevaVentaPage() {
   const ventaValida   = items.length > 0 && pedidoValido;
 
   // Vuelto (solo informativo, no se persiste)
-  const montoRecibidoNum = parseFloat(montoRecibido) || 0;
+  const montoRecibidoNum = parseImporte(montoRecibido);
   const vuelto           = montoRecibidoNum - totalGeneral;
 
   function handleEliminarLinea(index: number) {

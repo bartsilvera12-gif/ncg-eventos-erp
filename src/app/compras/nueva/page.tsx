@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import MontoInput from "@/components/ui/MontoInput";
 import PageHeader from "@/components/ui/PageHeader";
 import { saveCompraMulti, uploadFacturaCompra } from "@/lib/compras/storage";
+import { parseImporte } from "@/lib/utils/money";
 import { getProveedores, proveedorExiste, createProveedor } from "@/lib/proveedores/storage";
 import { getProductos, productoExiste, saveProducto } from "@/lib/inventario/storage";
 import type {
@@ -218,9 +219,9 @@ export default function NuevaCompraPage() {
   }, []);
 
   // ── Cálculos ──────────────────────────────────────────────────────────────
-  const tipoCambioNum = header.moneda === "USD" ? (parseFloat(header.tipo_cambio) || 0) : 1;
-  const cantNum = parseFloat(linea.cantidad) || 0;
-  const costoInputNum = parseFloat(linea.costo_input) || 0;
+  const tipoCambioNum = header.moneda === "USD" ? parseImporte(header.tipo_cambio) : 1;
+  const cantNum = parseImporte(linea.cantidad);
+  const costoInputNum = parseImporte(linea.costo_input);
   // Importe unitario tal como lo ingresa el usuario (puede incluir IVA).
   const costoInputEur = costoInputNum * tipoCambioNum;
   const ivaRateLinea = ivaRate(linea.iva_tipo);
@@ -246,7 +247,7 @@ export default function NuevaCompraPage() {
     && (!docMeta.required || !!header.nro_timbrado.trim())
     && items.length > 0;
 
-  const precioSugeridoNum = parseFloat(formProducto.precio_venta_sugerido) || 0;
+  const precioSugeridoNum = parseImporte(formProducto.precio_venta_sugerido);
   const margenPreview =
     precioSugeridoNum > 0 && costoEur > 0 ? ((precioSugeridoNum - costoEur) / precioSugeridoNum) * 100 : null;
 

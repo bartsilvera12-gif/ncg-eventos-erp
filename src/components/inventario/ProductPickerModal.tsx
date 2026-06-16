@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { TipoIvaVenta } from "@/lib/ventas/types";
+import { parseImporte, importeToInputValue } from "@/lib/utils/money";
 
 export interface ProductoPickerItem {
   id: string;
@@ -140,12 +141,16 @@ export default function ProductPickerModal({
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [q, open]);
 
-  /** Convierte un precio en PYG a la moneda activa de la venta (string para el input). */
-  function precioEnMonedaStr(precioGs: number): string {
+  /**
+   * Convierte el precio del producto (en la moneda base, sea € o GS) al texto que va
+   * dentro del <input>. CONSERVA decimales: el bug anterior era hacer Math.round y
+   * truncar 4,25 → 4.
+   */
+  function precioEnMonedaStr(precioBase: number): string {
     if (moneda === "USD" && tipoCambio > 0) {
-      return String(Math.round((precioGs / tipoCambio) * 100) / 100);
+      return importeToInputValue(precioBase / tipoCambio);
     }
-    return String(Math.round(precioGs));
+    return importeToInputValue(precioBase);
   }
 
   function selectProducto(p: ProductoPickerItem) {
@@ -167,8 +172,8 @@ export default function ProductPickerModal({
 
   function handleAgregar() {
     if (!sel) return;
-    const cantNum = parseFloat(cantidad.replace(",", ".")) || 0;
-    const precioNum = parseFloat(precio) || 0;
+    const cantNum = parseImporte(cantidad);
+    const precioNum = parseImporte(precio);
     if (cantNum <= 0) { setFeedback("Cantidad debe ser > 0"); return; }
     if (precioNum <= 0) { setFeedback("Precio debe ser > 0"); return; }
     if (moneda === "USD" && tipoCambio <= 0) { setFeedback("Falta tipo de cambio en la venta"); return; }
@@ -196,8 +201,8 @@ export default function ProductPickerModal({
   if (!open) return null;
   const enCarritoSel = sel ? excludeIds.filter((id) => id === sel.id).length : 0;
   const dispSel = sel ? sel.stock_actual - enCarritoSel : 0;
-  const precioGsEquiv = moneda === "USD" ? (parseFloat(precio) || 0) * (tipoCambio || 0) : (parseFloat(precio) || 0);
-  const brutoLinea = (parseFloat(cantidad.replace(",", ".")) || 0) * precioGsEquiv;
+  const precioGsEquiv = moneda === "USD" ? parseImporte(precio) * (tipoCambio || 0) : parseImporte(precio);
+  const brutoLinea = parseImporte(cantidad) * precioGsEquiv;
   const tasaIva =
     iva === "21%" ? 0.21 :
     iva === "10%" ? 0.10 :
@@ -412,9 +417,9 @@ export default function ProductPickerModal({
                         Cantidad ({sel.unidad_medida})
                       </label>
                       <input
-                        type="number" min={0} step="any" inputMode="decimal"
+                        type="text" inputMode="decimal" autoComplete="off"
                         value={cantidad}
-                        onChange={(e) => setCantidad(e.target.value)}
+                        onChange={(e) => setCantidad(e.target.value.replace(/[^\d.,-]/g, ""))}
                         className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm"
                       />
                     </div>
@@ -423,12 +428,12 @@ export default function ProductPickerModal({
                         {precioIncluyeIva ? "Precio final con IVA" : "Precio sin IVA"} ({moneda === "USD" ? "USD" : "€"})
                       </label>
                       <input
-                        type="number" min={0}
+                        type="text" inputMode="decimal" autoComplete="off"
                         value={precio}
-                        onChange={(e) => setPrecio(e.target.value)}
+                        onChange={(e) => setPrecio(e.target.value.replace(/[^\d.,-]/g, ""))}
                         className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm"
                       />
-                      {moneda === "USD" && (parseFloat(precio) || 0) > 0 && (
+                      {moneda === "USD" && parseImporte(precio) > 0 && (
                         <p className="mt-1 text-[11px] text-slate-400">≈ {formatGs(precioGsEquiv)}</p>
                       )}
                     </div>
