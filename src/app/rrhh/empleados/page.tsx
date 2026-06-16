@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import PageHeader from "@/components/ui/PageHeader";
 import MontoInput from "@/components/ui/MontoInput";
@@ -429,6 +429,68 @@ function Section({ titulo, children }: { titulo: string; children: React.ReactNo
   );
 }
 
+/**
+ * Combo de supervisor: input editable + dropdown filtrable.
+ * Reemplaza el <datalist> nativo (poco confiable y no se abre al focus).
+ * Acepta nombres libres (no obliga a elegir de la lista).
+ */
+function SupervisorPicker({
+  value, onChange, opciones,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  opciones: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(e: MouseEvent) {
+      if (!boxRef.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  const sugerencias = useMemo(() => {
+    const q = value.trim().toLowerCase();
+    if (!q) return opciones.slice(0, 12);
+    return opciones.filter((n) => n.toLowerCase().includes(q)).slice(0, 12);
+  }, [value, opciones]);
+
+  return (
+    <div ref={boxRef} className="relative">
+      <input
+        className={inputCls}
+        value={value}
+        onChange={(e) => { onChange(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        placeholder="Buscar empleado…"
+        autoComplete="off"
+      />
+      {open && (sugerencias.length > 0 || value.trim().length > 0) && (
+        <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+          {sugerencias.length === 0 ? (
+            <div className="px-3 py-2 text-xs text-slate-400">Sin coincidencias. Se guardará &quot;{value.trim()}&quot;.</div>
+          ) : (
+            sugerencias.map((nombre) => (
+              <button
+                key={nombre}
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); onChange(nombre); setOpen(false); }}
+                className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+              >
+                {nombre}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function EmpleadoFormFields({
   form, setForm, editMode = false, supervisores = [],
 }: {
@@ -526,20 +588,12 @@ function EmpleadoFormFields({
           <input type="date" className={inputCls} value={form.fecha_baja}
             onChange={(e) => set("fecha_baja", e.target.value)} />
         </Field>
-        <Field label="Supervisor inmediato" hint="Tipeá para buscar; podés elegir uno de la lista o escribir un nombre nuevo.">
-          <input
-            className={inputCls}
+        <Field label="Supervisor inmediato" hint="Buscá o escribí un nombre nuevo.">
+          <SupervisorPicker
             value={form.supervisor}
-            onChange={(e) => set("supervisor", e.target.value)}
-            list="empleados-supervisores-list"
-            placeholder="Buscar empleado…"
-            autoComplete="off"
+            onChange={(v) => set("supervisor", v)}
+            opciones={supervisores}
           />
-          <datalist id="empleados-supervisores-list">
-            {supervisores.map((nombre) => (
-              <option key={nombre} value={nombre} />
-            ))}
-          </datalist>
         </Field>
         <Field label="Departamento">
           <input className={inputCls} value={form.departamento}
