@@ -142,6 +142,10 @@ export default function MovimientosPage() {
             <option value="ENTRADA">ENTRADA</option>
             <option value="SALIDA">SALIDA</option>
             <option value="AJUSTE">AJUSTE</option>
+            <option value="ASIGNACION">ASIGNACIÓN</option>
+            <option value="DEVOLUCION">DEVOLUCIÓN</option>
+            <option value="BAJA">BAJA</option>
+            <option value="MANTENIMIENTO_FIN">FIN MANT.</option>
           </select>
           <select
             value={filtroOrigen}
@@ -220,21 +224,32 @@ export default function MovimientosPage() {
               ) : (
                 filtrados.map((m) => {
                   const signo =
-                    m.tipo === "ENTRADA" ? "+" : m.tipo === "SALIDA" ? "−" : m.cantidad >= 0 ? "+" : "";
+                    m.tipo === "ENTRADA" ? "+"
+                    : m.tipo === "SALIDA" || m.tipo === "BAJA" ? "−"
+                    : m.cantidad >= 0 ? "+" : "";
                   const cantidadColor =
-                    m.tipo === "ENTRADA"
-                      ? "text-green-600"
-                      : m.tipo === "SALIDA"
-                      ? "text-red-600"
-                      : "text-yellow-600";
+                    m.tipo === "ENTRADA" || m.tipo === "DEVOLUCION" || m.tipo === "MANTENIMIENTO_FIN" ? "text-green-600"
+                    : m.tipo === "SALIDA" || m.tipo === "BAJA" ? "text-red-600"
+                    : m.tipo === "ASIGNACION" ? "text-sky-700"
+                    : "text-yellow-600";
+                  const tipoLabel =
+                    m.tipo === "ASIGNACION" ? "ASIGNACIÓN"
+                    : m.tipo === "DEVOLUCION" ? "DEVOLUCIÓN"
+                    : m.tipo === "MANTENIMIENTO_FIN" ? "FIN MANT."
+                    : m.tipo;
+                  const tipoTone: "success" | "danger" | "warning" | "primary" | "info" =
+                    m.tipo === "ENTRADA" || m.tipo === "DEVOLUCION" || m.tipo === "MANTENIMIENTO_FIN" ? "success"
+                    : m.tipo === "SALIDA" || m.tipo === "BAJA" ? "danger"
+                    : m.tipo === "ASIGNACION" ? "info"
+                    : "warning";
 
                   return (
                     <tr key={m.id} className="border-b last:border-0 hover:bg-gray-50">
                       <td className="py-4 pr-4 font-medium text-gray-800">{m.producto_nombre}</td>
                       <td className="py-4 pr-4 text-gray-500 font-mono hidden md:table-cell">{m.producto_sku}</td>
                       <td className="py-4 pr-4">
-                        <Badge tone={m.tipo === "ENTRADA" ? "success" : m.tipo === "SALIDA" ? "danger" : "warning"}>
-                          {m.tipo}
+                        <Badge tone={tipoTone}>
+                          {tipoLabel}
                         </Badge>
                       </td>
                       <td className={`py-4 pr-4 text-right font-semibold tabular-nums ${cantidadColor}`}>
@@ -252,7 +267,10 @@ export default function MovimientosPage() {
                         </span>
                       </td>
                       <td className="py-4 pr-4 text-gray-700 text-xs hidden lg:table-cell">
-                        {m.motivo ? (MOTIVO_LABEL[m.motivo] ?? m.motivo) : <span className="text-gray-300">—</span>}
+                        {m.motivo ? (MOTIVO_LABEL[m.motivo] ?? m.motivo)
+                          : m.motivo_baja ? `Baja: ${m.motivo_baja}`
+                          : m.estado_devolucion ? `Dev: ${m.estado_devolucion}`
+                          : <span className="text-gray-300">—</span>}
                       </td>
                       <td className="py-4 pr-4 text-gray-700 text-xs hidden lg:table-cell">
                         {m.proyecto_titulo ?? <span className="text-gray-300">—</span>}

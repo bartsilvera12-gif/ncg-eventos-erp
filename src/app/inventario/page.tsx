@@ -11,6 +11,11 @@ import PageHeader from "@/components/ui/PageHeader";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { useIsAdmin } from "@/lib/auth/use-is-admin";
 import SalidaConsumibleModal, { type SalidaConsumibleProducto } from "@/components/inventario/SalidaConsumibleModal";
+import AsignarHerramientaModal, { type HerramientaResumen } from "@/components/inventario/AsignarHerramientaModal";
+import DevolverHerramientaModal from "@/components/inventario/DevolverHerramientaModal";
+import FinalizarMantenimientoModal from "@/components/inventario/FinalizarMantenimientoModal";
+import BajaHerramientaModal from "@/components/inventario/BajaHerramientaModal";
+import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
 
 const inputFilterClass =
   "border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none";
@@ -62,6 +67,9 @@ export default function InventarioPage() {
   const [eliminandoId,     setEliminandoId]     = useState<string | null>(null);
   const [salidaProducto,   setSalidaProducto]   = useState<SalidaConsumibleProducto | null>(null);
   const [toast,            setToast]            = useState<string | null>(null);
+  // Herramientas: estado de modales y resumen de "última asignación" por producto.
+  const [herrModal, setHerrModal] = useState<{ tipo: "asignar" | "devolver" | "finmant" | "baja"; herr: HerramientaResumen } | null>(null);
+  const [ultAsign,  setUltAsign]  = useState<Map<string, { responsable: string | null; proyecto_titulo: string | null }>>(new Map());
 
   async function handleEliminarProducto(id: string, nombre: string) {
     if (eliminandoId) return; // evitar doble click
@@ -111,6 +119,41 @@ export default function InventarioPage() {
       .catch(() => undefined);
     return () => { cancelled = true; };
   }, [refreshKey]);
+
+  // Última asignación por herramienta (solo cuando estamos en ese tab).
+  // Hace UN GET de movimientos y arma un Map producto_id -> {responsable, obra}.
+  useEffect(() => {
+    if (tab !== "herramienta") return;
+    let cancel = false;
+    fetchWithSupabaseSession("/api/inventario/movimientos", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: { movimientos?: Array<{ producto_id: string; tipo: string; usuario_nombre: string | null; proyecto_titulo: string | null; fecha: string }> } }) => {
+        if (cancel) return;
+        const ult = new Map<string, { responsable: string | null; proyecto_titulo: string | null }>();
+        const movs = j.data?.movimientos ?? [];
+        // movimientos vienen ordenados por fecha desc; el primer ASIGNACION por producto
+        // que tenga su par DEVOLUCION posterior se descarta.
+        const asignaciones = new Map<string, { fecha: string; responsable: string | null; proyecto_titulo: string | null }>();
+        const devoluciones = new Map<string, string>(); // producto_id -> ultima_fecha_devolucion
+        for (const m of movs) {
+          if (m.tipo === "ASIGNACION" && !asignaciones.has(m.producto_id)) {
+            asignaciones.set(m.producto_id, { fecha: m.fecha, responsable: m.usuario_nombre, proyecto_titulo: m.proyecto_titulo });
+          }
+          if ((m.tipo === "DEVOLUCION" || m.tipo === "BAJA") && !devoluciones.has(m.producto_id)) {
+            devoluciones.set(m.producto_id, m.fecha);
+          }
+        }
+        for (const [pid, info] of asignaciones) {
+          const devFecha = devoluciones.get(pid);
+          if (!devFecha || devFecha < info.fecha) {
+            ult.set(pid, { responsable: info.responsable, proyecto_titulo: info.proyecto_titulo });
+          }
+        }
+        setUltAsign(ult);
+      })
+      .catch(() => { /* tolerante */ });
+    return () => { cancel = true; };
+  }, [tab, refreshKey]);
 
   // Map se reconstruia en cada render del componente (cualquier setState de
   // filtro): O(N) basura por keystroke. useMemo lo cachea hasta que cambia ubicaciones.
@@ -407,19 +450,22 @@ export default function InventarioPage() {
               <tr className="bg-slate-50 text-slate-600 text-sm font-semibold">
                 <th className="py-3 pr-4 font-medium">Nombre</th>
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">SKU</th>
-                <th className="py-3 pr-4 font-medium">Costo Prom.</th>
+                <th className={`py-3 pr-4 font-medium ${tab === "herramienta" ? "hidden lg:table-cell" : ""}`}>
+                  {tab === "herramienta" ? "Costo adquisición" : "Costo Prom."}
+                </th>
                 <th className={`py-3 pr-4 font-medium ${tab === "consumible" ? "" : "hidden"}`}>Último costo</th>
-                <th className={`py-3 pr-4 font-medium ${tab === "consumible" ? "hidden" : ""}`}>Precio Venta</th>
+                <th className={`py-3 pr-4 font-medium ${tab === "consumible" || tab === "herramienta" ? "hidden" : ""}`}>Precio Venta</th>
                 <th className={`py-3 pr-4 font-medium text-center ${tab !== "herramienta" ? "" : "hidden"}`}>Stock</th>
                 <th className={`py-3 pr-4 font-medium text-center ${tab !== "herramienta" ? "hidden md:table-cell" : "hidden"}`}>Stock Mín.</th>
-                <th className="py-3 pr-4 font-medium hidden lg:table-cell">Unidad</th>
-                <th className="py-3 pr-4 font-medium hidden lg:table-cell">
-                  {tab === "consumible" ? "Valor (€)" : "Valuación"}
+                <th className={`py-3 pr-4 font-medium ${tab === "herramienta" ? "" : "hidden"}`}>Estado</th>
+                <th className={`py-3 pr-4 font-medium hidden md:table-cell ${tab === "herramienta" ? "" : ""}`}>{tab === "herramienta" ? "Responsable" : "Unidad"}</th>
+                <th className={`py-3 pr-4 font-medium hidden lg:table-cell`}>
+                  {tab === "herramienta" ? "Obra asignada" : tab === "consumible" ? "Valor (€)" : "Valuación"}
                 </th>
-                <th className={`py-3 pr-6 font-medium text-right hidden md:table-cell ${tab === "consumible" ? "md:hidden" : ""}`}>
+                <th className={`py-3 pr-6 font-medium text-right hidden md:table-cell ${tab === "consumible" || tab === "herramienta" ? "md:hidden" : ""}`}>
                   <span title="(precio - costo) / precio × 100">Margen s/venta</span>
                 </th>
-                <th className={`py-3 pl-4 font-medium text-center ${tab === "consumible" ? "w-60" : "w-44"}`}>Acción</th>
+                <th className={`py-3 pl-4 font-medium text-center ${tab === "consumible" || tab === "herramienta" ? "w-72" : "w-44"}`}>Acción</th>
               </tr>
             </thead>
 
@@ -478,18 +524,42 @@ export default function InventarioPage() {
                       </div>
                     </td>
                     <td className="py-4 pr-4 text-gray-500 font-mono hidden md:table-cell">{p.sku}</td>
-                    <td className="py-4 pr-4 text-gray-700">{formatGs(p.costo_promedio)}</td>
+                    <td className={`py-4 pr-4 text-gray-700 ${tab === "herramienta" ? "hidden lg:table-cell" : ""}`}>{formatGs(p.costo_promedio)}</td>
                     <td className={`py-4 pr-4 text-gray-700 ${tab === "consumible" ? "" : "hidden"}`}>{formatGs(p.ultimo_costo ?? p.costo_promedio)}</td>
-                    <td className={`py-4 pr-4 text-gray-700 ${tab === "consumible" ? "hidden" : ""}`}>{formatGs(p.precio_venta)}</td>
+                    <td className={`py-4 pr-4 text-gray-700 ${tab === "consumible" || tab === "herramienta" ? "hidden" : ""}`}>{formatGs(p.precio_venta)}</td>
                     <td className={`py-4 pr-4 text-center ${tab !== "herramienta" ? "" : "hidden"}`}>
                       <span className={`font-semibold ${stockBajo ? "text-red-600" : "text-gray-800"}`}>
                         {p.stock_actual}
                       </span>
                     </td>
                     <td className={`py-4 pr-4 text-center text-gray-500 ${tab !== "herramienta" ? "hidden md:table-cell" : "hidden"}`}>{p.stock_minimo}</td>
-                    <td className="py-4 pr-4 text-gray-600 hidden lg:table-cell">{p.unidad_medida}</td>
+                    {/* Estado (solo herramienta) */}
+                    {tab === "herramienta" && (() => {
+                      const asignada = p.cantidad_asignada ?? 0;
+                      const mant = p.cantidad_mantenimiento ?? 0;
+                      const disp = p.stock_actual - asignada - mant;
+                      return (
+                        <td className="py-4 pr-4">
+                          <div className="flex flex-col gap-0.5 text-[11px]">
+                            {disp > 0 && <span className="font-semibold text-emerald-700">Disponible · {disp}</span>}
+                            {asignada > 0 && <span className="text-amber-700">En obra · {asignada}</span>}
+                            {mant > 0 && <span className="text-sky-700">Mant. · {mant}</span>}
+                            {disp <= 0 && asignada <= 0 && mant <= 0 && <span className="text-slate-400">—</span>}
+                          </div>
+                        </td>
+                      );
+                    })()}
+                    {tab === "herramienta" ? (
+                      <td className="py-4 pr-4 text-gray-700 text-xs hidden md:table-cell">
+                        {ultAsign.get(p.id)?.responsable ?? <span className="text-gray-300">—</span>}
+                      </td>
+                    ) : (
+                      <td className="py-4 pr-4 text-gray-600 hidden md:table-cell lg:table-cell">{p.unidad_medida}</td>
+                    )}
                     <td className="py-4 pr-4 hidden lg:table-cell">
-                      {tab === "consumible" ? (
+                      {tab === "herramienta" ? (
+                        <span className="text-xs text-gray-700">{ultAsign.get(p.id)?.proyecto_titulo ?? <span className="text-gray-300">—</span>}</span>
+                      ) : tab === "consumible" ? (
                         <span className="tabular-nums font-semibold text-gray-800">
                           {formatGs(p.stock_actual * p.costo_promedio)}
                         </span>
@@ -497,11 +567,55 @@ export default function InventarioPage() {
                         <Badge tone={metodoTone[p.metodo_valuacion]}>{p.metodo_valuacion}</Badge>
                       )}
                     </td>
-                    <td className={`py-4 pr-6 text-right tabular-nums font-semibold hidden md:table-cell ${tab === "consumible" ? "md:hidden" : ""} ${margenColor(margen)}`}>
+                    <td className={`py-4 pr-6 text-right tabular-nums font-semibold hidden md:table-cell ${tab === "consumible" || tab === "herramienta" ? "md:hidden" : ""} ${margenColor(margen)}`}>
                       {margen.toFixed(2)}%
                     </td>
                     <td className="py-4 pl-4 text-center">
                       <div className="inline-flex items-center justify-center gap-2 flex-wrap">
+                        {tab === "herramienta" && (() => {
+                          const asignada = p.cantidad_asignada ?? 0;
+                          const mant = p.cantidad_mantenimiento ?? 0;
+                          const disp = p.stock_actual - asignada - mant;
+                          const resumen: HerramientaResumen = {
+                            id: p.id,
+                            nombre: p.nombre,
+                            sku: p.sku,
+                            stock_actual: p.stock_actual,
+                            cantidad_asignada: asignada,
+                            cantidad_mantenimiento: mant,
+                            unidad_medida: p.unidad_medida,
+                          };
+                          return (
+                            <>
+                              <button type="button" disabled={disp <= 0}
+                                onClick={() => setHerrModal({ tipo: "asignar", herr: resumen })}
+                                className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                Asignar
+                              </button>
+                              <button type="button" disabled={asignada <= 0}
+                                onClick={() => setHerrModal({ tipo: "devolver", herr: resumen })}
+                                className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 hover:border-sky-300 hover:bg-sky-100 disabled:opacity-40 disabled:cursor-not-allowed">
+                                Devolver
+                              </button>
+                              {mant > 0 && (
+                                <button type="button"
+                                  onClick={() => setHerrModal({ tipo: "finmant", herr: resumen })}
+                                  className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 hover:border-amber-300 hover:bg-amber-100">
+                                  Finalizar mant.
+                                </button>
+                              )}
+                              <button type="button"
+                                onClick={() => setHerrModal({ tipo: "baja", herr: resumen })}
+                                className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-red-200 bg-white px-3 py-1.5 text-xs font-medium text-red-600 hover:border-red-300 hover:bg-red-50">
+                                Dar de baja
+                              </button>
+                              <Link href={`/inventario/movimientos?producto=${p.id}`}
+                                className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50">
+                                Historial
+                              </Link>
+                            </>
+                          );
+                        })()}
                         {tab === "consumible" && (
                           <>
                             <button
@@ -553,7 +667,7 @@ export default function InventarioPage() {
                       : hayFiltrosActivos
                         ? "Ningún ítem coincide con los filtros."
                         : tab === "herramienta"
-                          ? "No hay herramientas registradas. Creá una con “Nuevo material” y elegí Herramienta."
+                          ? "No hay herramientas registradas. Creá una con “Nueva herramienta”."
                           : tab === "consumible"
                             ? "No hay consumibles registrados. Creá uno con “Nuevo consumible”."
                             : tab === "accesorio"
@@ -578,6 +692,35 @@ export default function InventarioPage() {
             setToast("Salida registrada correctamente.");
             setTimeout(() => setToast(null), 3000);
           }}
+        />
+      )}
+
+      {herrModal?.tipo === "asignar" && (
+        <AsignarHerramientaModal
+          herramienta={herrModal.herr}
+          onClose={() => setHerrModal(null)}
+          onSaved={async () => { setRefreshKey((k) => k + 1); setToast("Herramienta asignada."); setTimeout(() => setToast(null), 3000); }}
+        />
+      )}
+      {herrModal?.tipo === "devolver" && (
+        <DevolverHerramientaModal
+          herramienta={herrModal.herr}
+          onClose={() => setHerrModal(null)}
+          onSaved={async () => { setRefreshKey((k) => k + 1); setToast("Devolución registrada."); setTimeout(() => setToast(null), 3000); }}
+        />
+      )}
+      {herrModal?.tipo === "finmant" && (
+        <FinalizarMantenimientoModal
+          herramienta={herrModal.herr}
+          onClose={() => setHerrModal(null)}
+          onSaved={async () => { setRefreshKey((k) => k + 1); setToast("Mantenimiento finalizado."); setTimeout(() => setToast(null), 3000); }}
+        />
+      )}
+      {herrModal?.tipo === "baja" && (
+        <BajaHerramientaModal
+          herramienta={herrModal.herr}
+          onClose={() => setHerrModal(null)}
+          onSaved={async () => { setRefreshKey((k) => k + 1); setToast("Baja registrada."); setTimeout(() => setToast(null), 3000); }}
         />
       )}
 

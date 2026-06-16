@@ -1,5 +1,5 @@
 export type MetodoValuacion = "CPP" | "FIFO" | "LIFO";
-export type TipoMovimiento = "ENTRADA" | "SALIDA" | "AJUSTE";
+export type TipoMovimiento = "ENTRADA" | "SALIDA" | "AJUSTE" | "ASIGNACION" | "DEVOLUCION" | "BAJA" | "MANTENIMIENTO_FIN";
 export type OrigenMovimiento = "compra" | "venta" | "ajuste_manual" | "inventario_inicial";
 
 export interface Producto {
@@ -9,6 +9,10 @@ export interface Producto {
   costo_promedio: number;
   /** Costo unitario sin IVA de la última compra registrada. */
   ultimo_costo?: number;
+  /** Herramientas: cantidad prestada/asignada a obras/responsables (no descuenta stock). */
+  cantidad_asignada?: number;
+  /** Herramientas: cantidad en mantenimiento (no descuenta stock). */
+  cantidad_mantenimiento?: number;
   /** Precio de venta minorista (precio al público). Opcional por compat: en
    *  productos viejos se deriva de `precio_venta` en el mapeo (rowToProducto). */
   precio_minorista?: number;
@@ -73,4 +77,12 @@ export interface MovimientoInventario {
   motivo?: string | null;
   /** Observación libre. */
   observacion?: string | null;
+  /** Ubicación de destino (para devoluciones/asignaciones). */
+  ubicacion_destino?: string | null;
+  /** Fecha estimada de devolución (asignaciones). */
+  fecha_devolucion_estimada?: string | null;
+  /** Estado al devolver: buen_estado | requiere_mantenimiento | rota. */
+  estado_devolucion?: string | null;
+  /** Motivo de baja: rotura | perdida | robo | obsolescencia | venta_activo. */
+  motivo_baja?: string | null;
 }

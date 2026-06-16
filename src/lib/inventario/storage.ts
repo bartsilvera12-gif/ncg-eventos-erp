@@ -16,6 +16,8 @@ interface ProductoRow {
   sku: string;
   costo_promedio: number;
   ultimo_costo?: number | string | null;
+  cantidad_asignada?: number | string | null;
+  cantidad_mantenimiento?: number | string | null;
   precio_venta: number;
   precio_minorista?: number | string | null;
   precio_mayorista?: number | string | null;
@@ -66,6 +68,10 @@ interface MovimientoRow {
   proyecto_titulo?: string | null;
   motivo?: string | null;
   observacion?: string | null;
+  ubicacion_destino?: string | null;
+  fecha_devolucion_estimada?: string | null;
+  estado_devolucion?: string | null;
+  motivo_baja?: string | null;
 }
 
 // ─── Mapeo fila → tipo ────────────────────────────────────────────────────────
@@ -88,6 +94,8 @@ function rowToProducto(row: ProductoRow): Producto {
     sku: row.sku,
     costo_promedio: Number(row.costo_promedio),
     ultimo_costo: row.ultimo_costo != null ? Number(row.ultimo_costo) : Number(row.costo_promedio),
+    cantidad_asignada: row.cantidad_asignada != null ? Number(row.cantidad_asignada) : 0,
+    cantidad_mantenimiento: row.cantidad_mantenimiento != null ? Number(row.cantidad_mantenimiento) : 0,
     precio_minorista: precioMinorista,
     precio_mayorista: precioMayorista,
     precio_venta: precioVenta,
@@ -134,6 +142,10 @@ function rowToMovimiento(row: MovimientoRow): MovimientoInventario {
     proyecto_titulo: row.proyecto_titulo ?? null,
     motivo: row.motivo ?? null,
     observacion: row.observacion ?? null,
+    ubicacion_destino: row.ubicacion_destino ?? null,
+    fecha_devolucion_estimada: row.fecha_devolucion_estimada ?? null,
+    estado_devolucion: row.estado_devolucion ?? null,
+    motivo_baja: row.motivo_baja ?? null,
   };
 }
 

@@ -6,7 +6,7 @@ import { normalizeUpperText } from "@/lib/text/normalize";
 import type { AppSupabaseClient } from "@/lib/supabase/schema";
 
 const PRODUCTO_COLS =
-  "id, empresa_id, nombre, sku, costo_promedio, ultimo_costo, precio_venta, precio_minorista, precio_mayorista, stock_actual, stock_minimo, " +
+  "id, empresa_id, nombre, sku, costo_promedio, ultimo_costo, cantidad_asignada, cantidad_mantenimiento, precio_venta, precio_minorista, precio_mayorista, stock_actual, stock_minimo, " +
   "unidad_medida, metodo_valuacion, activo, created_at, updated_at, " +
   "codigo_barras, codigo_interno, codigo_barras_interno, imagen_path, imagen_url, " +
   "categoria_principal_id, ubicacion_principal_id, proveedor_principal_id, " +

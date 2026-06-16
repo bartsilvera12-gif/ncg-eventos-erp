@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await ctx.supabase
       .from("movimientos_inventario")
       .select(
-        "id, empresa_id, producto_id, producto_nombre, producto_sku, tipo, cantidad, costo_unitario, origen, referencia, fecha, created_at, updated_at, created_by, usuario_nombre, proyecto_id, motivo, observacion, proyectos:proyecto_id(titulo)"
+        "id, empresa_id, producto_id, producto_nombre, producto_sku, tipo, cantidad, costo_unitario, origen, referencia, fecha, created_at, updated_at, created_by, usuario_nombre, proyecto_id, motivo, observacion, ubicacion_destino, fecha_devolucion_estimada, estado_devolucion, motivo_baja, proyectos:proyecto_id(titulo)"
       )
       .eq("empresa_id", empresaId)
       .order("fecha", { ascending: false })
