@@ -413,7 +413,6 @@ export default function EditarProductoPage() {
 
       <div className="bg-white rounded-xl border border-amber-200 shadow-sm p-5 max-w-5xl">
         <div className="flex items-start gap-4">
-          <div className="text-3xl">{summary.icono}</div>
           <div className="flex-1 min-w-0">
             <div className="text-base font-semibold text-slate-900">{summary.titulo}</div>
             <div className="text-sm text-slate-600 mt-0.5">{summary.descripcion}</div>
