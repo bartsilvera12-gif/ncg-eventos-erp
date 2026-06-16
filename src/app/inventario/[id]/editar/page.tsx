@@ -37,7 +37,7 @@ export default function EditarProductoPage() {
 
   // descripcion live separately because form se inicializa al cargar
   const [descripcion, setDescripcion] = useState("");
-  const [tipoInv, setTipoInv] = useState<"material" | "herramienta" | "consumible" | "accesorio">("material");
+  const [tipoInv, setTipoInv] = useState<"material" | "herramienta" | "consumible">("material");
   const [form, setForm] = useState({
     nombre: "",
     sku: "",
@@ -151,7 +151,7 @@ export default function EditarProductoPage() {
       const may = p.precio_mayorista ?? min;
       const markupMin = costo > 0 && min > 0 ? ((min - costo) / costo) * 100 : 0;
       const markupMay = costo > 0 && may > 0 ? ((may - costo) / costo) * 100 : 0;
-      setTipoInv((p.tipo_inventario as "material" | "herramienta" | "consumible" | "accesorio" | undefined) ?? "material");
+      setTipoInv((p.tipo_inventario as "material" | "herramienta" | "consumible" | undefined) ?? "material");
       setForm({
         nombre: p.nombre,
         sku: p.sku,

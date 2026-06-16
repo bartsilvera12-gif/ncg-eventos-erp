@@ -31,7 +31,6 @@ const TIPO_SUMMARY = {
   material:    { titulo: "Material",    descripcion: "Materiales que se consumen en cada obra. Controlan stock.",                 icono: "🔩" },
   herramienta: { titulo: "Herramienta", descripcion: "Activos de la empresa. No descuentan stock ni se facturan al cliente.",     icono: "🛠️" },
   consumible:  { titulo: "Consumible",  descripcion: "Insumos que se gastan seguido. Controlan stock para alerta de reposición.", icono: "🛢️" },
-  accesorio:   { titulo: "Accesorio",   descripcion: "Piezas de terminación y accesorios certificados. Controlan stock.",        icono: "🪛" },
 } as const;
 
 interface CatRow { id: string; nombre: string }
@@ -73,7 +72,7 @@ export default function NuevoProductoPage() {
   const [esInsumo, setEsInsumo] = useState(false);
 
   // Selector inicial de tipo — aplica presets a los flags y persiste tipo_inventario.
-  type TipoInventario = "material" | "herramienta" | "consumible" | "accesorio" | null;
+  type TipoInventario = "material" | "herramienta" | "consumible" | null;
   const [tipoInventario, setTipoInventario] = useState<TipoInventario>(null);
   function aplicarTipoInventario(tipo: Exclude<TipoInventario, null>) {
     setTipoInventario(tipo);
@@ -87,15 +86,10 @@ export default function NuevoProductoPage() {
       setEsVendible(false);
       setEsInsumo(false);
       setControlaStock(false);
-    } else if (tipo === "consumible") {
-      // Se gasta seguido durante la obra. Controla stock para alerta de reposición.
+    } else {
+      // Consumible: se gasta seguido durante la obra. Controla stock para alerta de reposición.
       setEsVendible(false);
       setEsInsumo(true);
-      setControlaStock(true);
-    } else {
-      // Accesorio: pieza terminación. Igual que material pero categorizada aparte.
-      setEsVendible(true);
-      setEsInsumo(false);
       setControlaStock(true);
     }
     setForm((prev) => ({ ...prev, unidad_medida: prev.unidad_medida || "UNIDAD" }));
@@ -337,7 +331,7 @@ export default function NuevoProductoPage() {
       // Validaciones básicas en JS (HTML5 desactivado con noValidate).
       const nombreT = form.nombre.trim();
       if (!nombreT) { showErr("El nombre es obligatorio."); return; }
-      if ((tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible") && !form.sku.trim()) { showErr("El código interno / SKU es obligatorio para productos de reventa."); return; }
+      if ((tipoInventario === "material" || tipoInventario === "consumible") && !form.sku.trim()) { showErr("El código interno / SKU es obligatorio para productos de reventa."); return; }
 
       // Código de barras = NUMÉRICO escaneable (EAN-13). El código interno / SKU
       // va en el campo sku. No se autogenera nada al guardar.
@@ -492,13 +486,6 @@ export default function NuevoProductoPage() {
               descripcion: "Insumos que se gastan seguido. Controlan stock con alerta de reposición.",
               acento: "border-emerald-300 bg-emerald-50/40 hover:border-emerald-500",
             },
-            {
-              tipo: "accesorio" as const,
-              titulo: "Accesorio",
-              icono: "🪛",
-              descripcion: "Piezas de terminación y accesorios certificados. Controlan stock e se imputan a obra.",
-              acento: "border-amber-300 bg-amber-50/40 hover:border-amber-500",
-            },
           ]).map((opt) => (
             <button
               key={opt.tipo}
@@ -526,7 +513,7 @@ export default function NuevoProductoPage() {
   }
 
   const summary = TIPO_SUMMARY[tipoInventario];
-  const showStock = (tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible");
+  const showStock = (tipoInventario === "material" || tipoInventario === "consumible" || tipoInventario === "herramienta");
   const esConsumible = tipoInventario === "consumible";
   // Para consumibles no aplica precio de venta (se gastan en obra, no se facturan al cliente).
   const showPrecioVenta = tipoInventario !== "materia" && !esConsumible;
@@ -626,7 +613,7 @@ export default function NuevoProductoPage() {
             <div>
               <label className={labelClass}>
                 Código interno / SKU
-                {(tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible") ? "" : <span className="text-xs font-normal text-gray-400 ml-1">(opcional)</span>}
+                {(tipoInventario === "material" || tipoInventario === "consumible") ? "" : <span className="text-xs font-normal text-gray-400 ml-1">(opcional)</span>}
                 {codigoGeneradoInterno && form.sku && (
                   <span className="ml-2 align-middle text-[10px] uppercase tracking-wider bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded">
                     Generado
@@ -640,7 +627,7 @@ export default function NuevoProductoPage() {
                 onChange={handleChange}
                 placeholder="Ej: INT-DIS-202606-000010 o tu propio código"
                 className={`${inputClass} uppercase`}
-                required={(tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible")}
+                required={(tipoInventario === "material" || tipoInventario === "consumible")}
                 autoComplete="off"
               />
               <div className="mt-2">

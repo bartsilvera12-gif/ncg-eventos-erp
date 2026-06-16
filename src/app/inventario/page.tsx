@@ -61,7 +61,7 @@ export default function InventarioPage() {
   const [filtroValuacion,  setFiltroValuacion]  = useState<MetodoValuacion | "">("");
   const [filtroUbicacion,  setFiltroUbicacion]  = useState<string>(""); // "", "__sin__" o id
   const [filtroTipo,       setFiltroTipo]       = useState<"todos" | "vendibles" | "insumos" | "mixtos">("todos");
-  const [tab,              setTab]               = useState<"material" | "herramienta" | "consumible" | "accesorio">("material");
+  const [tab,              setTab]               = useState<"material" | "herramienta" | "consumible">("material");
   const [cargandoLista,    setCargandoLista]     = useState(true);
   const [soloStockBajo,    setSoloStockBajo]    = useState(false);
   const [eliminandoId,     setEliminandoId]     = useState<string | null>(null);
@@ -216,16 +216,12 @@ export default function InventarioPage() {
       if (filtroTipo === "insumos" && !(i && !v)) return false;
     }
 
-    // Filtro por tab (Materiales | Herramientas | Consumibles | Accesorios).
-    // Usa tipo_inventario (nueva columna). Si está vacío, fallback a 'material'.
-    const tipoInv = (p as { tipo_inventario?: string }).tipo_inventario ?? "material";
-    const tabMap: Record<string, string> = {
-      material: "material",
-      herramienta: "herramienta",
-      consumible: "consumible",
-      accesorio: "accesorio",
-    };
-    if (tabMap[tab] && tipoInv !== tabMap[tab]) return false;
+    // Filtro por tab (Materiales | Herramientas | Consumibles).
+    // Usa tipo_inventario (nueva columna). Si está vacío o tiene un valor legacy
+    // (ej. 'accesorio'), se trata como 'material' para que no quede oculto.
+    const rawTipo = (p as { tipo_inventario?: string }).tipo_inventario;
+    const tipoInv = rawTipo === "herramienta" || rawTipo === "consumible" ? rawTipo : "material";
+    if (tipoInv !== tab) return false;
 
     return true;
   }), [
@@ -287,7 +283,6 @@ export default function InventarioPage() {
             { id: "material",    label: "Materiales",  subtitle: "Materiales principales que se consumen en cada obra" },
             { id: "herramienta", label: "Herramientas", subtitle: "Activos de la empresa: equipos y herramientas" },
             { id: "consumible",  label: "Consumibles",  subtitle: "Insumos que se gastan seguido" },
-            { id: "accesorio",   label: "Accesorios",   subtitle: "Accesorios y terminaciones específicas" },
           ] as const).map((t) => (
             <button
               key={t.id}
@@ -324,7 +319,6 @@ export default function InventarioPage() {
             >
               {tab === "consumible" ? "Nuevo consumible"
                 : tab === "herramienta" ? "Nueva herramienta"
-                : tab === "accesorio" ? "Nuevo accesorio"
                 : "Nuevo material"}
             </Link>
             <input
@@ -670,9 +664,7 @@ export default function InventarioPage() {
                           ? "No hay herramientas registradas. Creá una con “Nueva herramienta”."
                           : tab === "consumible"
                             ? "No hay consumibles registrados. Creá uno con “Nuevo consumible”."
-                            : tab === "accesorio"
-                              ? "No hay accesorios registrados. Creá uno con “Nuevo material” y elegí Accesorio."
-                              : "No hay materiales registrados. Creá uno con “Nuevo material”."}
+                            : "No hay materiales registrados. Creá uno con “Nuevo material”."}
                   </td>
                 </tr>
               )}
