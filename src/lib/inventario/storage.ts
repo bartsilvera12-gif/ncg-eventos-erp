@@ -15,6 +15,7 @@ interface ProductoRow {
   nombre: string;
   sku: string;
   costo_promedio: number;
+  ultimo_costo?: number | string | null;
   precio_venta: number;
   precio_minorista?: number | string | null;
   precio_mayorista?: number | string | null;
@@ -86,6 +87,7 @@ function rowToProducto(row: ProductoRow): Producto {
     nombre: row.nombre,
     sku: row.sku,
     costo_promedio: Number(row.costo_promedio),
+    ultimo_costo: row.ultimo_costo != null ? Number(row.ultimo_costo) : Number(row.costo_promedio),
     precio_minorista: precioMinorista,
     precio_mayorista: precioMayorista,
     precio_venta: precioVenta,
@@ -212,6 +214,7 @@ export async function saveProducto(
     nombre: datos.nombre,
     sku: datos.sku,
     costo_promedio: datos.costo_promedio,
+    ultimo_costo: (datos as { ultimo_costo?: number }).ultimo_costo ?? datos.costo_promedio,
     precio_minorista: datos.precio_minorista,
     precio_mayorista: datos.precio_mayorista,
     // precio_venta se mantiene como espejo de minorista (el server lo fuerza igual).
@@ -287,6 +290,7 @@ export async function updateProducto(
   if (datos.nombre !== undefined) body.nombre = datos.nombre;
   if (datos.sku !== undefined) body.sku = datos.sku;
   if (datos.costo_promedio !== undefined) body.costo_promedio = datos.costo_promedio;
+  if (datos.ultimo_costo !== undefined) body.ultimo_costo = datos.ultimo_costo;
   if (datos.precio_minorista !== undefined) body.precio_minorista = datos.precio_minorista;
   if (datos.precio_mayorista !== undefined) body.precio_mayorista = datos.precio_mayorista;
   if (datos.precio_venta !== undefined) body.precio_venta = datos.precio_venta;

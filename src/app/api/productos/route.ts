@@ -11,12 +11,12 @@ import type { AppSupabaseClient } from "@/lib/supabase/schema";
  */
 
 const PRODUCTO_COLS =
-  "id, empresa_id, nombre, sku, costo_promedio, precio_venta, precio_minorista, precio_mayorista, stock_actual, stock_minimo, " +
+  "id, empresa_id, nombre, sku, costo_promedio, ultimo_costo, precio_venta, precio_minorista, precio_mayorista, stock_actual, stock_minimo, " +
   "unidad_medida, metodo_valuacion, activo, created_at, updated_at, " +
   "codigo_barras, codigo_interno, codigo_barras_interno, imagen_path, imagen_url, " +
   "categoria_principal_id, ubicacion_principal_id, proveedor_principal_id, " +
   "es_vendible, es_insumo, controla_stock, valorizado, unidad_compra, unidad_receta, " +
-  "factor_compra_receta, tiempo_prep_minutos, descripcion";
+  "factor_compra_receta, tiempo_prep_minutos, descripcion, tipo_inventario";
 
 function toNumber(v: unknown): unknown {
   return typeof v === "string" ? Number(v) : v;
@@ -25,6 +25,7 @@ function rowToApi(r: Record<string, unknown>): Record<string, unknown> {
   return {
     ...r,
     costo_promedio: toNumber(r.costo_promedio),
+    ultimo_costo: toNumber(r.ultimo_costo),
     precio_venta: toNumber(r.precio_venta),
     precio_minorista: toNumber(r.precio_minorista),
     precio_mayorista: toNumber(r.precio_mayorista),
@@ -129,7 +130,15 @@ export async function POST(request: NextRequest) {
     const codigoInterno = String(body.codigo_interno ?? "").trim().toUpperCase() || null;
     const stockActual = Number(body.stock_actual ?? 0) || 0;
     const costoPromedio = Number(body.costo_promedio ?? 0) || 0;
+    // Si no viene ultimo_costo, arranca igual al costo promedio (compras posteriores lo actualizan).
+    const ultimoCosto = body.ultimo_costo != null && body.ultimo_costo !== ""
+      ? Number(body.ultimo_costo) || 0
+      : costoPromedio;
     const stockMinimo = Number(body.stock_minimo ?? 0) || 0;
+    const tipoInventario =
+      body.tipo_inventario === "consumible" || body.tipo_inventario === "herramienta" || body.tipo_inventario === "accesorio"
+        ? (body.tipo_inventario as string)
+        : "material";
     // Precios: minorista es el precio principal. Fallback a precio_venta para
     // compatibilidad si el cliente no envía minorista. Mayorista cae a minorista.
     const precioVentaBody = Number(body.precio_venta ?? 0) || 0;
@@ -195,6 +204,7 @@ export async function POST(request: NextRequest) {
       nombre,
       sku,
       costo_promedio: costoPromedio,
+      ultimo_costo: ultimoCosto,
       precio_minorista: precioMinorista,
       precio_mayorista: precioMayorista,
       precio_venta: precioVenta,
@@ -208,6 +218,7 @@ export async function POST(request: NextRequest) {
       categoria_principal_id: categoriaPrincipalId,
       ubicacion_principal_id: ubicacionPrincipalId,
       proveedor_principal_id: proveedorPrincipalId,
+      tipo_inventario: tipoInventario,
     };
     if (esVendible !== undefined) insertPayload.es_vendible = esVendible;
     if (esInsumo !== undefined) insertPayload.es_insumo = esInsumo;

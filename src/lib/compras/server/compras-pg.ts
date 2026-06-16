@@ -492,11 +492,21 @@ export async function insertCompraMultiConImpacto(
           "La compra se guardó pero uno o más movimientos de entrada en inventario no se registraron.";
       }
 
-      // stock += cantidad ; costo_promedio = costo_unitario (réplica exacta del comportamiento actual)
+      // Costo promedio ponderado:
+      //   ((stock_actual * costo_promedio_actual) + (cantidad * costo_unitario_sin_iva))
+      //   / (stock_actual + cantidad)
+      // ultimo_costo = costo unitario sin IVA de ESTA compra.
       await client.query(
         `UPDATE ${tP}
-            SET stock_actual = stock_actual + $1::numeric,
-                costo_promedio = $2::numeric,
+            SET costo_promedio = CASE
+                  WHEN (COALESCE(stock_actual, 0) + $1::numeric) > 0 THEN
+                    ((COALESCE(stock_actual, 0) * COALESCE(costo_promedio, 0))
+                     + ($1::numeric * $2::numeric))
+                    / (COALESCE(stock_actual, 0) + $1::numeric)
+                  ELSE $2::numeric
+                END,
+                ultimo_costo = $2::numeric,
+                stock_actual = COALESCE(stock_actual, 0) + $1::numeric,
                 updated_at = now()
           WHERE id = $3::uuid AND empresa_id = $4::uuid`,
         [it.cantidad, it.costo_unitario, it.producto_id, empresaId]

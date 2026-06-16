@@ -6,7 +6,7 @@ import { normalizeUpperText } from "@/lib/text/normalize";
 import type { AppSupabaseClient } from "@/lib/supabase/schema";
 
 const PRODUCTO_COLS =
-  "id, empresa_id, nombre, sku, costo_promedio, precio_venta, precio_minorista, precio_mayorista, stock_actual, stock_minimo, " +
+  "id, empresa_id, nombre, sku, costo_promedio, ultimo_costo, precio_venta, precio_minorista, precio_mayorista, stock_actual, stock_minimo, " +
   "unidad_medida, metodo_valuacion, activo, created_at, updated_at, " +
   "codigo_barras, codigo_interno, codigo_barras_interno, imagen_path, imagen_url, " +
   "categoria_principal_id, ubicacion_principal_id, proveedor_principal_id, " +
@@ -20,6 +20,7 @@ function rowToApi(r: Record<string, unknown>): Record<string, unknown> {
   return {
     ...r,
     costo_promedio: toNumber(r.costo_promedio),
+    ultimo_costo: toNumber(r.ultimo_costo),
     precio_venta: toNumber(r.precio_venta),
     precio_minorista: toNumber(r.precio_minorista),
     precio_mayorista: toNumber(r.precio_mayorista),
@@ -90,6 +91,7 @@ export async function PATCH(
     if (body.nombre !== undefined) patch.nombre = normalizeUpperText(body.nombre);
     if (body.sku !== undefined) patch.sku = normalizeUpperText(body.sku);
     if (body.costo_promedio !== undefined) patch.costo_promedio = Number(body.costo_promedio) || 0;
+    if (body.ultimo_costo !== undefined) patch.ultimo_costo = Number(body.ultimo_costo) || 0;
     // Minorista es el precio principal; precio_venta queda SIEMPRE como su espejo.
     if (body.precio_minorista !== undefined) {
       const min = Number(body.precio_minorista) || 0;

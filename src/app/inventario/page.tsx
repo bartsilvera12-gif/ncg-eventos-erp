@@ -408,11 +408,14 @@ export default function InventarioPage() {
                 <th className="py-3 pr-4 font-medium">Nombre</th>
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">SKU</th>
                 <th className="py-3 pr-4 font-medium">Costo Prom.</th>
+                <th className={`py-3 pr-4 font-medium ${tab === "consumible" ? "" : "hidden"}`}>Último costo</th>
                 <th className={`py-3 pr-4 font-medium ${tab === "consumible" ? "hidden" : ""}`}>Precio Venta</th>
                 <th className={`py-3 pr-4 font-medium text-center ${tab !== "herramienta" ? "" : "hidden"}`}>Stock</th>
                 <th className={`py-3 pr-4 font-medium text-center ${tab !== "herramienta" ? "hidden md:table-cell" : "hidden"}`}>Stock Mín.</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">Unidad</th>
-                <th className="py-3 pr-4 font-medium hidden lg:table-cell">Valuación</th>
+                <th className="py-3 pr-4 font-medium hidden lg:table-cell">
+                  {tab === "consumible" ? "Valor (€)" : "Valuación"}
+                </th>
                 <th className={`py-3 pr-6 font-medium text-right hidden md:table-cell ${tab === "consumible" ? "md:hidden" : ""}`}>
                   <span title="(precio - costo) / precio × 100">Margen s/venta</span>
                 </th>
@@ -476,6 +479,7 @@ export default function InventarioPage() {
                     </td>
                     <td className="py-4 pr-4 text-gray-500 font-mono hidden md:table-cell">{p.sku}</td>
                     <td className="py-4 pr-4 text-gray-700">{formatGs(p.costo_promedio)}</td>
+                    <td className={`py-4 pr-4 text-gray-700 ${tab === "consumible" ? "" : "hidden"}`}>{formatGs(p.ultimo_costo ?? p.costo_promedio)}</td>
                     <td className={`py-4 pr-4 text-gray-700 ${tab === "consumible" ? "hidden" : ""}`}>{formatGs(p.precio_venta)}</td>
                     <td className={`py-4 pr-4 text-center ${tab !== "herramienta" ? "" : "hidden"}`}>
                       <span className={`font-semibold ${stockBajo ? "text-red-600" : "text-gray-800"}`}>
@@ -485,7 +489,13 @@ export default function InventarioPage() {
                     <td className={`py-4 pr-4 text-center text-gray-500 ${tab !== "herramienta" ? "hidden md:table-cell" : "hidden"}`}>{p.stock_minimo}</td>
                     <td className="py-4 pr-4 text-gray-600 hidden lg:table-cell">{p.unidad_medida}</td>
                     <td className="py-4 pr-4 hidden lg:table-cell">
-                      <Badge tone={metodoTone[p.metodo_valuacion]}>{p.metodo_valuacion}</Badge>
+                      {tab === "consumible" ? (
+                        <span className="tabular-nums font-semibold text-gray-800">
+                          {formatGs(p.stock_actual * p.costo_promedio)}
+                        </span>
+                      ) : (
+                        <Badge tone={metodoTone[p.metodo_valuacion]}>{p.metodo_valuacion}</Badge>
+                      )}
                     </td>
                     <td className={`py-4 pr-6 text-right tabular-nums font-semibold hidden md:table-cell ${tab === "consumible" ? "md:hidden" : ""} ${margenColor(margen)}`}>
                       {margen.toFixed(2)}%

@@ -49,6 +49,7 @@ export default function NuevoProductoPage() {
     sku: "",
     codigo_barras: "",
     costo_promedio: "",
+    ultimo_costo: "",
     precio_minorista: "",
     markup_minorista: "",
     precio_mayorista: "",
@@ -363,11 +364,16 @@ export default function NuevoProductoPage() {
         const precioMinorista = parseFloat(form.precio_minorista) || 0;
         // Mayorista cae a minorista si quedó vacío (nunca 0 accidental).
         const precioMayorista = parseFloat(form.precio_mayorista) || precioMinorista;
+        const costoBase = parseFloat(form.costo_promedio) || 0;
+        const ultimoCosto = form.ultimo_costo.trim() !== ""
+          ? parseFloat(form.ultimo_costo) || 0
+          : costoBase;
         guardado = await saveProducto({
           nombre: form.nombre.trim().toUpperCase(),
           descripcion: form.descripcion.trim() || null,
           sku: form.sku.trim().toUpperCase(),
-          costo_promedio: parseFloat(form.costo_promedio) || 0,
+          costo_promedio: costoBase,
+          ultimo_costo: ultimoCosto,
           precio_minorista: precioMinorista,
           precio_mayorista: precioMayorista,
           // Espejo de minorista por compatibilidad (el server también lo fuerza).
@@ -521,7 +527,9 @@ export default function NuevoProductoPage() {
 
   const summary = TIPO_SUMMARY[tipoInventario];
   const showStock = (tipoInventario === "material" || tipoInventario === "accesorio" || tipoInventario === "consumible");
-  const showPrecioVenta = tipoInventario !== "materia";
+  const esConsumible = tipoInventario === "consumible";
+  // Para consumibles no aplica precio de venta (se gastan en obra, no se facturan al cliente).
+  const showPrecioVenta = tipoInventario !== "materia" && !esConsumible;
 
   return (
     <div className="space-y-8">
@@ -743,23 +751,47 @@ export default function NuevoProductoPage() {
             </div>
           </div>
 
-          {/* Precios — costo + minorista/mayorista con markups reactivos */}
+          {/* Precios (o "Costo y stock" si es consumible) */}
           <div>
             <p className="text-xs text-gray-400 mb-3 uppercase tracking-wide font-semibold">
-              Precios
+              {esConsumible ? "Costo y stock" : "Precios"}
             </p>
 
-            {/* Costo promedio */}
-            <div className="sm:max-w-xs">
-              <label className={labelClass}>Costo promedio (€)</label>
-              <MontoInput
-                value={form.costo_promedio}
-                onChange={handleCostoChange}
-                placeholder="Ej: 52,30"
-                className={inputClass}
-                decimals
-                required
-              />
+            {/* Costo promedio / Costo inicial sin IVA */}
+            <div className={esConsumible ? "grid grid-cols-1 gap-4 sm:grid-cols-2" : "sm:max-w-xs"}>
+              <div>
+                <label className={labelClass}>
+                  {esConsumible ? "Costo inicial sin IVA (€)" : "Costo promedio (€)"}
+                </label>
+                <MontoInput
+                  value={form.costo_promedio}
+                  onChange={handleCostoChange}
+                  placeholder="Ej: 6,00"
+                  className={inputClass}
+                  decimals
+                  required
+                />
+                {esConsumible && (
+                  <p className="mt-1 text-xs text-slate-400">
+                    Si no cargás último costo, se usa este valor también como base. Las compras posteriores recalculan el costo promedio ponderado.
+                  </p>
+                )}
+              </div>
+              {esConsumible && (
+                <div>
+                  <label className={labelClass}>Último costo (€) <span className="text-xs font-normal text-gray-400">(opcional)</span></label>
+                  <MontoInput
+                    value={form.ultimo_costo}
+                    onChange={(n) => setForm((p) => ({ ...p, ultimo_costo: String(n) }))}
+                    placeholder="Si lo dejás vacío, = costo inicial"
+                    className={inputClass}
+                    decimals
+                  />
+                  <p className="mt-1 text-xs text-slate-400">
+                    Costo unitario sin IVA de la compra más reciente. Se actualiza solo cuando registrás una compra.
+                  </p>
+                </div>
+              )}
             </div>
 
             {showPrecioVenta && (

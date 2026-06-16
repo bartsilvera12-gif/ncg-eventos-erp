@@ -37,11 +37,13 @@ export default function EditarProductoPage() {
 
   // descripcion live separately because form se inicializa al cargar
   const [descripcion, setDescripcion] = useState("");
+  const [tipoInv, setTipoInv] = useState<"material" | "herramienta" | "consumible" | "accesorio">("material");
   const [form, setForm] = useState({
     nombre: "",
     sku: "",
     codigo_barras: "",
     costo_promedio: "",
+    ultimo_costo: "",
     precio_minorista: "",
     markup_minorista: "",
     precio_mayorista: "",
@@ -149,11 +151,13 @@ export default function EditarProductoPage() {
       const may = p.precio_mayorista ?? min;
       const markupMin = costo > 0 && min > 0 ? ((min - costo) / costo) * 100 : 0;
       const markupMay = costo > 0 && may > 0 ? ((may - costo) / costo) * 100 : 0;
+      setTipoInv((p.tipo_inventario as "material" | "herramienta" | "consumible" | "accesorio" | undefined) ?? "material");
       setForm({
         nombre: p.nombre,
         sku: p.sku,
         codigo_barras: p.codigo_barras ?? "",
         costo_promedio: String(p.costo_promedio),
+        ultimo_costo: p.ultimo_costo != null ? String(p.ultimo_costo) : String(p.costo_promedio),
         precio_minorista: String(min),
         markup_minorista: markupMin.toFixed(2),
         precio_mayorista: String(may),
@@ -326,10 +330,15 @@ export default function EditarProductoPage() {
       const precioMinorista = parseFloat(form.precio_minorista) || 0;
       // Mayorista cae a minorista si quedó vacío (nunca 0 accidental).
       const precioMayorista = parseFloat(form.precio_mayorista) || precioMinorista;
+      const costoPromedioBase = parseFloat(form.costo_promedio) || 0;
+      const ultimoCostoBase = form.ultimo_costo.trim() !== ""
+        ? parseFloat(form.ultimo_costo) || 0
+        : costoPromedioBase;
       const updatePayload: Parameters<typeof updateProducto>[1] = {
         nombre: form.nombre.trim().toUpperCase(),
         sku: form.sku.trim().toUpperCase(),
-        costo_promedio: parseFloat(form.costo_promedio) || 0,
+        costo_promedio: costoPromedioBase,
+        ultimo_costo: ultimoCostoBase,
         precio_minorista: precioMinorista,
         precio_mayorista: precioMayorista,
         // Espejo de minorista por compatibilidad (el server también lo fuerza).
@@ -399,7 +408,9 @@ export default function EditarProductoPage() {
 
   const summary = TIPO_SUMMARY[tipoGastro];
   const showStock = tipoGastro === "reventa";
-  const showPrecioVenta = tipoGastro !== "materia";
+  const esConsumible = tipoInv === "consumible";
+  // Consumibles no se venden: ocultar bloques de precios.
+  const showPrecioVenta = tipoGastro !== "materia" && !esConsumible;
 
   return (
     <div className="space-y-8">
@@ -743,18 +754,43 @@ export default function EditarProductoPage() {
           </div>
 
           <div>
-            <p className="text-xs text-gray-400 mb-3 uppercase tracking-wide font-semibold">Precios</p>
+            <p className="text-xs text-gray-400 mb-3 uppercase tracking-wide font-semibold">
+              {esConsumible ? "Costo y stock" : "Precios"}
+            </p>
 
-            {/* Costo promedio */}
-            <div className="sm:max-w-xs">
-              <label className={labelClass}>Costo promedio (€)</label>
-              <MontoInput
-                value={form.costo_promedio}
-                onChange={handleCostoChange}
-                className={inputClass}
-                decimals
-                required
-              />
+            {/* Costo promedio + (consumible) Último costo */}
+            <div className={esConsumible ? "grid grid-cols-1 gap-4 sm:grid-cols-2" : "sm:max-w-xs"}>
+              <div>
+                <label className={labelClass}>
+                  {esConsumible ? "Costo promedio (€)" : "Costo promedio (€)"}
+                </label>
+                <MontoInput
+                  value={form.costo_promedio}
+                  onChange={handleCostoChange}
+                  className={inputClass}
+                  decimals
+                  required
+                />
+                {esConsumible && (
+                  <p className="mt-1 text-xs text-slate-400">
+                    Las compras posteriores recalculan este valor por promedio ponderado.
+                  </p>
+                )}
+              </div>
+              {esConsumible && (
+                <div>
+                  <label className={labelClass}>Último costo (€)</label>
+                  <MontoInput
+                    value={form.ultimo_costo}
+                    onChange={(n) => setForm((p) => ({ ...p, ultimo_costo: String(n) }))}
+                    className={inputClass}
+                    decimals
+                  />
+                  <p className="mt-1 text-xs text-slate-400">
+                    Costo unitario sin IVA de la compra más reciente. Se actualiza al registrar una compra.
+                  </p>
+                </div>
+              )}
             </div>
 
             {showPrecioVenta && (

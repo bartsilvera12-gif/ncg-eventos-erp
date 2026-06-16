@@ -7,6 +7,8 @@ export interface Producto {
   nombre: string;
   sku: string;
   costo_promedio: number;
+  /** Costo unitario sin IVA de la última compra registrada. */
+  ultimo_costo?: number;
   /** Precio de venta minorista (precio al público). Opcional por compat: en
    *  productos viejos se deriva de `precio_venta` en el mapeo (rowToProducto). */
   precio_minorista?: number;
