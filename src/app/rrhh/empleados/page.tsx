@@ -274,14 +274,24 @@ export default function EmpleadosPage() {
                     )}
                   </td>
                   <td className="px-5 py-3.5 text-right">
-                    <div className="flex justify-end gap-3">
-                      <button type="button" onClick={() => setEditando(e)}
-                        className="text-xs font-medium text-[#3F8E91] hover:text-[#2F6F72] underline">
-                        editar
+                    <div className="inline-flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditando(e)}
+                        className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+                      >
+                        Editar
                       </button>
-                      <button type="button" onClick={() => void toggleActivo(e)}
-                        className={`text-xs font-medium underline ${e.activo ? "text-amber-700 hover:text-amber-900" : "text-emerald-700 hover:text-emerald-900"}`}>
-                        {e.activo ? "desactivar" : "activar"}
+                      <button
+                        type="button"
+                        onClick={() => void toggleActivo(e)}
+                        className={`inline-flex items-center justify-center min-h-[40px] rounded-md border bg-white px-3 py-1.5 text-xs font-medium transition-colors ${
+                          e.activo
+                            ? "border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50"
+                            : "border-emerald-200 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50"
+                        }`}
+                      >
+                        {e.activo ? "Desactivar" : "Activar"}
                       </button>
                     </div>
                   </td>
