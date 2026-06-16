@@ -481,6 +481,52 @@ function DepartamentoSelect({ value, onChange }: { value: string; onChange: (v: 
 }
 
 /**
+ * Selector de Sucursal. Mismo patrón que DepartamentoSelect:
+ * lee del catálogo configurable y conserva valores libres viejos.
+ */
+function SucursalSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [opts, setOpts] = useState<{ slug: string; nombre: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancel = false;
+    setLoading(true);
+    fetchWithSupabaseSession("/api/rrhh/sucursales-catalogo", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: { tipos?: { slug: string; nombre: string; activo: boolean; orden: number }[] } }) => {
+        if (cancel) return;
+        const list = (j.data?.tipos ?? [])
+          .filter((t) => t.activo)
+          .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+          .map((t) => ({ slug: t.slug, nombre: t.nombre }));
+        setOpts(list);
+      })
+      .catch(() => { /* tolerante */ })
+      .finally(() => { if (!cancel) setLoading(false); });
+    return () => { cancel = true; };
+  }, []);
+
+  const valueEnCatalogo = !value || opts.some((o) => o.nombre === value);
+
+  return (
+    <select
+      className={inputCls}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={loading}
+    >
+      <option value="">{loading ? "Cargando…" : "— Sin sucursal —"}</option>
+      {opts.map((o) => (
+        <option key={o.slug} value={o.nombre}>{o.nombre}</option>
+      ))}
+      {!valueEnCatalogo && (
+        <option value={value}>{value} (no en catálogo)</option>
+      )}
+    </select>
+  );
+}
+
+/**
  * Combo de supervisor: input editable + dropdown filtrable.
  * Reemplaza el <datalist> nativo (poco confiable y no se abre al focus).
  * Acepta nombres libres (no obliga a elegir de la lista).
@@ -799,9 +845,11 @@ function TiposEmpleadoSection({
       )}
 
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Field label="Sucursal" hint="Sucursal o sede donde trabaja el empleado.">
-          <input className={inputCls} value={form.sucursal}
-            onChange={(e) => setField("sucursal", e.target.value)} placeholder="Ej. Madrid Centro" />
+        <Field label="Sucursal" hint="Editá el listado en Configuración · Empleados.">
+          <SucursalSelect
+            value={form.sucursal}
+            onChange={(v) => setField("sucursal", v)}
+          />
         </Field>
       </div>
 

@@ -4,11 +4,12 @@ import { useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import CatalogoEditor from "@/components/config/CatalogoEditor";
 
-type Tab = "tipos" | "departamentos";
+type Tab = "tipos" | "departamentos" | "sucursales";
 
 const TABS: { id: Tab; label: string; descripcion: string }[] = [
   { id: "tipos", label: "Tipos de empleado", descripcion: "Roles operativos (Obrero, Capataz, Soldador, Chofer…)." },
   { id: "departamentos", label: "Departamentos", descripcion: "Áreas funcionales (Operaciones, Administración, Comercial…)." },
+  { id: "sucursales", label: "Sucursales", descripcion: "Sedes donde trabajan los empleados (Central, otra sede…)." },
 ];
 
 export default function ConfiguracionEmpleadosPage() {
@@ -56,6 +57,13 @@ export default function ConfiguracionEmpleadosPage() {
           endpointBase="/api/rrhh/departamentos-catalogo"
           singular="departamento"
           placeholderCrear="Logística"
+        />
+      )}
+      {tab === "sucursales" && (
+        <CatalogoEditor
+          endpointBase="/api/rrhh/sucursales-catalogo"
+          singular="sucursal"
+          placeholderCrear="Madrid Centro"
         />
       )}
     </div>
