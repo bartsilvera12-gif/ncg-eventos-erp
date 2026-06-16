@@ -46,9 +46,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       "tipo_documento","documento","lugar_nacimiento","nacionalidad","estado_civil",
       "grupo_sanguineo","direccion","email","telefono","cargo","tipo_empleado","tipo_periodo",
       "departamento","seccion","supervisor","banco","numero_cuenta",
+      "sucursal","chofer_habilitacion","chofer_observacion",
     ];
-    const DATE_FIELDS = ["fecha_nacimiento","fecha_ingreso","fecha_baja"];
+    const DATE_FIELDS = ["fecha_nacimiento","fecha_ingreso","fecha_baja","chofer_fecha_venc"];
     const NUM_FIELDS = ["salario_base","salario_complementario","costo_hora"];
+    const NUMN_FIELDS = ["chofer_km"];
     const BOOL_FIELDS = ["cobrar_con_cheque","excluir_liquidaciones","activo"];
 
     if (body.nombre !== undefined) {
@@ -65,8 +67,24 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     for (const k of NUM_FIELDS) {
       if (body[k] !== undefined) update[k] = Number(body[k]) || 0;
     }
+    for (const k of NUMN_FIELDS) {
+      if (body[k] !== undefined) {
+        if (body[k] === null || body[k] === "") update[k] = null;
+        else {
+          const n = Number(body[k]);
+          update[k] = Number.isFinite(n) ? n : null;
+        }
+      }
+    }
     for (const k of BOOL_FIELDS) {
       if (body[k] !== undefined) update[k] = Boolean(body[k]);
+    }
+    if (body.tipos_empleado !== undefined) {
+      const raw = Array.isArray(body.tipos_empleado) ? (body.tipos_empleado as unknown[]) : [];
+      const clean = Array.from(new Set(
+        raw.map((v) => String(v ?? "").trim().toLowerCase()).filter((s) => s.length > 0)
+      ));
+      update.tipos_empleado = clean;
     }
 
     const { error } = await ctx.supabase

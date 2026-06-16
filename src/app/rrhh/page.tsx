@@ -6,8 +6,7 @@ export const dynamic = "force-dynamic";
 type Seccion = { titulo: string; descripcion: string; href?: string };
 
 const SECCIONES: Seccion[] = [
-  { titulo: "Empleados", descripcion: "Alta de personal, cargos, salarios base y costo por hora.", href: "/rrhh/empleados" },
-  { titulo: "Asignación de tipo de empleado", descripcion: "Asigná uno o varios roles a cada empleado (obrero, capataz, técnico, chofer…) y sus datos asociados.", href: "/rrhh/tipos-empleado" },
+  { titulo: "Empleados", descripcion: "Alta de personal, cargos, salarios, tipo(s) de empleado y datos de chofer.", href: "/rrhh/empleados" },
   { titulo: "Personal por obra", descripcion: "Asignación de empleados a obras desde la pestaña Personal de cada obra.", href: "/dashboard/proyectos" },
   { titulo: "Control horario", descripcion: "Fichajes de entrada y salida diarios. Calcula horas automáticamente.", href: "/rrhh/control-horario" },
   { titulo: "Vacaciones", descripcion: "Solicitudes y aprobación de vacaciones por empleado.", href: "/rrhh/vacaciones" },

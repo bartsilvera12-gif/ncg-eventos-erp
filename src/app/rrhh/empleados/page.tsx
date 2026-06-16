@@ -26,6 +26,12 @@ type Empleado = {
   fecha_baja: string | null;
   tipo_empleado: string | null;
   tipo_periodo: string | null;
+  tipos_empleado: string[] | null;
+  sucursal: string | null;
+  chofer_habilitacion: string | null;
+  chofer_fecha_venc: string | null;
+  chofer_km: number | null;
+  chofer_observacion: string | null;
   departamento: string | null;
   seccion: string | null;
   supervisor: string | null;
@@ -56,6 +62,12 @@ const FORM_INICIAL = {
   fecha_baja: "",
   tipo_empleado: "CONTRATADO",
   tipo_periodo: "mensual",
+  tipos_empleado: [] as string[],
+  sucursal: "",
+  chofer_habilitacion: "",
+  chofer_fecha_venc: "",
+  chofer_km: "",
+  chofer_observacion: "",
   departamento: "",
   seccion: "",
   supervisor: "",
@@ -330,6 +342,12 @@ function empleadoToForm(e: Empleado): FormEmpleado {
     fecha_baja: e.fecha_baja ?? "",
     tipo_empleado: e.tipo_empleado ?? "CONTRATADO",
     tipo_periodo: e.tipo_periodo ?? "mensual",
+    tipos_empleado: Array.isArray(e.tipos_empleado) ? e.tipos_empleado : [],
+    sucursal: e.sucursal ?? "",
+    chofer_habilitacion: e.chofer_habilitacion ?? "",
+    chofer_fecha_venc: e.chofer_fecha_venc ?? "",
+    chofer_km: e.chofer_km != null ? String(e.chofer_km) : "",
+    chofer_observacion: e.chofer_observacion ?? "",
     departamento: e.departamento ?? "",
     seccion: e.seccion ?? "",
     supervisor: e.supervisor ?? "",
@@ -488,7 +506,7 @@ function EmpleadoFormFields({
           <input className={inputCls} value={form.cargo} placeholder="Ej. Albañil, Encargado, Soldador"
             onChange={(e) => set("cargo", e.target.value)} />
         </Field>
-        <Field label="Tipo de empleado">
+        <Field label="Tipo de contratación">
           <select className={inputCls} value={form.tipo_empleado}
             onChange={(e) => set("tipo_empleado", e.target.value)}>
             {TIPO_EMP_OPTS.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -532,6 +550,8 @@ function EmpleadoFormFields({
             onChange={(e) => set("seccion", e.target.value)} placeholder="Ej. Cuadrilla A" />
         </Field>
       </Section>
+
+      <TiposEmpleadoSection form={form} setForm={setForm} />
 
       <Section titulo="Compensación">
         <Field label="Salario base (€)">
@@ -594,5 +614,115 @@ function EmpleadoFormFields({
         </div>
       </Section>
     </>
+  );
+}
+
+// ── Sección "Tipos de empleado" + datos chofer ────────────────────────────
+type TipoCat = { slug: string; nombre: string; activo: boolean; orden: number };
+
+function TiposEmpleadoSection({
+  form, setForm,
+}: {
+  form: FormEmpleado;
+  setForm: React.Dispatch<React.SetStateAction<FormEmpleado>>;
+}) {
+  const [catalogo, setCatalogo] = useState<TipoCat[]>([]);
+  const [loadingCat, setLoadingCat] = useState(true);
+  const seleccionados = form.tipos_empleado ?? [];
+  const esChofer = seleccionados.includes("chofer");
+
+  useEffect(() => {
+    let cancel = false;
+    setLoadingCat(true);
+    fetchWithSupabaseSession("/api/rrhh/tipos-empleado-catalogo", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: { tipos?: TipoCat[] } }) => {
+        if (cancel) return;
+        const tipos = (j.data?.tipos ?? []).filter((t) => t.activo);
+        tipos.sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+        setCatalogo(tipos);
+      })
+      .catch(() => { /* tolerante: el form sigue, solo no muestra opciones */ })
+      .finally(() => { if (!cancel) setLoadingCat(false); });
+    return () => { cancel = true; };
+  }, []);
+
+  function toggle(slug: string) {
+    setForm((s) => {
+      const cur = s.tipos_empleado ?? [];
+      const next = cur.includes(slug) ? cur.filter((x) => x !== slug) : [...cur, slug];
+      return { ...s, tipos_empleado: next };
+    });
+  }
+
+  function setField<K extends keyof FormEmpleado>(k: K, v: FormEmpleado[K]) {
+    setForm((s) => ({ ...s, [k]: v }));
+  }
+
+  return (
+    <section>
+      <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Tipo(s) de empleado</h3>
+      <p className="-mt-2 mb-3 text-xs text-slate-500">
+        Roles operativos del empleado. Editá el catálogo en <Link href="/configuracion/tipos-empleado" className="underline">Configuración · Tipos de empleado</Link>.
+      </p>
+      {loadingCat ? (
+        <p className="text-xs text-slate-400">Cargando catálogo…</p>
+      ) : catalogo.length === 0 ? (
+        <p className="text-xs text-slate-500">No hay tipos en el catálogo. Creá los roles desde Configuración.</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {catalogo.map((t) => {
+            const sel = seleccionados.includes(t.slug);
+            return (
+              <button
+                key={t.slug}
+                type="button"
+                onClick={() => toggle(t.slug)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                  sel
+                    ? "border-[#4FAEB2] bg-[#4FAEB2]/10 text-[#3F8E91]"
+                    : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                {sel ? "✓ " : ""}{t.nombre}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Field label="Sucursal" hint="Sucursal o sede donde trabaja el empleado.">
+          <input className={inputCls} value={form.sucursal}
+            onChange={(e) => setField("sucursal", e.target.value)} placeholder="Ej. Madrid Centro" />
+        </Field>
+      </div>
+
+      {esChofer && (
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <h4 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Datos de chofer</h4>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Field label="Habilitación / carnet">
+              <input className={inputCls} value={form.chofer_habilitacion}
+                onChange={(e) => setField("chofer_habilitacion", e.target.value)} placeholder="Ej. C1 + CAP" />
+            </Field>
+            <Field label="Vencimiento">
+              <input type="date" className={inputCls} value={form.chofer_fecha_venc}
+                onChange={(e) => setField("chofer_fecha_venc", e.target.value)} />
+            </Field>
+            <Field label="Km" hint="Último km registrado.">
+              <input type="number" className={inputCls} value={form.chofer_km}
+                onChange={(e) => setField("chofer_km", e.target.value)} placeholder="0" />
+            </Field>
+            <div className="md:col-span-2 lg:col-span-3">
+              <Field label="Observaciones">
+                <textarea className={inputCls} rows={2} value={form.chofer_observacion}
+                  onChange={(e) => setField("chofer_observacion", e.target.value)} />
+              </Field>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

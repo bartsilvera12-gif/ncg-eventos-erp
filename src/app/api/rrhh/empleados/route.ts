@@ -41,7 +41,18 @@ export async function POST(request: NextRequest) {
     const str = (k: string): string | null => body[k] ? String(body[k]).trim() || null : null;
     const date = (k: string): string | null => body[k] ? String(body[k]) : null;
     const numv = (k: string): number => Number(body[k]) || 0;
+    const numn = (k: string): number | null => {
+      if (body[k] === undefined || body[k] === null || body[k] === "") return null;
+      const n = Number(body[k]);
+      return Number.isFinite(n) ? n : null;
+    };
     const bool = (k: string): boolean => Boolean(body[k]);
+    const tiposEmpleadoRaw = Array.isArray(body.tipos_empleado)
+      ? (body.tipos_empleado as unknown[])
+          .map((v) => String(v ?? "").trim().toLowerCase())
+          .filter((s) => s.length > 0)
+      : [];
+    const tiposEmpleado = Array.from(new Set(tiposEmpleadoRaw));
 
     const insert = {
       empresa_id: ctx.auth.empresa_id,
@@ -65,6 +76,12 @@ export async function POST(request: NextRequest) {
       fecha_baja: date("fecha_baja"),
       tipo_empleado: str("tipo_empleado"),
       tipo_periodo: str("tipo_periodo") ?? "mensual",
+      tipos_empleado: tiposEmpleado,
+      sucursal: str("sucursal"),
+      chofer_habilitacion: str("chofer_habilitacion"),
+      chofer_fecha_venc: date("chofer_fecha_venc"),
+      chofer_km: numn("chofer_km"),
+      chofer_observacion: str("chofer_observacion"),
       departamento: str("departamento"),
       seccion: str("seccion"),
       supervisor: str("supervisor"),
