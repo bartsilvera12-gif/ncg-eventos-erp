@@ -3,17 +3,13 @@ import { getTenantSupabaseFromAuth } from "@/lib/supabase/tenant-api";
 import { successResponse, errorResponse } from "@/lib/api/response";
 import { API_ERRORS } from "@/lib/api/errors";
 
-const TIPOS_VALIDOS = new Set([
-  "obrero","capataz","jornalero","soldador","montador",
-  "tecnico","administrador","vendedor","cobrador","chofer",
-]);
-
+/** Acepta cualquier slug — el catálogo de tipos es editable por empresa. */
 function sanitizarTipos(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
   return Array.from(new Set(
     input
       .map((t) => String(t).trim().toLowerCase())
-      .filter((t) => t && TIPOS_VALIDOS.has(t)),
+      .filter(Boolean),
   ));
 }
 

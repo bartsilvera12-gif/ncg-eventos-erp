@@ -17,20 +17,13 @@ import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
 
-const TIPOS_DISPONIBLES = [
-  { value: "obrero",        label: "Obrero" },
-  { value: "capataz",       label: "Capataz / Jefe de obra" },
-  { value: "jornalero",     label: "Jornalero" },
-  { value: "soldador",      label: "Soldador" },
-  { value: "montador",      label: "Montador" },
-  { value: "tecnico",       label: "Técnico" },
-  { value: "administrador", label: "Administrador" },
-  { value: "vendedor",      label: "Vendedor" },
-  { value: "cobrador",      label: "Cobrador" },
-  { value: "chofer",        label: "Chofer" },
-] as const;
-
-const TIPOS_LABEL = Object.fromEntries(TIPOS_DISPONIBLES.map((t) => [t.value, t.label]));
+interface TipoCatalogo {
+  id: string;
+  slug: string;
+  nombre: string;
+  activo: boolean;
+  orden: number;
+}
 
 interface Empleado {
   id: string;
@@ -71,22 +64,31 @@ const labelClass = "block text-xs font-medium text-slate-600 mb-1.5";
 export default function AsignacionesTipoEmpleadoPage() {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
+  const [catalogo, setCatalogo] = useState<TipoCatalogo[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
   const [editando, setEditando] = useState<Fila | null>(null);
   const [creandoLibre, setCreandoLibre] = useState(false);
 
+  const tiposLabel = useMemo(
+    () => Object.fromEntries(catalogo.map((t) => [t.slug, t.nombre])),
+    [catalogo],
+  );
+
   async function cargar() {
     setLoading(true);
     try {
-      const [rE, rA] = await Promise.all([
+      const [rE, rA, rC] = await Promise.all([
         fetchWithSupabaseSession("/api/rrhh/empleados", { cache: "no-store" }),
         fetchWithSupabaseSession("/api/rrhh/asignaciones-tipo", { cache: "no-store" }),
+        fetchWithSupabaseSession("/api/rrhh/tipos-empleado-catalogo", { cache: "no-store" }),
       ]);
       const jE = await rE.json();
       const jA = await rA.json();
+      const jC = await rC.json();
       if (jE.success) setEmpleados(jE.data.empleados ?? []);
       if (jA.success) setAsignaciones(jA.data.asignaciones ?? []);
+      if (jC.success) setCatalogo(jC.data.tipos ?? []);
     } finally {
       setLoading(false);
     }
@@ -109,7 +111,7 @@ export default function AsignacionesTipoEmpleadoPage() {
       (f) =>
         f.empleado.nombre.toLowerCase().includes(t) ||
         (f.empleado.cargo ?? "").toLowerCase().includes(t) ||
-        (f.asignacion?.tipos ?? []).some((tp) => (TIPOS_LABEL[tp] ?? tp).toLowerCase().includes(t)),
+        (f.asignacion?.tipos ?? []).some((tp) => (tiposLabel[tp] ?? tp).toLowerCase().includes(t)),
     );
   }, [filas, busqueda]);
 
@@ -184,7 +186,7 @@ export default function AsignacionesTipoEmpleadoPage() {
                         ) : (
                           (f.asignacion.tipos ?? []).map((t) => (
                             <span key={t} className="rounded-full bg-[#E4F5F4] px-2.5 py-0.5 text-[11px] font-medium text-[#104A4E]">
-                              {TIPOS_LABEL[t] ?? t}
+                              {tiposLabel[t] ?? t}
                             </span>
                           ))
                         )}
@@ -219,6 +221,7 @@ export default function AsignacionesTipoEmpleadoPage() {
         <FormModal
           empleado={editando.empleado}
           asignacion={editando.asignacion}
+          catalogo={catalogo}
           onClose={() => setEditando(null)}
           onSaved={() => { setEditando(null); void cargar(); }}
         />
@@ -227,6 +230,7 @@ export default function AsignacionesTipoEmpleadoPage() {
         <FormModal
           empleado={null}
           asignacion={null}
+          catalogo={catalogo}
           onClose={() => setCreandoLibre(false)}
           onSaved={() => { setCreandoLibre(false); void cargar(); }}
         />
@@ -240,11 +244,13 @@ export default function AsignacionesTipoEmpleadoPage() {
 function FormModal({
   empleado,
   asignacion,
+  catalogo,
   onClose,
   onSaved,
 }: {
   empleado: Empleado | null;
   asignacion: Asignacion | null;
+  catalogo: TipoCatalogo[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -407,19 +413,25 @@ function FormModal({
                   </tr>
                 </thead>
                 <tbody>
-                  {TIPOS_DISPONIBLES.map((t) => (
-                    <tr key={t.value} className="border-t border-slate-100">
-                      <td className="px-4 py-2 text-center">
-                        <input
-                          type="checkbox"
-                          checked={form.tipos.has(t.value)}
-                          onChange={() => toggleTipo(t.value)}
-                          className="h-4 w-4 rounded border-slate-300 text-[#104A4E] focus:ring-[#4FAEB2]"
-                        />
-                      </td>
-                      <td className="px-4 py-2 text-slate-700">{t.label}</td>
-                    </tr>
-                  ))}
+                  {catalogo.length === 0 ? (
+                    <tr><td colSpan={2} className="px-4 py-4 text-center text-xs text-slate-400">
+                      Catálogo vacío. Cargá los tipos desde <strong>Configuración → Tipos de empleado</strong>.
+                    </td></tr>
+                  ) : (
+                    catalogo.map((t) => (
+                      <tr key={t.slug} className="border-t border-slate-100">
+                        <td className="px-4 py-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={form.tipos.has(t.slug)}
+                            onChange={() => toggleTipo(t.slug)}
+                            className="h-4 w-4 rounded border-slate-300 text-[#104A4E] focus:ring-[#4FAEB2]"
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-slate-700">{t.nombre}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

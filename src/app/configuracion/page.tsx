@@ -81,6 +81,16 @@ export default function ConfiguracionPage() {
         <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
           <li>
             <SettingsModuleCard
+              title="Tipos de empleado"
+              subtitle="EMPRESA · RRHH"
+              description="Editá la lista de roles (Obrero, Capataz, Soldador, Técnico, Chofer…) que aparece al asignar el tipo de empleado en RRHH. Podés agregar, renombrar o desactivar."
+              icon={Tag}
+              badge={editorBadge}
+              href="/configuracion/tipos-empleado"
+            />
+          </li>
+          <li>
+            <SettingsModuleCard
               title="Tipos de cliente / servicio"
               subtitle="EMPRESA · CATÁLOGO"
               description="Editá las opciones del selector «Tipo de servicio» en los formularios de cliente (Cubierta metálica, Estructura ligera, Reforma, Mantenimiento, etc.). Podés agregar, renombrar o desactivar."
