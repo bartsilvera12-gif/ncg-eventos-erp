@@ -8,7 +8,7 @@ type Seccion = { titulo: string; descripcion: string; href?: string };
 const SECCIONES: Seccion[] = [
   { titulo: "Libro de Ventas",  descripcion: "Detalle de ventas reales del mes con subtotal, IVA y total.", href: "/finanzas/libro-ventas" },
   { titulo: "Libro de Compras", descripcion: "Compras y gastos del mes con totales unificados.", href: "/finanzas/libro-compras" },
-  { titulo: "IVA Mensual",      descripcion: "IVA débito, IVA crédito e IVA a pagar por mes del año.", href: "/finanzas/iva-mensual" },
+  { titulo: "IVA del período",  descripcion: "IVA repercutido (ventas), IVA soportado (compras) y resultado por mes.", href: "/finanzas/iva-mensual" },
   { titulo: "Cuentas por Cobrar", descripcion: "Ventas con saldo pendiente de cobro.", href: "/finanzas/cuentas-por-cobrar" },
   { titulo: "Cuentas por Pagar",  descripcion: "Compras y gastos con saldo pendiente de pago.", href: "/finanzas/cuentas-por-pagar" },
   { titulo: "Tesorería",          descripcion: "Movimientos de dinero por fecha (cobros y pagos).", href: "/finanzas/tesoreria" },

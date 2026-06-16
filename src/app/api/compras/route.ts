@@ -5,14 +5,11 @@ import { successResponse, errorResponse } from "@/lib/api/response";
 import { API_ERRORS } from "@/lib/api/errors";
 import { listCompras, insertCompraMultiConImpacto } from "@/lib/compras/server/compras-pg";
 import type { CompraItemInput } from "@/lib/compras/server/compras-pg";
+import { getPais, rateOf, calcularMontos } from "@/lib/iva/config";
 
-const IVA_OK = ["exenta", "4", "10", "21", "5"]; // "5" se mantiene por compat con compras legacy
+const IVA_OK = ["exenta", "4", "10", "21", "5"]; // "5" se mantiene por compat con compras legacy PY
 function ivaRate(t: string): number {
-  if (t === "21") return 0.21;
-  if (t === "10") return 0.10;
-  if (t === "4") return 0.04;
-  if (t === "5") return 0.05;
-  return 0;
+  return rateOf(getPais(), t);
 }
 
 const TIPO_DOC_OK = ["factura", "albaran", "ticket", "presupuesto", "rectificativa"];
@@ -39,23 +36,32 @@ function parseItems(body: Record<string, unknown>): { items: CompraItemInput[] }
     if (!producto_id) return { error: "Cada línea debe tener un producto." };
     const cantidad = Number(r.cantidad) || 0;
     if (cantidad <= 0) return { error: "La cantidad de cada línea debe ser mayor a 0." };
-    const costo_unitario = Number(r.costo_unitario) || 0;
-    if (costo_unitario <= 0) return { error: "El costo unitario de cada línea debe ser mayor a 0." };
+    const importeUnitarioRaw = Number(r.costo_unitario) || 0;
+    if (importeUnitarioRaw <= 0) return { error: "El coste unitario de cada línea debe ser mayor a 0." };
     const iva_tipo = IVA_OK.includes(String(r.iva_tipo)) ? String(r.iva_tipo) : "21";
-    const costo_unitario_original = Number(r.costo_unitario_original) || costo_unitario;
-    const subtotal = cantidad * costo_unitario;
-    const monto_iva = subtotal * ivaRate(iva_tipo);
+    const precioIncluyeIva = r.precio_incluye_iva === true;
+    const rate = ivaRate(iva_tipo);
+    // Si el importe ingresado incluye IVA, deriva la base unitaria sin IVA antes
+    // de persistir, para que el inventario quede valorizado a base imponible.
+    const montos = calcularMontos({
+      cantidad,
+      importeUnitario: importeUnitarioRaw,
+      rate,
+      precioIncluyeIva,
+    });
+    const costoUnitarioSinIva = cantidad > 0 ? montos.subtotal / cantidad : 0;
+    const costo_unitario_original = Number(r.costo_unitario_original) || costoUnitarioSinIva;
     items.push({
       producto_id,
       producto_nombre: String(r.producto_nombre ?? ""),
       sku: String(r.sku ?? ""),
       cantidad,
-      costo_unitario,
+      costo_unitario: costoUnitarioSinIva,
       costo_unitario_original,
       iva_tipo,
-      subtotal,
-      monto_iva,
-      total_linea: subtotal + monto_iva,
+      subtotal: montos.subtotal,
+      monto_iva: montos.iva,
+      total_linea: montos.total,
     });
   }
   return { items };

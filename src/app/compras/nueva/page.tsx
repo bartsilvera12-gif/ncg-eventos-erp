@@ -143,6 +143,7 @@ export default function NuevaCompraPage() {
     cantidad: "",
     costo_input: "",
     iva_tipo: "21" as TipoIva,
+    precio_incluye_iva: false,
   });
 
   // ── Inline: PROVEEDOR ────────────────────────────────────────────────────
@@ -220,9 +221,15 @@ export default function NuevaCompraPage() {
   const tipoCambioNum = header.moneda === "USD" ? (parseFloat(header.tipo_cambio) || 0) : 1;
   const cantNum = parseFloat(linea.cantidad) || 0;
   const costoInputNum = parseFloat(linea.costo_input) || 0;
-  const costoEur = costoInputNum * tipoCambioNum;
+  // Importe unitario tal como lo ingresa el usuario (puede incluir IVA).
+  const costoInputEur = costoInputNum * tipoCambioNum;
+  const ivaRateLinea = ivaRate(linea.iva_tipo);
+  // Base unitaria SIN IVA (lo que se persiste en costo_unitario / inventario).
+  const costoEur = linea.precio_incluye_iva && ivaRateLinea > 0
+    ? costoInputEur / (1 + ivaRateLinea)
+    : costoInputEur;
   const lineaSubtotal = cantNum > 0 && costoEur > 0 ? cantNum * costoEur : 0;
-  const lineaIvaMonto = lineaSubtotal * ivaRate(linea.iva_tipo);
+  const lineaIvaMonto = lineaSubtotal * ivaRateLinea;
   const lineaTotal = lineaSubtotal + lineaIvaMonto;
   const prodLineaSel = productos.find((p) => p.id === linea.producto_id);
   const lineaValida =
@@ -284,7 +291,7 @@ export default function NuevaCompraPage() {
         total_linea: lineaTotal,
       },
     ]);
-    setLinea({ producto_id: "", cantidad: "", costo_input: "", iva_tipo: linea.iva_tipo });
+    setLinea({ producto_id: "", cantidad: "", costo_input: "", iva_tipo: linea.iva_tipo, precio_incluye_iva: linea.precio_incluye_iva });
     setProductoCreado(null);
   }
 
@@ -666,12 +673,21 @@ export default function NuevaCompraPage() {
                 </div>
                 <div className="md:col-span-2">
                   <label className={labelSmClass}>
-                    Coste unitario sin IVA ({header.moneda === "USD" ? "USD" : "€"})
+                    {linea.precio_incluye_iva ? "Precio unitario CON IVA" : "Coste unitario sin IVA"} ({header.moneda === "USD" ? "USD" : "€"})
                   </label>
                   <MontoInput value={linea.costo_input}
                     onChange={(n) => { setErrorLinea(null); setLinea((p) => ({ ...p, costo_input: String(n) })); }}
                     placeholder={header.moneda === "USD" ? "Ej: 12" : "Ej: 35,50"}
                     className={inputClass} decimals />
+                  <label className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={linea.precio_incluye_iva}
+                      onChange={(e) => setLinea((p) => ({ ...p, precio_incluye_iva: e.target.checked }))}
+                      className="h-3.5 w-3.5 rounded border-slate-300 text-[#0EA5E9] focus:ring-[#0EA5E9]"
+                    />
+                    Precio incluye IVA
+                  </label>
                 </div>
                 <div className="md:col-span-3">
                   <label className={labelSmClass}>IVA</label>

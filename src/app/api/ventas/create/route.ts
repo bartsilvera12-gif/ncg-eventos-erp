@@ -17,7 +17,7 @@ function asItems(body: unknown): CreateVentaItemInput[] | null {
     if (!x || typeof x !== "object") return null;
     const r = x as Record<string, unknown>;
     const tipoIva = r.tipo_iva;
-    if (tipoIva !== "EXENTA" && tipoIva !== "5%" && tipoIva !== "10%") return null;
+    if (tipoIva !== "EXENTA" && tipoIva !== "4%" && tipoIva !== "5%" && tipoIva !== "10%" && tipoIva !== "21%") return null;
     // tipo_precio: valores exactos del CHECK; default seguro 'minorista'
     // (ventas viejas / payloads sin el campo quedan como minorista).
     const tp = r.tipo_precio;

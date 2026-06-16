@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { TipoIvaVenta } from "@/lib/ventas/types";
 
 export interface ProductoPickerItem {
   id: string;
@@ -36,9 +37,11 @@ export interface AgregarVentaPayload {
   producto: ProductoPickerItem;
   cantidad: number;
   precio_input: number;
-  iva: "EXENTA" | "5%" | "10%";
+  iva: TipoIvaVenta;
   /** Tipo de precio elegido en el panel de detalle (minorista/mayorista/al costo). */
   tipo_precio: "minorista" | "mayorista" | "costo";
+  /** Si true, el `precio_input` ya incluye IVA y se debe extraer. */
+  precio_incluye_iva: boolean;
 }
 
 interface Props {
@@ -54,7 +57,11 @@ interface Props {
   /** Tipo de cambio cuando moneda=USD (PYG por USD). 0 si no se cargo. */
   tipoCambio?: number;
   /** IVA default que viene de la venta. */
-  ivaDefault?: "EXENTA" | "5%" | "10%";
+  ivaDefault?: TipoIvaVenta;
+  /** Tasas disponibles a mostrar en el selector (orden importa). */
+  tasasIva?: TipoIvaVenta[];
+  /** Default del toggle "Precio incluye IVA" (ES=false, PY=true). */
+  precioIncluyeIvaDefault?: boolean;
 }
 
 function formatGs(v: number): string {
@@ -78,7 +85,10 @@ function precioPorTipoPicker(
 }
 
 export default function ProductPickerModal({
-  open, onClose, onAgregar, excludeIds = [], moneda = "GS", tipoCambio = 1, ivaDefault = "10%",
+  open, onClose, onAgregar, excludeIds = [], moneda = "GS", tipoCambio = 1,
+  ivaDefault = "21%",
+  tasasIva = ["EXENTA", "4%", "10%", "21%"],
+  precioIncluyeIvaDefault = false,
 }: Props) {
   const [q, setQ] = useState("");
   const [items, setItems] = useState<ProductoPickerItem[]>([]);
@@ -91,7 +101,8 @@ export default function ProductPickerModal({
   const [sel, setSel] = useState<ProductoPickerItem | null>(null);
   const [cantidad, setCantidad] = useState("1");
   const [precio, setPrecio] = useState("");
-  const [iva, setIva] = useState<"EXENTA" | "5%" | "10%">(ivaDefault);
+  const [iva, setIva] = useState<TipoIvaVenta>(ivaDefault);
+  const [precioIncluyeIva, setPrecioIncluyeIva] = useState<boolean>(precioIncluyeIvaDefault);
   const [tipoPrecio, setTipoPrecio] = useState<"minorista" | "mayorista" | "costo">("minorista");
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -172,7 +183,7 @@ export default function ProductPickerModal({
         return;
       }
     }
-    const ok = onAgregar({ producto: sel, cantidad: cantNum, precio_input: precioNum, iva, tipo_precio: tipoPrecio });
+    const ok = onAgregar({ producto: sel, cantidad: cantNum, precio_input: precioNum, iva, tipo_precio: tipoPrecio, precio_incluye_iva: precioIncluyeIva });
     if (ok !== false) {
       setFeedback("Producto agregado ✓");
       setCantidad("1");
@@ -186,11 +197,18 @@ export default function ProductPickerModal({
   const enCarritoSel = sel ? excludeIds.filter((id) => id === sel.id).length : 0;
   const dispSel = sel ? sel.stock_actual - enCarritoSel : 0;
   const precioGsEquiv = moneda === "USD" ? (parseFloat(precio) || 0) * (tipoCambio || 0) : (parseFloat(precio) || 0);
-  const subtotal = (parseFloat(cantidad.replace(",", ".")) || 0) * precioGsEquiv;
-  // IVA incluido en el precio: el cliente paga el precio mostrado tal cual; el IVA
-  // se calcula extrayendolo del subtotal (solo informativo, no se suma).
-  const tasaIva = iva === "10%" ? 0.10 : iva === "5%" ? 0.05 : 0;
-  const ivaMonto = tasaIva > 0 ? subtotal - subtotal / (1 + tasaIva) : 0;
+  const brutoLinea = (parseFloat(cantidad.replace(",", ".")) || 0) * precioGsEquiv;
+  const tasaIva =
+    iva === "21%" ? 0.21 :
+    iva === "10%" ? 0.10 :
+    iva === "5%"  ? 0.05 :
+    iva === "4%"  ? 0.04 : 0;
+  // Si el precio ingresado YA incluye IVA, se extrae del bruto. Si no, se suma encima.
+  const baseImponible = tasaIva > 0 && precioIncluyeIva ? brutoLinea / (1 + tasaIva) : brutoLinea;
+  const ivaMonto = tasaIva > 0
+    ? (precioIncluyeIva ? brutoLinea - baseImponible : baseImponible * tasaIva)
+    : 0;
+  const totalLinea = baseImponible + ivaMonto;
 
   // Mobile: pt-3 (gana viewport vertical valioso, evita el modal "cortado")
   // y pt-12 en sm+ donde si hay espacio para el aire decorativo.
@@ -415,26 +433,39 @@ export default function ProductPickerModal({
                   <div>
                     <label className="block text-[11px] uppercase text-slate-400 mb-1">IVA</label>
                     <div className="flex border border-slate-200 rounded-lg overflow-hidden">
-                      {(["EXENTA", "5%", "10%"] as const).map((opt) => (
+                      {tasasIva.map((opt) => (
                         <button
                           key={opt} type="button"
                           onClick={() => setIva(opt)}
                           className={`flex-1 py-1.5 text-xs font-medium ${iva === opt ? "bg-[#0EA5E9] text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}
                         >
-                          {opt}
+                          {opt === "EXENTA" ? "Exento" : opt}
                         </button>
                       ))}
                     </div>
+                    <label className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-slate-500 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={precioIncluyeIva}
+                        onChange={(e) => setPrecioIncluyeIva(e.target.checked)}
+                        className="h-3.5 w-3.5 rounded border-slate-300 text-[#0EA5E9] focus:ring-[#0EA5E9]"
+                      />
+                      Precio incluye IVA
+                    </label>
                   </div>
 
                   <div className="text-xs text-slate-500 space-y-0.5 pt-1">
                     <div className="flex justify-between">
-                      <span>IVA incluido</span>
-                      <span className="tabular-nums">{ivaMonto > 0 ? `${formatGs(ivaMonto)} (referencia)` : "—"}</span>
+                      <span>Subtotal sin IVA</span>
+                      <span className="tabular-nums">{formatGs(baseImponible)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>IVA repercutido</span>
+                      <span className="tabular-nums">{ivaMonto > 0 ? formatGs(ivaMonto) : "—"}</span>
                     </div>
                     <div className="flex justify-between font-bold text-slate-800 pt-1 border-t border-slate-200">
-                      <span>Total línea</span>
-                      <span className="tabular-nums">{formatGs(subtotal)}</span>
+                      <span>Total con IVA</span>
+                      <span className="tabular-nums">{formatGs(totalLinea)}</span>
                     </div>
                   </div>
                 </div>

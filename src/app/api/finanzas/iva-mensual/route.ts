@@ -6,10 +6,13 @@ import { API_ERRORS } from "@/lib/api/errors";
 /**
  * GET /api/finanzas/iva-mensual?anio=YYYY
  *
- * Resumen mensual de IVA del año:
- *  - debito  = SUM(ventas.monto_iva) por mes (solo ventas reales, no presupuestos)
- *  - credito = SUM(compras.monto_iva) por mes
- *  - neto    = debito - credito  (positivo = a pagar, negativo = crédito a favor)
+ * Resumen del IVA del período (año):
+ *  - iva_repercutido = SUM(ventas.monto_iva) por mes (solo ventas reales, no presupuestos)
+ *  - iva_soportado   = SUM(compras.monto_iva) por mes
+ *  - resultado_iva   = iva_repercutido - iva_soportado  (positivo = IVA a pagar, negativo = crédito a favor)
+ *
+ * Se mantienen los campos legacy `debito` / `credito` / `neto` en la respuesta
+ * para no romper consumidores existentes durante la transición.
  *
  * Si no se pasa anio, devuelve el año actual.
  */
@@ -50,32 +53,45 @@ export async function GET(request: NextRequest) {
       return Number.isFinite(m) ? m - 1 : 0;
     };
 
-    const debito = Array.from({ length: 12 }, () => 0);
-    const credito = Array.from({ length: 12 }, () => 0);
+    const ivaRepercutido = Array.from({ length: 12 }, () => 0);
+    const ivaSoportado = Array.from({ length: 12 }, () => 0);
 
     for (const r of (ventasQ.data ?? []) as { fecha?: string; monto_iva?: number | string }[]) {
       if (!r.fecha) continue;
-      debito[mesIdx(r.fecha)] += Number(r.monto_iva ?? 0);
+      ivaRepercutido[mesIdx(r.fecha)] += Number(r.monto_iva ?? 0);
     }
     for (const r of (comprasQ.data ?? []) as { fecha?: string; monto_iva?: number | string }[]) {
       if (!r.fecha) continue;
-      credito[mesIdx(r.fecha)] += Number(r.monto_iva ?? 0);
+      ivaSoportado[mesIdx(r.fecha)] += Number(r.monto_iva ?? 0);
     }
 
     const meses = Array.from({ length: 12 }, (_, i) => {
-      const d = debito[i];
-      const c = credito[i];
+      const rep = ivaRepercutido[i];
+      const sop = ivaSoportado[i];
+      const resultado = rep - sop;
       return {
         mes: `${anio}-${String(i + 1).padStart(2, "0")}`,
-        debito: d,
-        credito: c,
-        neto: d - c,
+        // Campos nuevos (ES)
+        iva_repercutido: rep,
+        iva_soportado: sop,
+        resultado_iva: resultado,
+        // Alias legacy (no romper consumidores)
+        debito: rep,
+        credito: sop,
+        neto: resultado,
       };
     });
 
     const totales = meses.reduce(
-      (acc, m) => ({ debito: acc.debito + m.debito, credito: acc.credito + m.credito, neto: acc.neto + m.neto }),
-      { debito: 0, credito: 0, neto: 0 }
+      (acc, m) => ({
+        iva_repercutido: acc.iva_repercutido + m.iva_repercutido,
+        iva_soportado: acc.iva_soportado + m.iva_soportado,
+        resultado_iva: acc.resultado_iva + m.resultado_iva,
+        debito: acc.debito + m.debito,
+        credito: acc.credito + m.credito,
+        neto: acc.neto + m.neto,
+      }),
+      { iva_repercutido: 0, iva_soportado: 0, resultado_iva: 0, debito: 0, credito: 0, neto: 0 }
     );
 
     return NextResponse.json(successResponse({ anio, meses, totales }));

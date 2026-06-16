@@ -1,4 +1,4 @@
-export type TipoIvaVenta = "EXENTA" | "5%" | "10%";
+export type TipoIvaVenta = "EXENTA" | "4%" | "5%" | "10%" | "21%";
 export type TipoVenta   = "CONTADO" | "CREDITO";
 export type MonedaVenta = "GS" | "USD";
 export type MetodoPago  = "efectivo" | "tarjeta" | "transferencia";

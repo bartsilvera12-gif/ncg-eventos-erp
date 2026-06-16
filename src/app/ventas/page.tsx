@@ -39,9 +39,11 @@ const inputFilterClass =
 
 
 const ivaLabel: Record<TipoIvaVenta, string> = {
-  EXENTA: "Exenta",
+  EXENTA: "Exento",
+  "4%":   "IVA 4%",
   "5%":   "IVA 5%",
   "10%":  "IVA 10%",
+  "21%":  "IVA 21%",
 };
 
 // ── Métricas del día ──────────────────────────────────────────────────────────

@@ -6,16 +6,25 @@ import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session"
 
 export const dynamic = "force-dynamic";
 
-type MesRow = { mes: string; debito: number; credito: number; neto: number };
-type Data = { anio: number; meses: MesRow[]; totales: { debito: number; credito: number; neto: number } };
+type MesRow = {
+  mes: string;
+  iva_repercutido: number;
+  iva_soportado: number;
+  resultado_iva: number;
+};
+type Data = {
+  anio: number;
+  meses: MesRow[];
+  totales: { iva_repercutido: number; iva_soportado: number; resultado_iva: number };
+};
 
 const NOMBRES_MES = [
   "Enero","Febrero","Marzo","Abril","Mayo","Junio",
   "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre",
 ];
 
-function fmtGs(n: number): string {
-  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+function fmtEur(n: number): string {
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function IvaMensualPage() {
@@ -43,8 +52,8 @@ export default function IvaMensualPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="NCG · Finanzas"
-        title="IVA Mensual"
-        description="IVA débito (ventas) menos IVA crédito (compras). Saldo positivo = a pagar."
+        title="IVA del período"
+        description="IVA repercutido (ventas) menos IVA soportado (compras). Resultado positivo = IVA a pagar; negativo = crédito a favor."
         backHref="/finanzas"
         backLabel="Finanzas"
         actions={
@@ -58,11 +67,12 @@ export default function IvaMensualPage() {
 
       {data && (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <Kpi label="IVA Débito" hint="ventas reales del año" value={fmtGs(data.totales.debito)} tone="indigo" />
-          <Kpi label="IVA Crédito" hint="compras del año" value={fmtGs(data.totales.credito)} tone="sky" />
-          <Kpi label={data.totales.neto >= 0 ? "IVA a pagar" : "Crédito a favor"}
-            value={fmtGs(Math.abs(data.totales.neto))}
-            tone={data.totales.neto >= 0 ? "red" : "emerald"} highlight />
+          <Kpi label="IVA repercutido (ventas)" hint="del año" value={fmtEur(data.totales.iva_repercutido)} tone="indigo" />
+          <Kpi label="IVA soportado (compras)" hint="del año" value={fmtEur(data.totales.iva_soportado)} tone="sky" />
+          <Kpi label={data.totales.resultado_iva >= 0 ? "IVA a pagar" : "Crédito a favor"}
+            hint="Resultado IVA"
+            value={fmtEur(Math.abs(data.totales.resultado_iva))}
+            tone={data.totales.resultado_iva >= 0 ? "red" : "emerald"} highlight />
         </div>
       )}
 
@@ -71,9 +81,9 @@ export default function IvaMensualPage() {
           <thead className="bg-slate-50 text-slate-600">
             <tr>
               <th className="px-4 py-3 font-semibold">Mes</th>
-              <th className="px-4 py-3 font-semibold text-right">Débito</th>
-              <th className="px-4 py-3 font-semibold text-right">Crédito</th>
-              <th className="px-4 py-3 font-semibold text-right">Neto</th>
+              <th className="px-4 py-3 font-semibold text-right">IVA repercutido</th>
+              <th className="px-4 py-3 font-semibold text-right">IVA soportado</th>
+              <th className="px-4 py-3 font-semibold text-right">Resultado IVA</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -83,10 +93,10 @@ export default function IvaMensualPage() {
               data.meses.map((m, i) => (
                 <tr key={m.mes} className="hover:bg-[#4FAEB2]/[0.04]">
                   <td className="px-4 py-2.5 font-medium text-gray-800">{NOMBRES_MES[i]}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{fmtGs(m.debito)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{fmtGs(m.credito)}</td>
-                  <td className={`px-4 py-2.5 text-right tabular-nums font-semibold ${m.neto > 0 ? "text-red-700" : m.neto < 0 ? "text-emerald-700" : "text-gray-500"}`}>
-                    {fmtGs(m.neto)}
+                  <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{fmtEur(m.iva_repercutido)}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{fmtEur(m.iva_soportado)}</td>
+                  <td className={`px-4 py-2.5 text-right tabular-nums font-semibold ${m.resultado_iva > 0 ? "text-red-700" : m.resultado_iva < 0 ? "text-emerald-700" : "text-gray-500"}`}>
+                    {fmtEur(m.resultado_iva)}
                   </td>
                 </tr>
               ))
@@ -94,10 +104,10 @@ export default function IvaMensualPage() {
             {data && (
               <tr className="border-t-2 border-slate-200 bg-slate-50">
                 <td className="px-4 py-3 font-bold text-slate-800">Total año</td>
-                <td className="px-4 py-3 text-right tabular-nums font-bold text-slate-800">{fmtGs(data.totales.debito)}</td>
-                <td className="px-4 py-3 text-right tabular-nums font-bold text-slate-800">{fmtGs(data.totales.credito)}</td>
-                <td className={`px-4 py-3 text-right tabular-nums font-bold ${data.totales.neto > 0 ? "text-red-700" : data.totales.neto < 0 ? "text-emerald-700" : "text-gray-700"}`}>
-                  {fmtGs(data.totales.neto)}
+                <td className="px-4 py-3 text-right tabular-nums font-bold text-slate-800">{fmtEur(data.totales.iva_repercutido)}</td>
+                <td className="px-4 py-3 text-right tabular-nums font-bold text-slate-800">{fmtEur(data.totales.iva_soportado)}</td>
+                <td className={`px-4 py-3 text-right tabular-nums font-bold ${data.totales.resultado_iva > 0 ? "text-red-700" : data.totales.resultado_iva < 0 ? "text-emerald-700" : "text-gray-700"}`}>
+                  {fmtEur(data.totales.resultado_iva)}
                 </td>
               </tr>
             )}

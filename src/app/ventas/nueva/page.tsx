@@ -29,17 +29,14 @@ function formatGs(valor: number) {
   return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
-/**
- * IVA incluido en el precio (NCG España): el precio que ingresa el cajero
- * YA incluye IVA. Esta función extrae el monto de IVA contenido en `total`.
- *   base_imponible = total / (1 + tasa)
- *   iva = total - base_imponible
- * El total de la línea sigue siendo `total` (no se suma encima).
- */
-function calcIva(tipo: TipoIvaVenta, total: number) {
-  const tasa = tipo === "EXENTA" ? 0 : tipo === "5%" ? 0.05 : 0.10;
-  if (tasa === 0) return 0;
-  return total - total / (1 + tasa);
+/** Alícuota a partir del código de IVA (admite formatos PY y ES). */
+function tasaIvaVenta(tipo: TipoIvaVenta): number {
+  if (tipo === "EXENTA") return 0;
+  if (tipo === "4%") return 0.04;
+  if (tipo === "5%") return 0.05;
+  if (tipo === "10%") return 0.1;
+  if (tipo === "21%") return 0.21;
+  return 0;
 }
 
 // ── Estilos ────────────────────────────────────────────────────────────────────
@@ -51,9 +48,11 @@ const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
 // ── Labels ──────────────────────────────────────────────────────────────────
 
 const ivaLabel: Record<TipoIvaVenta, string> = {
-  EXENTA: "Exenta",
+  EXENTA: "Exento",
+  "4%":   "4%",
   "5%":   "5%",
   "10%":  "10%",
+  "21%":  "21%",
 };
 
 const tipoPrecioLabel: Record<TipoPrecioVenta, string> = {
@@ -116,10 +115,8 @@ export default function NuevaVentaPage() {
    * ahí). Mantiene el modal abierto si todo OK para seguir cargando.
    */
   function handleAgregarDesdePicker(payload: AgregarVentaPayload): boolean {
-    const { producto: p, cantidad, precio_input, iva, tipo_precio } = payload;
+    const { producto: p, cantidad, precio_input, iva, tipo_precio, precio_incluye_iva } = payload;
     const precioPyg = precio_input;
-    // Verificar stock vs lo ya cargado SOLO si el producto controla stock.
-    // Productos del Menú (controla_stock=false) no validan stock.
     const ctrlStock = (p as { controla_stock?: boolean }).controla_stock !== false;
     if (ctrlStock) {
       const yaEnCarrito = items.filter((i) => i.producto_id === p.id).reduce((s, i) => s + i.cantidad, 0);
@@ -128,11 +125,13 @@ export default function NuevaVentaPage() {
         return false;
       }
     }
-    // Precio con IVA incluido: total_linea = cantidad × precio (sin sumar IVA).
-    // monto_iva se extrae del total (informativo / contable).
-    const totalLinea = cantidad * precioPyg;
-    const montoIva = calcIva(iva, totalLinea);
-    const subtotal = totalLinea - montoIva; // base imponible
+    const tasa = tasaIvaVenta(iva);
+    const bruto = cantidad * precioPyg;
+    // precio_incluye_iva=true → el bruto YA contiene IVA, se extrae.
+    // precio_incluye_iva=false → el bruto es base imponible, IVA se suma encima.
+    const subtotal = tasa > 0 && precio_incluye_iva ? bruto / (1 + tasa) : bruto;
+    const montoIva = tasa > 0 ? (precio_incluye_iva ? bruto - subtotal : subtotal * tasa) : 0;
+    const totalLinea = subtotal + montoIva;
 
     setItems((prev) => [
       ...prev,
@@ -144,7 +143,6 @@ export default function NuevaVentaPage() {
         precio_venta_original: precio_input,
         precio_venta: precioPyg,
         tipo_iva: iva,
-        // Tipo de precio elegido por el cajero en el panel de detalle del buscador.
         tipo_precio,
         subtotal,
         monto_iva: montoIva,
@@ -393,13 +391,17 @@ export default function NuevaVentaPage() {
                 <div className="w-full md:w-80 space-y-3">
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>IVA incluido (referencia)</span>
+                      <span>Subtotal sin IVA</span>
+                      <span className="tabular-nums">{formatGs(totalSubtotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500">
+                      <span>IVA repercutido</span>
                       <span className="tabular-nums">
                         {totalIva > 0 ? formatGs(totalIva) : "—"}
                       </span>
                     </div>
                     <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
-                      <span>TOTAL</span>
+                      <span>TOTAL con IVA</span>
                       <span className="tabular-nums">{formatGs(totalGeneral)}</span>
                     </div>
                   </div>
@@ -657,7 +659,9 @@ export default function NuevaVentaPage() {
         excludeIds={items.map((i) => i.producto_id)}
         moneda={moneda}
         tipoCambio={tipoCambioNum}
-        ivaDefault="10%"
+        ivaDefault="21%"
+        tasasIva={["EXENTA", "4%", "10%", "21%"]}
+        precioIncluyeIvaDefault={false}
       />
 
       <PagoDetalleModal
