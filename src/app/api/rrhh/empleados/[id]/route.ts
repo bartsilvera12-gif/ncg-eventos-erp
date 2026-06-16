@@ -47,11 +47,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       "grupo_sanguineo","direccion","email","telefono","cargo","tipo_empleado","tipo_periodo",
       "departamento","seccion","supervisor","banco","numero_cuenta",
       "sucursal","chofer_habilitacion","chofer_observacion",
+      "comision_politica_id","comision_observacion",
     ];
     const DATE_FIELDS = ["fecha_nacimiento","fecha_ingreso","fecha_baja","chofer_fecha_venc"];
     const NUM_FIELDS = ["salario_base","salario_complementario","costo_hora"];
     const NUMN_FIELDS = ["chofer_km"];
-    const BOOL_FIELDS = ["cobrar_con_cheque","excluir_liquidaciones","activo"];
+    const BOOL_FIELDS = ["cobrar_con_cheque","excluir_liquidaciones","activo","participa_comisiones"];
 
     if (body.nombre !== undefined) {
       const n = String(body.nombre).trim();

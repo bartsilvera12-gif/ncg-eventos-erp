@@ -423,12 +423,14 @@ function renderAdminView({
   rows,
   baseLabel,
   onReload,
+  empleadosComisionables,
 }: {
   meta: PreviewMeta | null | undefined;
   kpis: PreviewKpis | null | undefined;
   rows: VendedorRow[];
   baseLabel: string;
   onReload: () => void;
+  empleadosComisionables: number | null;
 }) {
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-10">
@@ -521,9 +523,19 @@ function renderAdminView({
       <section>
         <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Por vendedor</h2>
         {rows.length === 0 ? (
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
-            No hay movimientos con vendedor asignado en este período para la base seleccionada.
-          </div>
+          empleadosComisionables === 0 ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-8 text-center text-sm text-amber-900">
+              <p className="font-medium">No hay vendedores/comerciales con comisión configurada.</p>
+              <p className="mt-1 text-xs">
+                Activá <strong>“Participa en comisiones”</strong> desde la ficha del empleado
+                {" "}(<Link href="/rrhh/empleados" className="underline">RRHH · Empleados</Link>).
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-600">
+              No hay movimientos con vendedor asignado en este período para la base seleccionada.
+            </div>
+          )
         ) : (
           <div className="space-y-3">
             {rows.map((r) => (
@@ -575,6 +587,21 @@ export default function ComisionesPage() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<PreviewPayload | null>(null);
   const [sellerMonth, setSellerMonth] = useState("");
+  // Cantidad de empleados activos marcados como "Participa en comisiones".
+  // Sirve para distinguir "no hay comisionables configurados" vs
+  // "hay vendedores pero sin movimientos en el período".
+  const [empleadosComisionables, setEmpleadosComisionables] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetchWithSupabaseSession("/api/rrhh/empleados", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: { empleados?: Array<{ activo?: boolean; participa_comisiones?: boolean }> } }) => {
+        if (!j?.success) return;
+        const emps = j.data?.empleados ?? [];
+        setEmpleadosComisionables(emps.filter((e) => e.activo !== false && e.participa_comisiones === true).length);
+      })
+      .catch(() => { /* tolerante */ });
+  }, []);
 
   const load = useCallback(async (opts?: { mes?: string; signal?: AbortSignal }) => {
     setLoading(true);
@@ -681,5 +708,6 @@ export default function ComisionesPage() {
     rows,
     baseLabel,
     onReload: () => void load(),
+    empleadosComisionables,
   });
 }

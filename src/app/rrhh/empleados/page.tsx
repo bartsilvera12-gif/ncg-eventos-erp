@@ -35,6 +35,9 @@ type Empleado = {
   departamento: string | null;
   seccion: string | null;
   supervisor: string | null;
+  participa_comisiones: boolean | null;
+  comision_politica_id: string | null;
+  comision_observacion: string | null;
   salario_base: number;
   salario_complementario: number;
   costo_hora: number;
@@ -71,6 +74,9 @@ const FORM_INICIAL = {
   departamento: "",
   seccion: "",
   supervisor: "",
+  participa_comisiones: false,
+  comision_politica_id: "",
+  comision_observacion: "",
   salario_base: "",
   salario_complementario: "",
   costo_hora: "",
@@ -361,6 +367,9 @@ function empleadoToForm(e: Empleado): FormEmpleado {
     departamento: e.departamento ?? "",
     seccion: e.seccion ?? "",
     supervisor: e.supervisor ?? "",
+    participa_comisiones: !!e.participa_comisiones,
+    comision_politica_id: e.comision_politica_id ?? "",
+    comision_observacion: e.comision_observacion ?? "",
     salario_base: String(e.salario_base ?? 0),
     salario_complementario: String(e.salario_complementario ?? 0),
     costo_hora: String(e.costo_hora ?? 0),
@@ -750,6 +759,8 @@ function EmpleadoFormFields({
         </div>
       </Section>
 
+      <ComisionesSection form={form} setForm={setForm} />
+
       <Section titulo="Estado">
         {editMode && (
           <div>
@@ -888,6 +899,85 @@ function TiposEmpleadoSection({
           </div>
         </div>
       )}
+    </section>
+  );
+}
+
+// ── Sección "Comisiones" colapsable ────────────────────────────────────────
+/**
+ * Sección mínima. Si "Participa en comisiones" está apagado, no muestra más
+ * campos. Si está prendido, muestra solo política y observación. La política
+ * de cálculo, escalas y reportes viven en Comercial → Comisiones.
+ */
+function ComisionesSection({
+  form, setForm,
+}: {
+  form: FormEmpleado;
+  setForm: React.Dispatch<React.SetStateAction<FormEmpleado>>;
+}) {
+  const [politicas, setPoliticas] = useState<{ id: string; nombre: string }[]>([]);
+  // Sugerir activar si el cargo huele a comercial.
+  const cargoLower = (form.cargo ?? "").toLowerCase();
+  const sugerirComision = /vendedor|comercial|asesor/.test(cargoLower);
+
+  useEffect(() => {
+    // GET /api/comisiones/politica devuelve la política activa única por empresa.
+    // Si en el futuro hay más de una, este endpoint puede paginar.
+    fetchWithSupabaseSession("/api/comisiones/politica", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j: { success?: boolean; data?: { politica?: { id: string; nombre: string } | null } }) => {
+        const p = j?.data?.politica;
+        if (p?.id) setPoliticas([{ id: p.id, nombre: p.nombre ?? "Política comercial" }]);
+      })
+      .catch(() => { /* tolerante: el módulo de comisiones puede no estar habilitado */ });
+  }, []);
+
+  function setField<K extends keyof FormEmpleado>(k: K, v: FormEmpleado[K]) {
+    setForm((s) => ({ ...s, [k]: v }));
+  }
+
+  return (
+    <section>
+      <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Comisiones</h3>
+      <div className="rounded-xl border border-slate-200 p-4 space-y-3">
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-700 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!form.participa_comisiones}
+            onChange={(e) => setField("participa_comisiones", e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300"
+          />
+          Participa en comisiones
+        </label>
+        {sugerirComision && !form.participa_comisiones && (
+          <p className="text-xs text-amber-700">
+            El cargo indica un rol comercial. Considerá activar comisiones para que este empleado aparezca en el módulo Comercial · Comisiones.
+          </p>
+        )}
+        {form.participa_comisiones && (
+          <>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <Field label="Política de comisión" hint="Configurala en Comercial · Comisiones.">
+                <select className={inputCls} value={form.comision_politica_id}
+                  onChange={(e) => setField("comision_politica_id", e.target.value)}>
+                  <option value="">— Política activa por defecto —</option>
+                  {politicas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                </select>
+              </Field>
+              <Field label="Observación interna" hint="Opcional. Solo visible internamente.">
+                <input className={inputCls} value={form.comision_observacion}
+                  onChange={(e) => setField("comision_observacion", e.target.value)}
+                  placeholder="Ej. comisión solo sobre obras > 5.000€" />
+              </Field>
+            </div>
+            <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">
+              Las comisiones se calculan, aprueban y pagan desde
+              {" "}<Link href="/comisiones" className="underline font-medium">Comercial · Comisiones</Link>.
+              No se mezclan con salario base ni costo por hora.
+            </div>
+          </>
+        )}
+      </div>
     </section>
   );
 }
