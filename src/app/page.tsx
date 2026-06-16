@@ -77,12 +77,14 @@ const Z = {
 } as const;
 
 function ZentraMark({ className = "" }: { className?: string }) {
+  // Hardcodeado a "Z" — el header del dashboard siempre muestra la marca
+  // del producto (Zentra), no la inicial del tenant.
   return (
     <div
       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#4FAEB2]/30 bg-white shadow-sm ring-1 ring-[#4FAEB2]/10 ${className}`}
     >
       <span className="text-xl font-extrabold leading-none tracking-tight" style={{ color: Z.accent }}>
-        {BRAND.initial}
+        Z
       </span>
     </div>
   );
@@ -2192,7 +2194,7 @@ export default function DashboardPage() {
           <ZentraMark />
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: Z.accent }}>
-              {BRAND.shortName}
+              Zentra
             </p>
             <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: Z.text }}>
               Dashboard
