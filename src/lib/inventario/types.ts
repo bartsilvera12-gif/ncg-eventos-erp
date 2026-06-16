@@ -67,4 +67,8 @@ export interface MovimientoInventario {
   proyecto_id?: string | null;
   /** Nombre denormalizado del proyecto, lo llena el endpoint para mostrar en la lista. */
   proyecto_titulo?: string | null;
+  /** Motivo de la salida (uso_obra, consumo_interno, rotura, ajuste, entrega_cuadrilla, transferencia_vehiculo). */
+  motivo?: string | null;
+  /** Observación libre. */
+  observacion?: string | null;
 }

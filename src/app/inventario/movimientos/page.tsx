@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { getMovimientos } from "@/lib/inventario/storage";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
@@ -13,6 +14,15 @@ const origenLabel: Record<OrigenMovimiento, string> = {
   venta: "Venta",
   ajuste_manual: "Ajuste manual",
   inventario_inicial: "Inventario inicial",
+};
+
+const MOTIVO_LABEL: Record<string, string> = {
+  uso_obra: "Uso en obra",
+  consumo_interno: "Consumo interno",
+  rotura: "Rotura / pérdida",
+  ajuste: "Ajuste de inventario",
+  entrega_cuadrilla: "Entrega a cuadrilla",
+  transferencia_vehiculo: "Transferencia a vehículo",
 };
 
 const origenBadge: Record<OrigenMovimiento, string> = {
@@ -44,6 +54,8 @@ const inputFilterClass =
   "border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-gray-400 transition-colors bg-white";
 
 export default function MovimientosPage() {
+  const searchParams = useSearchParams();
+  const productoFiltro = searchParams?.get("producto") ?? "";
   const [todos, setTodos] = useState<MovimientoInventario[]>([]);
 
   // Filtros
@@ -69,14 +81,18 @@ export default function MovimientosPage() {
       m.producto_sku.toLowerCase().includes(texto);
     const coincideTipo = filtroTipo === "" || m.tipo === filtroTipo;
     const coincideOrigen = filtroOrigen === "" || m.origen === filtroOrigen;
+    const coincideProducto = productoFiltro === "" || m.producto_id === productoFiltro;
 
     // Compara solo la parte de fecha (YYYY-MM-DD) del ISO string del movimiento
     const fechaMov = m.fecha.slice(0, 10); // "YYYY-MM-DD"
     const coincideDesde = fechaDesde === "" || fechaMov >= fechaDesde;
     const coincideHasta = fechaHasta === "" || fechaMov <= fechaHasta;
 
-    return coincideTexto && coincideTipo && coincideOrigen && coincideDesde && coincideHasta;
+    return coincideTexto && coincideTipo && coincideOrigen && coincideProducto && coincideDesde && coincideHasta;
   });
+  const nombreProductoFiltrado = productoFiltro
+    ? todos.find((m) => m.producto_id === productoFiltro)?.producto_nombre ?? null
+    : null;
 
   return (
     <div className="space-y-8">
@@ -95,11 +111,17 @@ export default function MovimientosPage() {
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm ring-1 ring-[#4FAEB2]/10 p-6">
 
         {/* Header */}
-        <div className="flex items-center gap-3 mb-5">
+        <div className="flex items-center gap-3 mb-5 flex-wrap">
           <h2 className="text-base font-semibold text-slate-800">Historial</h2>
           <span className="text-sm text-gray-400">
             {filtrados.length} de {todos.length} registros
           </span>
+          {productoFiltro && (
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#4FAEB2]/30 bg-[#E5F4F4] px-3 py-1 text-xs font-medium text-[#3F8E91]">
+              Filtrando: {nombreProductoFiltrado ?? "producto"}
+              <Button href="/inventario/movimientos" variant="ghost" size="sm">Quitar</Button>
+            </span>
+          )}
         </div>
 
         {/* Filtros — una sola línea en desktop; apilan en mobile */}
@@ -170,7 +192,7 @@ export default function MovimientosPage() {
         {/* Tabla — min-w activa el scroll horizontal en mobile;
             SKU, Origen, Usuario se ocultan en pantallas chicas. */}
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] sm:min-w-0 text-left text-sm">
+          <table className="w-full min-w-[1100px] sm:min-w-0 text-left text-sm">
             <thead>
               <tr className="border-b text-gray-500">
                 <th className="py-3 pr-4 font-medium">Producto</th>
@@ -178,7 +200,9 @@ export default function MovimientosPage() {
                 <th className="py-3 pr-4 font-medium">Tipo</th>
                 <th className="py-3 pr-4 font-medium text-right">Cantidad</th>
                 <th className="py-3 pr-4 font-medium text-right hidden lg:table-cell">Costo unit.</th>
+                <th className="py-3 pr-4 font-medium text-right hidden lg:table-cell">Costo total</th>
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">Origen</th>
+                <th className="py-3 pr-4 font-medium hidden lg:table-cell">Motivo</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">Obra</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">Usuario</th>
                 <th className="py-3 font-medium">Fecha</th>
@@ -187,7 +211,7 @@ export default function MovimientosPage() {
             <tbody>
               {filtrados.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-gray-400">
+                  <td colSpan={11} className="py-12 text-center text-gray-400">
                     {todos.length === 0
                       ? "No hay movimientos registrados"
                       : "Ningún movimiento coincide con los filtros"}
@@ -219,10 +243,16 @@ export default function MovimientosPage() {
                       <td className="py-4 pr-4 text-right text-gray-700 tabular-nums hidden lg:table-cell">
                         {formatGs(m.costo_unitario)}
                       </td>
+                      <td className="py-4 pr-4 text-right text-gray-800 font-semibold tabular-nums hidden lg:table-cell">
+                        {formatGs(Math.abs(m.cantidad) * m.costo_unitario)}
+                      </td>
                       <td className="py-4 pr-4 hidden md:table-cell">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${origenBadge[m.origen]}`}>
                           {origenLabel[m.origen]}
                         </span>
+                      </td>
+                      <td className="py-4 pr-4 text-gray-700 text-xs hidden lg:table-cell">
+                        {m.motivo ? (MOTIVO_LABEL[m.motivo] ?? m.motivo) : <span className="text-gray-300">—</span>}
                       </td>
                       <td className="py-4 pr-4 text-gray-700 text-xs hidden lg:table-cell">
                         {m.proyecto_titulo ?? <span className="text-gray-300">—</span>}

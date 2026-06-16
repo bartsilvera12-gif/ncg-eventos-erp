@@ -10,6 +10,7 @@ import EdgeScrollArea from "@/components/ui/EdgeScrollArea";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge, { type BadgeTone } from "@/components/ui/Badge";
 import { useIsAdmin } from "@/lib/auth/use-is-admin";
+import SalidaConsumibleModal, { type SalidaConsumibleProducto } from "@/components/inventario/SalidaConsumibleModal";
 
 const inputFilterClass =
   "border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none";
@@ -59,6 +60,8 @@ export default function InventarioPage() {
   const [cargandoLista,    setCargandoLista]     = useState(true);
   const [soloStockBajo,    setSoloStockBajo]    = useState(false);
   const [eliminandoId,     setEliminandoId]     = useState<string | null>(null);
+  const [salidaProducto,   setSalidaProducto]   = useState<SalidaConsumibleProducto | null>(null);
+  const [toast,            setToast]            = useState<string | null>(null);
 
   async function handleEliminarProducto(id: string, nombre: string) {
     if (eliminandoId) return; // evitar doble click
@@ -276,7 +279,10 @@ export default function InventarioPage() {
               href="/inventario/nuevo"
               className="rounded-lg bg-[#4FAEB2] px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-[#4FAEB2]/25 transition-colors hover:bg-[#3F8E91] active:scale-95"
             >
-              Nuevo material
+              {tab === "consumible" ? "Nuevo consumible"
+                : tab === "herramienta" ? "Nueva herramienta"
+                : tab === "accesorio" ? "Nuevo accesorio"
+                : "Nuevo material"}
             </Link>
             <input
               type="text"
@@ -402,15 +408,15 @@ export default function InventarioPage() {
                 <th className="py-3 pr-4 font-medium">Nombre</th>
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">SKU</th>
                 <th className="py-3 pr-4 font-medium">Costo Prom.</th>
-                <th className="py-3 pr-4 font-medium">Precio Venta</th>
+                <th className={`py-3 pr-4 font-medium ${tab === "consumible" ? "hidden" : ""}`}>Precio Venta</th>
                 <th className={`py-3 pr-4 font-medium text-center ${tab !== "herramienta" ? "" : "hidden"}`}>Stock</th>
                 <th className={`py-3 pr-4 font-medium text-center ${tab !== "herramienta" ? "hidden md:table-cell" : "hidden"}`}>Stock Mín.</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">Unidad</th>
                 <th className="py-3 pr-4 font-medium hidden lg:table-cell">Valuación</th>
-                <th className="py-3 pr-6 font-medium text-right hidden md:table-cell">
+                <th className={`py-3 pr-6 font-medium text-right hidden md:table-cell ${tab === "consumible" ? "md:hidden" : ""}`}>
                   <span title="(precio - costo) / precio × 100">Margen s/venta</span>
                 </th>
-                <th className="py-3 pl-4 font-medium text-center w-44">Acción</th>
+                <th className={`py-3 pl-4 font-medium text-center ${tab === "consumible" ? "w-60" : "w-44"}`}>Acción</th>
               </tr>
             </thead>
 
@@ -470,7 +476,7 @@ export default function InventarioPage() {
                     </td>
                     <td className="py-4 pr-4 text-gray-500 font-mono hidden md:table-cell">{p.sku}</td>
                     <td className="py-4 pr-4 text-gray-700">{formatGs(p.costo_promedio)}</td>
-                    <td className="py-4 pr-4 text-gray-700">{formatGs(p.precio_venta)}</td>
+                    <td className={`py-4 pr-4 text-gray-700 ${tab === "consumible" ? "hidden" : ""}`}>{formatGs(p.precio_venta)}</td>
                     <td className={`py-4 pr-4 text-center ${tab !== "herramienta" ? "" : "hidden"}`}>
                       <span className={`font-semibold ${stockBajo ? "text-red-600" : "text-gray-800"}`}>
                         {p.stock_actual}
@@ -481,11 +487,35 @@ export default function InventarioPage() {
                     <td className="py-4 pr-4 hidden lg:table-cell">
                       <Badge tone={metodoTone[p.metodo_valuacion]}>{p.metodo_valuacion}</Badge>
                     </td>
-                    <td className={`py-4 pr-6 text-right tabular-nums font-semibold hidden md:table-cell ${margenColor(margen)}`}>
+                    <td className={`py-4 pr-6 text-right tabular-nums font-semibold hidden md:table-cell ${tab === "consumible" ? "md:hidden" : ""} ${margenColor(margen)}`}>
                       {margen.toFixed(2)}%
                     </td>
                     <td className="py-4 pl-4 text-center">
-                      <div className="inline-flex items-center justify-center gap-2">
+                      <div className="inline-flex items-center justify-center gap-2 flex-wrap">
+                        {tab === "consumible" && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setSalidaProducto({
+                                id: p.id,
+                                nombre: p.nombre,
+                                sku: p.sku,
+                                stock_actual: p.stock_actual,
+                                costo_promedio: p.costo_promedio,
+                                unidad_medida: p.unidad_medida,
+                              })}
+                              className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100 transition-colors"
+                            >
+                              Dar salida
+                            </button>
+                            <Link
+                              href={`/inventario/movimientos?producto=${p.id}`}
+                              className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+                            >
+                              Movimientos
+                            </Link>
+                          </>
+                        )}
                         <Link
                           href={`/inventario/${p.id}/editar`}
                           className="inline-flex items-center justify-center min-h-[40px] rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 transition-colors"
@@ -515,7 +545,7 @@ export default function InventarioPage() {
                         : tab === "herramienta"
                           ? "No hay herramientas registradas. Creá una con “Nuevo material” y elegí Herramienta."
                           : tab === "consumible"
-                            ? "No hay consumibles registrados. Creá uno con “Nuevo material” y elegí Consumible."
+                            ? "No hay consumibles registrados. Creá uno con “Nuevo consumible”."
                             : tab === "accesorio"
                               ? "No hay accesorios registrados. Creá uno con “Nuevo material” y elegí Accesorio."
                               : "No hay materiales registrados. Creá uno con “Nuevo material”."}
@@ -528,6 +558,24 @@ export default function InventarioPage() {
         </EdgeScrollArea>
 
       </div>
+
+      {salidaProducto && (
+        <SalidaConsumibleModal
+          producto={salidaProducto}
+          onClose={() => setSalidaProducto(null)}
+          onSaved={async () => {
+            setRefreshKey((k) => k + 1);
+            setToast("Salida registrada correctamente.");
+            setTimeout(() => setToast(null), 3000);
+          }}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-medium text-white shadow-lg">
+          {toast}
+        </div>
+      )}
 
     </div>
   );

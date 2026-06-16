@@ -63,6 +63,8 @@ interface MovimientoRow {
   usuario_nombre?: string | null;
   proyecto_id?: string | null;
   proyecto_titulo?: string | null;
+  motivo?: string | null;
+  observacion?: string | null;
 }
 
 // ─── Mapeo fila → tipo ────────────────────────────────────────────────────────
@@ -128,6 +130,8 @@ function rowToMovimiento(row: MovimientoRow): MovimientoInventario {
     usuario_nombre: row.usuario_nombre ?? null,
     proyecto_id: row.proyecto_id ?? null,
     proyecto_titulo: row.proyecto_titulo ?? null,
+    motivo: row.motivo ?? null,
+    observacion: row.observacion ?? null,
   };
 }
 
