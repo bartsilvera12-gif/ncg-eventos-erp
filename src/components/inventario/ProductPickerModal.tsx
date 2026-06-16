@@ -63,6 +63,15 @@ interface Props {
   tasasIva?: TipoIvaVenta[];
   /** Default del toggle "Precio incluye IVA" (ES=false, PY=true). */
   precioIncluyeIvaDefault?: boolean;
+  /**
+   * Modo de uso del picker:
+   *  - "venta" (default): labels "Precio venta", "Total a cobrar",
+   *    "Agregar a la venta", tipo de precio minorista/mayorista/al costo.
+   *  - "presupuesto": labels de cotización. Oculta el selector de tipo de
+   *    precio (en obra se cotiza precio puntual, no minorista/mayorista),
+   *    cambia los textos del resumen al lenguaje de presupuesto.
+   */
+  mode?: "venta" | "presupuesto";
 }
 
 function formatGs(v: number): string {
@@ -90,7 +99,9 @@ export default function ProductPickerModal({
   ivaDefault = "21%",
   tasasIva = ["EXENTA", "4%", "10%", "21%"],
   precioIncluyeIvaDefault = false,
+  mode = "venta",
 }: Props) {
+  const esPresupuesto = mode === "presupuesto";
   const [q, setQ] = useState("");
   const [items, setItems] = useState<ProductoPickerItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -176,7 +187,7 @@ export default function ProductPickerModal({
     const precioNum = parseImporte(precio);
     if (cantNum <= 0) { setFeedback("Cantidad debe ser > 0"); return; }
     if (precioNum <= 0) { setFeedback("Precio debe ser > 0"); return; }
-    if (moneda === "USD" && tipoCambio <= 0) { setFeedback("Falta tipo de cambio en la venta"); return; }
+    if (moneda === "USD" && tipoCambio <= 0) { setFeedback(esPresupuesto ? "Falta tipo de cambio en el presupuesto" : "Falta tipo de cambio en la venta"); return; }
     // Solo validar stock si el producto controla stock (Reventa).
     // Productos del Menú (controla_stock=false) se agregan sin restricción.
     const ctrlStock = sel.controla_stock !== false;
@@ -190,7 +201,7 @@ export default function ProductPickerModal({
     }
     const ok = onAgregar({ producto: sel, cantidad: cantNum, precio_input: precioNum, iva, tipo_precio: tipoPrecio, precio_incluye_iva: precioIncluyeIva });
     if (ok !== false) {
-      setFeedback("Producto agregado ✓");
+      setFeedback(esPresupuesto ? "Partida agregada ✓" : "Producto agregado ✓");
       setCantidad("1");
       // foco al buscador para seguir cargando
       setTimeout(() => inputRef.current?.focus(), 0);
@@ -333,7 +344,7 @@ export default function ProductPickerModal({
           <div className={`${sel ? "flex" : "hidden lg:flex"} w-full lg:w-2/5 flex-col bg-slate-50 min-h-0`}>
             {!sel ? (
               <div className="flex-1 flex items-center justify-center text-sm text-slate-400 p-6 text-center">
-                Seleccioná un producto de la lista para ver detalle y agregar a la venta.
+                Seleccioná un producto de la lista para {esPresupuesto ? "ver detalle y agregar al presupuesto" : "ver detalle y agregar a la venta"}.
               </div>
             ) : (
               <>
@@ -375,16 +386,25 @@ export default function ProductPickerModal({
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <DetailItem
-                    label="Precio venta"
+                    label={esPresupuesto ? "Precio referencia" : "Precio venta"}
                     value={`${formatGs(sel.precio_venta)} ${precioIncluyeIva ? "c/IVA" : "s/IVA"}`}
                     highlight
                   />
                   {sel.controla_stock !== false ? (
-                    <DetailItem label="Stock disp." value={`${dispSel} ${sel.unidad_medida}`} highlight />
+                    <DetailItem
+                      label={esPresupuesto ? "Stock actual" : "Stock disp."}
+                      value={`${dispSel} ${sel.unidad_medida}`}
+                      highlight
+                    />
                   ) : (
                     <DetailItem label="Tipo" value="Menú (preparado)" highlight />
                   )}
                 </div>
+                {esPresupuesto && (
+                  <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-[11px] text-sky-800">
+                    Esta partida queda como <strong>estimación</strong>. No descuenta stock al guardar el presupuesto.
+                  </div>
+                )}
 
                 {feedback && (
                   <div className={`text-xs px-3 py-2 rounded-lg ${feedback.includes("✓") ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-700"}`}>
@@ -393,24 +413,27 @@ export default function ProductPickerModal({
                 )}
 
                 <div className="space-y-2 bg-white p-3 rounded-xl border border-slate-200">
-                  {/* Tipo de precio: al tocar, carga el precio correspondiente y recalcula. */}
-                  <div>
-                    <label className="block text-[11px] uppercase text-slate-400 mb-1">Tipo de precio</label>
-                    <div className="flex border border-slate-200 rounded-lg overflow-hidden">
-                      {(["minorista", "mayorista", "costo"] as const).map((t) => (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => handleTipoPrecio(t)}
-                          className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
-                            tipoPrecio === t ? "bg-[#0EA5E9] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
-                          }`}
-                        >
-                          {t === "minorista" ? "Minorista" : t === "mayorista" ? "Mayorista" : "Al costo"}
-                        </button>
-                      ))}
+                  {/* Tipo de precio: solo en modo venta. En presupuesto se cotiza
+                      precio puntual (no aplica minorista/mayorista/costo). */}
+                  {!esPresupuesto && (
+                    <div>
+                      <label className="block text-[11px] uppercase text-slate-400 mb-1">Tipo de precio</label>
+                      <div className="flex border border-slate-200 rounded-lg overflow-hidden">
+                        {(["minorista", "mayorista", "costo"] as const).map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => handleTipoPrecio(t)}
+                            className={`flex-1 py-1.5 text-xs font-medium transition-colors ${
+                              tipoPrecio === t ? "bg-[#0EA5E9] text-white" : "bg-white text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {t === "minorista" ? "Minorista" : t === "mayorista" ? "Mayorista" : "Al costo"}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-[11px] uppercase text-slate-400 mb-1">
@@ -425,7 +448,10 @@ export default function ProductPickerModal({
                     </div>
                     <div>
                       <label className="block text-[11px] uppercase text-slate-400 mb-1">
-                        {precioIncluyeIva ? "Precio final con IVA" : "Precio sin IVA"} ({moneda === "USD" ? "USD" : "€"})
+                        {esPresupuesto
+                          ? (precioIncluyeIva ? "Precio presupuestado c/IVA" : "Precio presupuestado s/IVA")
+                          : (precioIncluyeIva ? "Precio final con IVA" : "Precio sin IVA")
+                        } ({moneda === "USD" ? "USD" : "€"})
                       </label>
                       <input
                         type="text" inputMode="decimal" autoComplete="off"
@@ -476,7 +502,7 @@ export default function ProductPickerModal({
                       <span className="tabular-nums">{ivaMonto > 0 ? formatGs(ivaMonto) : "—"}</span>
                     </div>
                     <div className="flex justify-between font-bold text-slate-800 pt-1 border-t border-slate-200">
-                      <span>Total a cobrar</span>
+                      <span>{esPresupuesto ? "Total presupuestado" : "Total a cobrar"}</span>
                       <span className="tabular-nums">{formatGs(totalLinea)}</span>
                     </div>
                   </div>
@@ -490,7 +516,7 @@ export default function ProductPickerModal({
                     onClick={handleAgregar}
                     className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-semibold py-3 min-h-[48px] rounded-lg shadow-sm transition-colors"
                   >
-                    + Agregar a la venta
+                    + {esPresupuesto ? "Agregar al presupuesto" : "Agregar a la venta"}
                   </button>
                 </div>
               </>

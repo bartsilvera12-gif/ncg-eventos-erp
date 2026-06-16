@@ -117,7 +117,9 @@ export default function NuevaVentaPage() {
   // ── Modal buscador ─────────────────────────────────────────────────────────
   // Arranca abierto: al entrar a "Nueva venta" el buscador ya aparece desplegado
   // (un solo paso desde Ventas → Nueva venta → cargar productos).
-  const [pickerOpen, setPickerOpen] = useState(true);
+  // En modo presupuesto no abrir automáticamente: el usuario debe completar
+  // primero "Datos de la obra" antes de cargar partidas.
+  const [pickerOpen, setPickerOpen] = useState(!((searchParams?.get("tipo") ?? "") === "presupuesto"));
 
   // ── Popup de detalle de pago (transferencia / tarjeta) ───────────────────────
   const [pagoDetalleOpen, setPagoDetalleOpen] = useState(false);
@@ -698,6 +700,7 @@ export default function NuevaVentaPage() {
         ivaDefault="21%"
         tasasIva={["EXENTA", "4%", "10%", "21%"]}
         precioIncluyeIvaDefault={false}
+        mode={esPresupuesto ? "presupuesto" : "venta"}
       />
 
       <PagoDetalleModal
