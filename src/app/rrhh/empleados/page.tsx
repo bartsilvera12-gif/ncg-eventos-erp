@@ -178,7 +178,11 @@ export default function EmpleadosPage() {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="space-y-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <EmpleadoFormFields form={form} setForm={setForm} />
+          <EmpleadoFormFields
+            form={form}
+            setForm={setForm}
+            supervisores={activos.map((e) => e.nombre)}
+          />
           <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
             <button type="button" onClick={() => setShowForm(false)}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm">Cancelar</button>
@@ -279,6 +283,7 @@ export default function EmpleadosPage() {
       {editando && (
         <EditarEmpleadoModal
           empleado={editando}
+          supervisores={activos.filter((e) => e.id !== editando.id).map((e) => e.nombre)}
           onClose={() => setEditando(null)}
           onSaved={async () => { setEditando(null); await load(); }}
         />
@@ -339,7 +344,14 @@ function empleadoToForm(e: Empleado): FormEmpleado {
   };
 }
 
-function EditarEmpleadoModal({ empleado, onClose, onSaved }: { empleado: Empleado; onClose: () => void; onSaved: () => void | Promise<void> }) {
+function EditarEmpleadoModal({
+  empleado, supervisores = [], onClose, onSaved,
+}: {
+  empleado: Empleado;
+  supervisores?: string[];
+  onClose: () => void;
+  onSaved: () => void | Promise<void>;
+}) {
   const [form, setForm] = useState<FormEmpleado>(() => empleadoToForm(empleado));
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -375,7 +387,7 @@ function EditarEmpleadoModal({ empleado, onClose, onSaved }: { empleado: Emplead
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 p-5">
           {err && <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div>}
-          <EmpleadoFormFields form={form} setForm={setForm} editMode />
+          <EmpleadoFormFields form={form} setForm={setForm} editMode supervisores={supervisores} />
           <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
             <button type="button" onClick={onClose}
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm">Cancelar</button>
@@ -400,11 +412,13 @@ function Section({ titulo, children }: { titulo: string; children: React.ReactNo
 }
 
 function EmpleadoFormFields({
-  form, setForm, editMode = false,
+  form, setForm, editMode = false, supervisores = [],
 }: {
   form: FormEmpleado;
   setForm: React.Dispatch<React.SetStateAction<FormEmpleado>>;
   editMode?: boolean;
+  /** Nombres de empleados activos para el autocompletado de "Supervisor inmediato". */
+  supervisores?: string[];
 }) {
   function set<K extends keyof FormEmpleado>(k: K, v: FormEmpleado[K]) {
     setForm((s) => ({ ...s, [k]: v }));
@@ -494,9 +508,20 @@ function EmpleadoFormFields({
           <input type="date" className={inputCls} value={form.fecha_baja}
             onChange={(e) => set("fecha_baja", e.target.value)} />
         </Field>
-        <Field label="Supervisor inmediato">
-          <input className={inputCls} value={form.supervisor}
-            onChange={(e) => set("supervisor", e.target.value)} />
+        <Field label="Supervisor inmediato" hint="Tipeá para buscar; podés elegir uno de la lista o escribir un nombre nuevo.">
+          <input
+            className={inputCls}
+            value={form.supervisor}
+            onChange={(e) => set("supervisor", e.target.value)}
+            list="empleados-supervisores-list"
+            placeholder="Buscar empleado…"
+            autoComplete="off"
+          />
+          <datalist id="empleados-supervisores-list">
+            {supervisores.map((nombre) => (
+              <option key={nombre} value={nombre} />
+            ))}
+          </datalist>
         </Field>
         <Field label="Departamento">
           <input className={inputCls} value={form.departamento}
