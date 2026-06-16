@@ -647,8 +647,8 @@ export default function NuevaCompraPage() {
             <SectionTitle>Materiales de la compra</SectionTitle>
 
             <div className="rounded-xl border border-slate-200 p-4 space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                <div className="md:col-span-5">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                <div className="md:col-span-4">
                   <label className={labelSmClass}>Material</label>
                   <select value={linea.producto_id} onChange={handleProductoLineaChange} className={inputClass}>
                     <option value="">Seleccionar material...</option>
@@ -672,9 +672,9 @@ export default function NuevaCompraPage() {
                     className={inputClass}
                   />
                 </div>
-                <div className="md:col-span-2">
-                  <label className={labelSmClass}>
-                    {linea.precio_incluye_iva ? "Precio unitario CON IVA" : "Coste unitario sin IVA"} ({header.moneda === "USD" ? "USD" : "€"})
+                <div className="md:col-span-3">
+                  <label className={`${labelSmClass} whitespace-nowrap`}>
+                    {linea.precio_incluye_iva ? "Precio c/IVA" : "Coste s/IVA"} ({header.moneda === "USD" ? "USD" : "€"})
                   </label>
                   <MontoInput value={linea.costo_input}
                     onChange={(n) => { setErrorLinea(null); setLinea((p) => ({ ...p, costo_input: String(n) })); }}
