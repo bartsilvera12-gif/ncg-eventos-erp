@@ -22,6 +22,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NCG Eventos",
   description: "Sistema de gestión — NCG Eventos",
+  icons: {
+    icon: [{ url: "/brand/favicon.png", type: "image/png" }],
+    shortcut: [{ url: "/brand/favicon.png", type: "image/png" }],
+    apple: [{ url: "/brand/favicon.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
