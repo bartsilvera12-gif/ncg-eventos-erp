@@ -82,6 +82,16 @@ export default function EditarProductoPage() {
   const [unidadReceta, setUnidadReceta] = useState("");
   const [factorCompraReceta, setFactorCompraReceta] = useState("1");
   const [tiempoPrepMinutos, setTiempoPrepMinutos] = useState("0");
+  // Tarifas de alquiler (Eventos)
+  const [tarifaAlquilerHora, setTarifaAlquilerHora] = useState("");
+  const [tarifaAlquilerDia, setTarifaAlquilerDia] = useState("");
+  // Indicador de recupero (carga aparte vía /api/alquileres/recupero/:id)
+  const [recupero, setRecupero] = useState<{
+    costo_total_invertido: number;
+    ingreso_real_alquiler: number;
+    porcentaje_recuperado: number;
+    monto_faltante: number;
+  } | null>(null);
 
   useEffect(() => {
     let cancel = false;
@@ -139,6 +149,29 @@ export default function EditarProductoPage() {
     setForm((prev) => ({ ...prev, codigo_barras: generarEan13() }));
   }
 
+  // Carga el recupero (costo invertido vs ingreso real por alquileres).
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    fetch(`/api/alquileres/recupero/${id}`, { credentials: "include", cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => {
+        if (cancelled || !j?.success) return;
+        const r = j.data?.recupero;
+        if (r)
+          setRecupero({
+            costo_total_invertido: Number(r.costo_total_invertido) || 0,
+            ingreso_real_alquiler: Number(r.ingreso_real_alquiler) || 0,
+            porcentaje_recuperado: Number(r.porcentaje_recuperado) || 0,
+            monto_faltante: Number(r.monto_faltante) || 0,
+          });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
@@ -184,6 +217,8 @@ export default function EditarProductoPage() {
       setUnidadReceta(p.unidad_receta ?? "");
       setFactorCompraReceta(String(p.factor_compra_receta ?? 1));
       setTiempoPrepMinutos(String(p.tiempo_prep_minutos ?? 0));
+      setTarifaAlquilerHora(String(p.tarifa_alquiler_hora ?? 0));
+      setTarifaAlquilerDia(String(p.tarifa_alquiler_dia ?? 0));
       // Inferir tipo gastro a partir de los flags
       if (esIns) setTipoGastro("materia");
       else if (esVend && !ctrlStock) setTipoGastro("menu");
@@ -358,6 +393,8 @@ export default function EditarProductoPage() {
         unidad_receta: unidadReceta.trim() || null,
         factor_compra_receta: Math.max(parseFloat(factorCompraReceta) || 1, 0.0001),
         tiempo_prep_minutos: Math.max(parseInt(tiempoPrepMinutos) || 0, 0),
+        tarifa_alquiler_hora: Math.max(parseFloat(tarifaAlquilerHora) || 0, 0),
+        tarifa_alquiler_dia: Math.max(parseFloat(tarifaAlquilerDia) || 0, 0),
         descripcion: descripcion.trim() || null,
         codigo_barras: codigoBarras || null,
         // codigo_interno se OMITE del payload a propósito: el PATCH no lo toca,
@@ -750,6 +787,106 @@ export default function EditarProductoPage() {
               <p className="mt-2 text-xs text-gray-400">
                 Ejemplo: Harina se compra por bolsa de 25kg, pero se usa en recetas por gramos. En ese caso unidad compra = bolsa 25kg, unidad receta = g, factor = 25000.
               </p>
+            </div>
+
+            {/* Tarifas de alquiler + indicador de recupero (Eventos) */}
+            <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold text-slate-700 mb-1">
+                Alquiler{" "}
+                <span className="font-normal text-gray-400">(opcional · Eventos)</span>
+              </p>
+              <p className="mb-3 text-xs text-gray-400">
+                Cuánto se cobra por hora o por día al alquilar este insumo. Dejá 0 si no aplica.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={labelClass}>Tarifa por hora (€)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={tarifaAlquilerHora}
+                    onChange={(e) => setTarifaAlquilerHora(e.target.value)}
+                    placeholder="Ej: 2,50"
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Tarifa por día (€)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={tarifaAlquilerDia}
+                    onChange={(e) => setTarifaAlquilerDia(e.target.value)}
+                    placeholder="Ej: 15,00"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+
+              {recupero && recupero.costo_total_invertido > 0 ? (
+                <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Recupero de la inversión
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+                    <div>
+                      <p className="text-slate-500">Invertido en compras</p>
+                      <p className="font-semibold text-slate-800">
+                        € {recupero.costo_total_invertido.toLocaleString("es-PY")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Ingresos por alquiler</p>
+                      <p className="font-semibold text-emerald-700">
+                        € {recupero.ingreso_real_alquiler.toLocaleString("es-PY")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">% recuperado</p>
+                      <p className="font-semibold text-slate-800">
+                        {recupero.porcentaje_recuperado.toFixed(2)}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-slate-500">Falta para recuperar</p>
+                      <p className="font-semibold text-red-700">
+                        € {recupero.monto_faltante.toLocaleString("es-PY")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 h-2 w-full rounded-full bg-slate-200">
+                    <div
+                      className="h-2 rounded-full bg-emerald-500 transition-all"
+                      style={{
+                        width: `${Math.min(100, recupero.porcentaje_recuperado)}%`,
+                      }}
+                    />
+                  </div>
+                  {/* Proyección: a tarifa actual, en cuántos días/horas se recupera el faltante. */}
+                  {recupero.monto_faltante > 0 && (() => {
+                    const tDia = parseFloat(tarifaAlquilerDia) || 0;
+                    const tHora = parseFloat(tarifaAlquilerHora) || 0;
+                    const stock = parseInt(form.stock_actual) || 0;
+                    if (stock <= 0 || (tDia <= 0 && tHora <= 0)) return null;
+                    const partes: string[] = [];
+                    if (tDia > 0) {
+                      const dias = recupero.monto_faltante / (tDia * stock);
+                      partes.push(`${Math.ceil(dias)} días alquilando todas las unidades`);
+                    }
+                    if (tHora > 0) {
+                      const horas = recupero.monto_faltante / (tHora * stock);
+                      partes.push(`${Math.ceil(horas)} horas`);
+                    }
+                    return (
+                      <p className="mt-2 text-xs text-slate-500">
+                        Proyección a tarifa actual: se recupera en {partes.join(" o ")}.
+                      </p>
+                    );
+                  })()}
+                </div>
+              ) : null}
             </div>
           </div>
 

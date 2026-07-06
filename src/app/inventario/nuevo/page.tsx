@@ -102,6 +102,9 @@ export default function NuevoProductoPage() {
   const [unidadReceta, setUnidadReceta] = useState("");
   const [factorCompraReceta, setFactorCompraReceta] = useState("1");
   const [tiempoPrepMinutos, setTiempoPrepMinutos] = useState("0");
+  // Tarifas de alquiler (módulo Eventos). Vacío = 0 (no se alquila por esa unidad).
+  const [tarifaAlquilerHora, setTarifaAlquilerHora] = useState("");
+  const [tarifaAlquilerDia, setTarifaAlquilerDia] = useState("");
   const [categorias, setCategorias] = useState<CatRow[]>([]);
   const [ubicaciones, setUbicaciones] = useState<UbiRow[]>([]);
   const [proveedores, setProveedores] = useState<ProvRow[]>([]);
@@ -393,6 +396,8 @@ export default function NuevoProductoPage() {
           unidad_receta: unidadReceta.trim() || null,
           factor_compra_receta: Math.max(parseFloat(factorCompraReceta) || 1, 0.0001),
           tiempo_prep_minutos: Math.max(parseInt(tiempoPrepMinutos) || 0, 0),
+          tarifa_alquiler_hora: Math.max(parseFloat(tarifaAlquilerHora) || 0, 0),
+          tarifa_alquiler_dia: Math.max(parseFloat(tarifaAlquilerDia) || 0, 0),
         });
       } catch (err) {
         console.error("[inventario/nuevo] saveProducto error:", err);
@@ -847,6 +852,43 @@ export default function NuevoProductoPage() {
                     </div>
                   </div>
                   <p className="mt-2 text-xs text-gray-400">Si lo dejás vacío, se usa el minorista.</p>
+                </div>
+
+                {/* Tarifas de alquiler (Eventos) */}
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <p className="text-xs font-semibold text-slate-700 mb-1">
+                    Tarifas de alquiler{" "}
+                    <span className="font-normal text-gray-400">(opcional · Eventos)</span>
+                  </p>
+                  <p className="mb-3 text-xs text-gray-400">
+                    Cuánto se cobra por hora o por día al alquilar este insumo. Dejá 0 si no aplica.
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelClass}>Por hora (€)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={tarifaAlquilerHora}
+                        onChange={(e) => setTarifaAlquilerHora(e.target.value)}
+                        placeholder="Ej: 2,50"
+                        className={inputClass}
+                      />
+                    </div>
+                    <div>
+                      <label className={labelClass}>Por día (€)</label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={tarifaAlquilerDia}
+                        onChange={(e) => setTarifaAlquilerDia(e.target.value)}
+                        placeholder="Ej: 15,00"
+                        className={inputClass}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

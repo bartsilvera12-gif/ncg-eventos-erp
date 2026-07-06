@@ -22,6 +22,10 @@ export interface CompraItem {
   subtotal: number;                  // PYG, antes de IVA
   monto_iva: number;                 // PYG
   total_linea: number;               // PYG, con IVA
+  /** Tarifa alquiler por hora (Eventos · opcional). Si se setea, sobreescribe el catálogo. */
+  tarifa_alquiler_hora?: number | null;
+  /** Tarifa alquiler por día (Eventos · opcional). Si se setea, sobreescribe el catálogo. */
+  tarifa_alquiler_dia?: number | null;
 }
 
 export interface Compra {

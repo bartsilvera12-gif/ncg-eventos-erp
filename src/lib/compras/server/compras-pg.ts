@@ -314,6 +314,10 @@ export interface CompraItemInput {
   subtotal: number;
   monto_iva: number;
   total_linea: number;
+  /** Tarifa alquiler por hora (Eventos). Si se setea, actualiza el producto. */
+  tarifa_alquiler_hora?: number | null;
+  /** Tarifa alquiler por día (Eventos). Si se setea, actualiza el producto. */
+  tarifa_alquiler_dia?: number | null;
 }
 
 /** Cabecera de compra + N líneas (multiproducto). */
@@ -511,6 +515,25 @@ export async function insertCompraMultiConImpacto(
           WHERE id = $3::uuid AND empresa_id = $4::uuid`,
         [it.cantidad, it.costo_unitario, it.producto_id, empresaId]
       );
+
+      // Eventos: si la compra trae tarifas de alquiler para este producto,
+      // las sobreescribe en el catálogo. Permite ajustar tarifas al comprar
+      // nuevas unidades sin abrir la ficha de inventario.
+      if (it.tarifa_alquiler_hora != null || it.tarifa_alquiler_dia != null) {
+        await client.query(
+          `UPDATE ${tP}
+              SET tarifa_alquiler_hora = COALESCE($1::numeric, tarifa_alquiler_hora),
+                  tarifa_alquiler_dia  = COALESCE($2::numeric, tarifa_alquiler_dia),
+                  updated_at = now()
+            WHERE id = $3::uuid AND empresa_id = $4::uuid`,
+          [
+            it.tarifa_alquiler_hora ?? null,
+            it.tarifa_alquiler_dia ?? null,
+            it.producto_id,
+            empresaId,
+          ]
+        );
+      }
     }
 
     await client.query("COMMIT");

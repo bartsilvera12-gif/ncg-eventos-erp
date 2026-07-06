@@ -51,6 +51,14 @@ function parseItems(body: Record<string, unknown>): { items: CompraItemInput[] }
     });
     const costoUnitarioSinIva = cantidad > 0 ? montos.subtotal / cantidad : 0;
     const costo_unitario_original = Number(r.costo_unitario_original) || costoUnitarioSinIva;
+    const tarifaHora =
+      typeof r.tarifa_alquiler_hora === "number" && r.tarifa_alquiler_hora >= 0
+        ? r.tarifa_alquiler_hora
+        : null;
+    const tarifaDia =
+      typeof r.tarifa_alquiler_dia === "number" && r.tarifa_alquiler_dia >= 0
+        ? r.tarifa_alquiler_dia
+        : null;
     items.push({
       producto_id,
       producto_nombre: String(r.producto_nombre ?? ""),
@@ -62,6 +70,8 @@ function parseItems(body: Record<string, unknown>): { items: CompraItemInput[] }
       subtotal: montos.subtotal,
       monto_iva: montos.iva,
       total_linea: montos.total,
+      tarifa_alquiler_hora: tarifaHora,
+      tarifa_alquiler_dia: tarifaDia,
     });
   }
   return { items };

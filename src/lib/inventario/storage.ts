@@ -46,6 +46,8 @@ interface ProductoRow {
   factor_compra_receta?: string | number | null;
   tiempo_prep_minutos?: number | null;
   descripcion?: string | null;
+  tarifa_alquiler_hora?: number | string | null;
+  tarifa_alquiler_dia?: number | string | null;
 }
 
 interface MovimientoRow {
@@ -127,6 +129,10 @@ function rowToProducto(row: ProductoRow): Producto {
       if (t === "herramienta" || t === "consumible") return t;
       return "material" as const;
     })(),
+    tarifa_alquiler_hora:
+      row.tarifa_alquiler_hora != null ? Number(row.tarifa_alquiler_hora) : 0,
+    tarifa_alquiler_dia:
+      row.tarifa_alquiler_dia != null ? Number(row.tarifa_alquiler_dia) : 0,
   };
 }
 
@@ -269,6 +275,14 @@ export async function saveProducto(
         : 0,
     descripcion: datos.descripcion ?? null,
     tipo_inventario: datos.tipo_inventario ?? "material",
+    tarifa_alquiler_hora:
+      typeof datos.tarifa_alquiler_hora === "number" && datos.tarifa_alquiler_hora >= 0
+        ? datos.tarifa_alquiler_hora
+        : 0,
+    tarifa_alquiler_dia:
+      typeof datos.tarifa_alquiler_dia === "number" && datos.tarifa_alquiler_dia >= 0
+        ? datos.tarifa_alquiler_dia
+        : 0,
   };
 
   const res = await fetch("/api/productos", {

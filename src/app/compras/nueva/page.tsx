@@ -145,6 +145,10 @@ export default function NuevaCompraPage() {
     costo_input: "",
     iva_tipo: "21" as TipoIva,
     precio_incluye_iva: false,
+    // Tarifas de alquiler (Eventos · opcional). Si quedan vacías no se
+    // sobreescribe el catálogo del producto.
+    tarifa_alquiler_hora: "",
+    tarifa_alquiler_dia: "",
   });
 
   // ── Inline: PROVEEDOR ────────────────────────────────────────────────────
@@ -277,6 +281,14 @@ export default function NuevaCompraPage() {
     const p = prodLineaSel;
     if (!p) return setErrorLinea("Producto no encontrado.");
 
+    const tarifaHora =
+      linea.tarifa_alquiler_hora.trim() !== ""
+        ? Math.max(parseFloat(linea.tarifa_alquiler_hora) || 0, 0)
+        : null;
+    const tarifaDia =
+      linea.tarifa_alquiler_dia.trim() !== ""
+        ? Math.max(parseFloat(linea.tarifa_alquiler_dia) || 0, 0)
+        : null;
     setItems((prev) => [
       ...prev,
       {
@@ -290,9 +302,19 @@ export default function NuevaCompraPage() {
         subtotal: lineaSubtotal,
         monto_iva: lineaIvaMonto,
         total_linea: lineaTotal,
+        tarifa_alquiler_hora: tarifaHora,
+        tarifa_alquiler_dia: tarifaDia,
       },
     ]);
-    setLinea({ producto_id: "", cantidad: "", costo_input: "", iva_tipo: linea.iva_tipo, precio_incluye_iva: linea.precio_incluye_iva });
+    setLinea({
+      producto_id: "",
+      cantidad: "",
+      costo_input: "",
+      iva_tipo: linea.iva_tipo,
+      precio_incluye_iva: linea.precio_incluye_iva,
+      tarifa_alquiler_hora: "",
+      tarifa_alquiler_dia: "",
+    });
     setProductoCreado(null);
   }
 
@@ -702,6 +724,48 @@ export default function NuevaCompraPage() {
                       { value: "21", label: "21%" },
                     ]}
                     onChange={(v) => setLinea((p) => ({ ...p, iva_tipo: v }))}
+                  />
+                </div>
+              </div>
+
+              {/* Tarifas de alquiler (Eventos · opcional). Si se completan,
+                  sobreescriben las del catálogo del producto al guardar. */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start rounded-lg border border-dashed border-slate-200 p-3 bg-slate-50">
+                <div className="md:col-span-12 -mb-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    Alquiler (opcional)
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Cargá la tarifa por hora y/o por día solo si querés actualizar
+                    el catálogo del producto. Si dejás vacío, no se toca.
+                  </p>
+                </div>
+                <div className="md:col-span-3">
+                  <label className={labelSmClass}>Tarifa hora (€)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={linea.tarifa_alquiler_hora}
+                    onChange={(e) =>
+                      setLinea((p) => ({ ...p, tarifa_alquiler_hora: e.target.value }))
+                    }
+                    placeholder="Ej: 2,50"
+                    className={inputClass}
+                  />
+                </div>
+                <div className="md:col-span-3">
+                  <label className={labelSmClass}>Tarifa día (€)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={linea.tarifa_alquiler_dia}
+                    onChange={(e) =>
+                      setLinea((p) => ({ ...p, tarifa_alquiler_dia: e.target.value }))
+                    }
+                    placeholder="Ej: 15,00"
+                    className={inputClass}
                   />
                 </div>
               </div>

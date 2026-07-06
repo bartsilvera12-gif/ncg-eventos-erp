@@ -54,6 +54,10 @@ export interface Producto {
   descripcion?: string | null;
   /** Clasificación NCG (constructora): material / herramienta / consumible. */
   tipo_inventario?: "material" | "herramienta" | "consumible";
+  /** Tarifa de alquiler por hora (eventos). */
+  tarifa_alquiler_hora?: number;
+  /** Tarifa de alquiler por día (eventos). */
+  tarifa_alquiler_dia?: number;
 }
 
 export interface MovimientoInventario {

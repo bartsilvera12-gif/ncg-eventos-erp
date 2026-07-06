@@ -16,7 +16,8 @@ const PRODUCTO_COLS =
   "codigo_barras, codigo_interno, codigo_barras_interno, imagen_path, imagen_url, " +
   "categoria_principal_id, ubicacion_principal_id, proveedor_principal_id, " +
   "es_vendible, es_insumo, controla_stock, valorizado, unidad_compra, unidad_receta, " +
-  "factor_compra_receta, tiempo_prep_minutos, descripcion, tipo_inventario";
+  "factor_compra_receta, tiempo_prep_minutos, descripcion, tipo_inventario, " +
+  "tarifa_alquiler_hora, tarifa_alquiler_dia";
 
 function toNumber(v: unknown): unknown {
   return typeof v === "string" ? Number(v) : v;
@@ -186,6 +187,14 @@ export async function POST(request: NextRequest) {
       typeof body.tiempo_prep_minutos === "number" && body.tiempo_prep_minutos >= 0
         ? Math.floor(body.tiempo_prep_minutos)
         : undefined;
+    const tarifaAlquilerHora =
+      typeof body.tarifa_alquiler_hora === "number" && body.tarifa_alquiler_hora >= 0
+        ? body.tarifa_alquiler_hora
+        : undefined;
+    const tarifaAlquilerDia =
+      typeof body.tarifa_alquiler_dia === "number" && body.tarifa_alquiler_dia >= 0
+        ? body.tarifa_alquiler_dia
+        : undefined;
 
     // Validar ownership de relaciones opcionales
     if (categoriaPrincipalId && !(await existsId(sb, "categorias_productos", empresaId, categoriaPrincipalId))) {
@@ -228,6 +237,8 @@ export async function POST(request: NextRequest) {
     if (unidadReceta !== undefined) insertPayload.unidad_receta = unidadReceta;
     if (factorCompraReceta !== undefined) insertPayload.factor_compra_receta = factorCompraReceta;
     if (tiempoPrepMinutos !== undefined) insertPayload.tiempo_prep_minutos = tiempoPrepMinutos;
+    if (tarifaAlquilerHora !== undefined) insertPayload.tarifa_alquiler_hora = tarifaAlquilerHora;
+    if (tarifaAlquilerDia !== undefined) insertPayload.tarifa_alquiler_dia = tarifaAlquilerDia;
     const descripcion = typeof body.descripcion === "string" ? body.descripcion.trim() || null : (body.descripcion === null ? null : undefined);
     if (descripcion !== undefined) insertPayload.descripcion = descripcion;
 

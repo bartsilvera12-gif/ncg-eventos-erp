@@ -88,6 +88,8 @@ export interface ProductoRow {
   unidad_receta: string | null;
   factor_compra_receta: string | number;
   tiempo_prep_minutos: number;
+  tarifa_alquiler_hora?: string | number;
+  tarifa_alquiler_dia?: string | number;
 }
 
 export interface InsertProductoInput {
@@ -112,6 +114,8 @@ export interface InsertProductoInput {
   unidad_receta?: string | null;
   factor_compra_receta?: number;
   tiempo_prep_minutos?: number;
+  tarifa_alquiler_hora?: number;
+  tarifa_alquiler_dia?: number;
 }
 
 const RETURNING = `
@@ -120,7 +124,8 @@ const RETURNING = `
   codigo_barras, codigo_barras_interno, imagen_path, imagen_url,
   categoria_principal_id, ubicacion_principal_id, proveedor_principal_id,
   es_vendible, es_insumo,
-  controla_stock, valorizado, unidad_compra, unidad_receta, factor_compra_receta, tiempo_prep_minutos
+  controla_stock, valorizado, unidad_compra, unidad_receta, factor_compra_receta, tiempo_prep_minutos,
+  tarifa_alquiler_hora, tarifa_alquiler_dia
 `;
 
 // ─── Operaciones ──────────────────────────────────────────────────────────
@@ -138,14 +143,16 @@ export async function insertProducto(
       unidad_medida, metodo_valuacion, codigo_barras, codigo_barras_interno,
       categoria_principal_id, ubicacion_principal_id, proveedor_principal_id,
       es_vendible, es_insumo,
-      controla_stock, valorizado, unidad_compra, unidad_receta, factor_compra_receta, tiempo_prep_minutos
+      controla_stock, valorizado, unidad_compra, unidad_receta, factor_compra_receta, tiempo_prep_minutos,
+      tarifa_alquiler_hora, tarifa_alquiler_dia
     ) VALUES (
       $1::uuid, $2, $3, $4::numeric, $5::numeric, $6::numeric, $7::numeric,
       $8, $9, $10, COALESCE($11::boolean, false),
       $12::uuid, $13::uuid, $14::uuid,
       COALESCE($15::boolean, true), COALESCE($16::boolean, false),
       COALESCE($17::boolean, true), COALESCE($18::boolean, true),
-      $19, $20, COALESCE($21::numeric, 1), COALESCE($22::int, 0)
+      $19, $20, COALESCE($21::numeric, 1), COALESCE($22::int, 0),
+      COALESCE($23::numeric, 0), COALESCE($24::numeric, 0)
     )
     RETURNING ${RETURNING}
   `;
@@ -172,6 +179,8 @@ export async function insertProducto(
     d.unidad_receta ?? null,
     d.factor_compra_receta ?? null,
     d.tiempo_prep_minutos ?? null,
+    d.tarifa_alquiler_hora ?? null,
+    d.tarifa_alquiler_dia ?? null,
   ];
   try {
     const { rows } = await pool().query<ProductoRow>(sql, params);
@@ -205,6 +214,8 @@ export interface UpdateProductoInput {
   unidad_receta?: string | null;
   factor_compra_receta?: number;
   tiempo_prep_minutos?: number;
+  tarifa_alquiler_hora?: number;
+  tarifa_alquiler_dia?: number;
 }
 
 /** Update parcial. Devuelve la fila o null si no existe / no pertenece a la empresa. */
@@ -255,6 +266,8 @@ export async function updateProductoPg(
   if (patch.unidad_receta !== undefined) add("unidad_receta", patch.unidad_receta || null);
   if (patch.factor_compra_receta !== undefined) add("factor_compra_receta", patch.factor_compra_receta, "::numeric");
   if (patch.tiempo_prep_minutos !== undefined) add("tiempo_prep_minutos", patch.tiempo_prep_minutos, "::int");
+  if (patch.tarifa_alquiler_hora !== undefined) add("tarifa_alquiler_hora", patch.tarifa_alquiler_hora, "::numeric");
+  if (patch.tarifa_alquiler_dia !== undefined) add("tarifa_alquiler_dia", patch.tarifa_alquiler_dia, "::numeric");
   if (sets.length === 0) return await getProductoPg(schemaRaw, empresaId, id);
 
   sets.push(`updated_at = now()`);

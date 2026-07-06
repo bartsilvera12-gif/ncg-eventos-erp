@@ -11,7 +11,8 @@ const PRODUCTO_COLS =
   "codigo_barras, codigo_interno, codigo_barras_interno, imagen_path, imagen_url, " +
   "categoria_principal_id, ubicacion_principal_id, proveedor_principal_id, " +
   "es_vendible, es_insumo, controla_stock, valorizado, unidad_compra, unidad_receta, " +
-  "factor_compra_receta, tiempo_prep_minutos, descripcion";
+  "factor_compra_receta, tiempo_prep_minutos, descripcion, " +
+  "tarifa_alquiler_hora, tarifa_alquiler_dia";
 
 function toNumber(v: unknown): unknown {
   return typeof v === "string" ? Number(v) : v;
@@ -172,6 +173,10 @@ export async function PATCH(
       patch.tiempo_prep_minutos = Math.floor(body.tiempo_prep_minutos);
     if (body.descripcion !== undefined)
       patch.descripcion = body.descripcion == null ? null : String(body.descripcion).trim() || null;
+    if (typeof body.tarifa_alquiler_hora === "number" && body.tarifa_alquiler_hora >= 0)
+      patch.tarifa_alquiler_hora = body.tarifa_alquiler_hora;
+    if (typeof body.tarifa_alquiler_dia === "number" && body.tarifa_alquiler_dia >= 0)
+      patch.tarifa_alquiler_dia = body.tarifa_alquiler_dia;
 
     if (Object.keys(patch).length === 0) {
       const { data: existing, error: errGet } = await sb
