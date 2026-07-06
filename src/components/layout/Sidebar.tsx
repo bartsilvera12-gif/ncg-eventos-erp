@@ -97,12 +97,23 @@ const MENU_STRUCTURE: MenuItem[] = [
   { key: "eventos",          slug: "proyectos",     label: "Eventos",          href: "/dashboard/proyectos",    icon: FolderKanban },
   { key: "alquileres",       slug: "alquileres",    label: "Alquileres",       href: "/alquileres",             icon: Ticket },
 
-  { key: "compras",          slug: "compras",       label: "Compras",          href: "/compras",                icon: Package },
-  { key: "proveedores",      slug: "compras",       label: "Proveedores",      href: "/proveedores",            icon: Building2 },
-
-  { key: "productos",        slug: "inventario",    label: "Productos",        href: "/inventario",             icon: Package },
-  { key: "movimientos",      slug: "inventario",    label: "Movimientos",      href: "/inventario/movimientos", icon: ListChecks },
-  { key: "categorias",       slug: "inventario",    label: "Categorías",       href: "/inventario/categorias",  icon: ScrollText },
+  // "Inventario" y "Compras" son ítems padre con children (accordion). Viven
+  // ambos dentro de la sección OPERACIONES.
+  {
+    key: "inventario", slug: "inventario", label: "Inventario", href: "/inventario", icon: Package,
+    children: [
+      { label: "Productos",   href: "/inventario",              exactMatch: true },
+      { label: "Movimientos", href: "/inventario/movimientos" },
+      { label: "Categorías",  href: "/inventario/categorias" },
+    ],
+  },
+  {
+    key: "compras", slug: "compras", label: "Compras", href: "/compras", icon: ShoppingCart,
+    children: [
+      { label: "Compras",     href: "/compras", exactMatch: true },
+      { label: "Proveedores", href: "/proveedores" },
+    ],
+  },
 
   { key: "pagos",            slug: "pagos",         label: "Pagos",            href: "/pagos",                  icon: Receipt },
   { key: "gastos",           slug: "gastos",        label: "Gastos",           href: "/gastos",                 icon: Receipt },
@@ -121,8 +132,7 @@ const MENU_SECTIONS: { label: string; keys: string[] }[] = [
   { label: "General",    keys: ["dashboard"] },
   { label: "Comercial",  keys: ["clientes", "ventas"] },
   { label: "Eventos",    keys: ["eventos", "alquileres"] },
-  { label: "Compras",    keys: ["compras", "proveedores"] },
-  { label: "Inventario", keys: ["productos", "movimientos", "categorias"] },
+  { label: "Operaciones", keys: ["inventario", "compras"] },
   { label: "Finanzas",   keys: ["pagos", "gastos", "reportes", "panel_financiero"] },
   { label: "RRHH",       keys: ["rrhh"] },
   { label: "Admin",      keys: ["configuracion"] },
