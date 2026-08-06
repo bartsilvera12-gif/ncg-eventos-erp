@@ -7,8 +7,9 @@
 const SIDEBAR_SLUG_HREF_ORDER: { slug: string; href: string }[] = [
   { slug: "dashboard", href: "/" },
   { slug: "ventas", href: "/ventas" },
-  { slug: "proyectos", href: "/dashboard/proyectos" },
+  { slug: "proyectos", href: "/eventos" },
   { slug: "alquileres", href: "/alquileres" },
+  { slug: "certificados", href: "/certificados" },
   { slug: "compras", href: "/compras" },
   { slug: "inventario", href: "/inventario" },
   { slug: "contabilidad", href: "/finanzas" },
@@ -129,6 +130,7 @@ export function pathRequiresModuleSlug(pathname: string): string | null {
   if (p.startsWith("/dashboard")) {
     if (p.startsWith("/dashboard/marketing-ops")) return "marketing_ops";
     if (p.startsWith("/dashboard/proyectos")) return "proyectos";
+    // Nota: /dashboard/* legacy sigue mapeando arriba. /eventos abajo.
     if (p.startsWith("/dashboard/conversaciones-finalizadas")) return "conversaciones-finalizadas";
     if (p.startsWith("/dashboard/historial-omnicanal")) return "historial-omnicanal";
     if (p.startsWith("/dashboard/monitoreo")) return "monitoreo";
@@ -144,6 +146,8 @@ export function pathRequiresModuleSlug(pathname: string): string | null {
   if (p.startsWith("/ventas")) return "ventas";
   if (p.startsWith("/inventario")) return "inventario";
   if (p.startsWith("/alquileres")) return "alquileres";
+  if (p.startsWith("/eventos")) return "proyectos";
+  if (p.startsWith("/certificados")) return "certificados";
   if (p.startsWith("/clientes")) return "clientes";
   if (p.startsWith("/proveedores")) return "compras";
   if (p.startsWith("/compras")) return "compras";

@@ -94,7 +94,16 @@ const MENU_STRUCTURE: MenuItem[] = [
   { key: "clientes",         slug: "clientes",      label: "Clientes",         href: "/clientes",               icon: Users },
   { key: "ventas",           slug: "ventas",        label: "Ventas",           href: "/ventas",                 icon: ShoppingCart },
 
-  { key: "eventos",          slug: "proyectos",     label: "Eventos",          href: "/dashboard/proyectos",    icon: FolderKanban },
+  {
+    key: "eventos", slug: "proyectos", label: "Eventos", href: "/eventos", icon: FolderKanban,
+    children: [
+      { label: "Lista",       href: "/eventos", exactMatch: true },
+      { label: "Calendario",  href: "/eventos/calendario" },
+      { label: "Servicios",   href: "/eventos/servicios" },
+      { label: "Paquetes",    href: "/eventos/paquetes" },
+      { label: "Recursos",    href: "/eventos/recursos" },
+    ],
+  },
   { key: "alquileres",       slug: "alquileres",    label: "Alquileres",       href: "/alquileres",             icon: Ticket },
 
   // "Inventario" y "Compras" son ítems padre con children (accordion). Viven
@@ -117,11 +126,20 @@ const MENU_STRUCTURE: MenuItem[] = [
 
   { key: "pagos",            slug: "pagos",         label: "Pagos",            href: "/pagos",                  icon: Receipt },
   { key: "gastos",           slug: "gastos",        label: "Gastos",           href: "/gastos",                 icon: Receipt },
-  { key: "notas_credito",    slug: "notas_credito", label: "Notas de crédito", href: "/notas-credito",          icon: ScrollText },
   { key: "reportes",         slug: "reportes",      label: "Reportes",         href: "/reportes",               icon: BarChart3 },
   { key: "panel_financiero", slug: "contabilidad",  label: "Panel financiero", href: "/finanzas",               icon: BarChart3 },
 
-  { key: "rrhh",             slug: "rrhh",          label: "Recursos Humanos", href: "/rrhh",                   icon: Users },
+  // RRHH simplificado para NCG Eventos: sin control-horario ni nómina compleja.
+  // El item padre lleva a /rrhh; los sub-items visibles son Empleados y Vacaciones.
+  {
+    key: "rrhh", slug: "rrhh", label: "Recursos Humanos", href: "/rrhh", icon: Users,
+    children: [
+      { label: "Empleados",  href: "/rrhh/empleados" },
+      { label: "Vacaciones", href: "/rrhh/vacaciones" },
+    ],
+  },
+
+  { key: "certificados",     slug: "certificados",  label: "Certificados",     href: "/certificados",           icon: ScrollText },
 
   // Solo rol admin/administrador/super_admin. Gateado en mainItemsFiltered.
   { key: "configuracion",    slug: "configuracion", label: "Configuración",    href: "/configuracion",          icon: Settings },
@@ -135,6 +153,7 @@ const MENU_SECTIONS: { label: string; keys: string[] }[] = [
   { label: "Operaciones", keys: ["inventario", "compras"] },
   { label: "Finanzas",   keys: ["pagos", "gastos", "reportes", "panel_financiero"] },
   { label: "RRHH",       keys: ["rrhh"] },
+  { label: "Empresa",    keys: ["certificados"] },
   { label: "Admin",      keys: ["configuracion"] },
 ];
 
@@ -287,6 +306,7 @@ export default function Sidebar() {
     inventario: true,
     sorteos: true,
     compras: true,
+    eventos: true,
   });
   const [cargando, setCargando] = useState(true);
   const [esSuperAdmin, setEsSuperAdmin] = useState(false);
