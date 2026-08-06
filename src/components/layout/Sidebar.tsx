@@ -97,11 +97,12 @@ const MENU_STRUCTURE: MenuItem[] = [
   {
     key: "eventos", slug: "proyectos", label: "Eventos", href: "/eventos", icon: FolderKanban,
     children: [
-      { label: "Lista",       href: "/eventos", exactMatch: true },
-      { label: "Calendario",  href: "/eventos/calendario" },
-      { label: "Servicios",   href: "/eventos/servicios" },
-      { label: "Paquetes",    href: "/eventos/paquetes" },
-      { label: "Recursos",    href: "/eventos/recursos" },
+      { label: "Lista",         href: "/eventos", exactMatch: true },
+      { label: "Calendario",    href: "/eventos/calendario" },
+      { label: "Presupuestos",  href: "/eventos/presupuestos" },
+      { label: "Servicios",     href: "/eventos/servicios" },
+      { label: "Paquetes",      href: "/eventos/paquetes" },
+      { label: "Recursos",      href: "/eventos/recursos" },
     ],
   },
   { key: "alquileres",       slug: "alquileres",    label: "Alquileres",       href: "/alquileres",             icon: Ticket },
