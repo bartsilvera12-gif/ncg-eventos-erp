@@ -10,11 +10,14 @@ import {
   getEvento,
   getGaleria,
   getPagosEvento,
+  getPaquetes,
   getPresupuestos,
   getRentabilidadEvento,
   getReservasStock,
+  getServicios,
   getServiciosEvento,
   registrarFoto,
+  savePresupuesto,
   updatePresupuestoEstado,
   type FotoEvento,
 } from "@/lib/eventos/storage";
@@ -23,10 +26,21 @@ import type {
   Evento,
   EventoPresupuesto,
   EventoServicio,
+  Paquete,
   RentabilidadEvento,
+  ServicioCatalogo,
   StockReserva,
+  TipoItemPresupuesto,
 } from "@/lib/eventos/types";
 import type { PagosResumen } from "@/lib/eventos/storage";
+
+interface PresupuestoLineaDraft {
+  tipo: TipoItemPresupuesto;
+  ref_id: string | null;
+  descripcion: string;
+  cantidad: number;
+  precio_unitario: number;
+}
 
 type TabKey = "resumen" | "presupuestos" | "servicios" | "reservas" | "pagos" | "rentabilidad" | "galeria";
 
@@ -65,6 +79,18 @@ export default function EventoDetallePage() {
   const [fotos, setFotos] = useState<FotoEvento[]>([]);
   const [subiendo, setSubiendo] = useState(false);
   const [cargando, setCargando] = useState(true);
+
+  // Form de nuevo presupuesto (solo cuando se abre)
+  const [ppFormAbierto, setPpFormAbierto] = useState(false);
+  const [ppFecha, setPpFecha] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [ppValidez, setPpValidez] = useState<string>("30");
+  const [ppObs, setPpObs] = useState<string>("");
+  const [ppLineas, setPpLineas] = useState<PresupuestoLineaDraft[]>([]);
+  const [ppGuardando, setPpGuardando] = useState(false);
+  const [ppError, setPpError] = useState<string | null>(null);
+  const [catServicios, setCatServicios] = useState<ServicioCatalogo[]>([]);
+  const [catPaquetes, setCatPaquetes] = useState<Paquete[]>([]);
+  const [catCargado, setCatCargado] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -121,6 +147,104 @@ export default function EventoDetallePage() {
     if (!id || !confirm("¿Eliminar esta foto?")) return;
     await borrarFoto(id, fotoId);
     setFotos((prev) => prev.filter((f) => f.id !== fotoId));
+  };
+
+  // ── Presupuesto: form ────────────────────────────────────────────────────
+  const abrirFormPresupuesto = async () => {
+    setPpFormAbierto(true);
+    setPpError(null);
+    if (!catCargado) {
+      const [ss, ps] = await Promise.all([getServicios(), getPaquetes()]);
+      setCatServicios(ss);
+      setCatPaquetes(ps);
+      setCatCargado(true);
+    }
+  };
+  const cerrarFormPresupuesto = () => {
+    setPpFormAbierto(false);
+    setPpLineas([]);
+    setPpObs("");
+    setPpValidez("30");
+    setPpError(null);
+  };
+  const addLinea = (tipo: TipoItemPresupuesto = "servicio") => {
+    setPpLineas((prev) => [
+      ...prev,
+      { tipo, ref_id: null, descripcion: "", cantidad: 1, precio_unitario: 0 },
+    ]);
+  };
+  const updateLinea = (idx: number, patch: Partial<PresupuestoLineaDraft>) => {
+    setPpLineas((prev) =>
+      prev.map((l, i) => {
+        if (i !== idx) return l;
+        const merged = { ...l, ...patch };
+        // Autofill al elegir referencia del catálogo.
+        if (patch.ref_id !== undefined && patch.ref_id) {
+          if (merged.tipo === "servicio") {
+            const s = catServicios.find((x) => x.id === patch.ref_id);
+            if (s) {
+              if (!merged.descripcion) merged.descripcion = s.nombre;
+              if (!merged.precio_unitario) merged.precio_unitario = s.precio_base;
+            }
+          } else if (merged.tipo === "paquete") {
+            const p = catPaquetes.find((x) => x.id === patch.ref_id);
+            if (p) {
+              if (!merged.descripcion) merged.descripcion = p.nombre;
+              if (!merged.precio_unitario) merged.precio_unitario = p.precio_total;
+            }
+          }
+        }
+        // Al cambiar tipo, resetear ref_id.
+        if (patch.tipo !== undefined && patch.tipo !== l.tipo) {
+          merged.ref_id = null;
+        }
+        return merged;
+      })
+    );
+  };
+  const removeLinea = (idx: number) => {
+    setPpLineas((prev) => prev.filter((_, i) => i !== idx));
+  };
+  const ppTotal = ppLineas.reduce((s, l) => s + l.cantidad * l.precio_unitario, 0);
+  const guardarPresupuesto = async () => {
+    if (!id) return;
+    setPpError(null);
+    if (ppLineas.length === 0) {
+      setPpError("Agregá al menos una línea.");
+      return;
+    }
+    for (const l of ppLineas) {
+      if (!l.descripcion.trim()) {
+        setPpError("Todas las líneas necesitan descripción.");
+        return;
+      }
+      if (l.cantidad <= 0) {
+        setPpError("La cantidad debe ser mayor a 0.");
+        return;
+      }
+    }
+    setPpGuardando(true);
+    const res = await savePresupuesto({
+      proyecto_id: id,
+      fecha: ppFecha,
+      validez_dias: parseInt(ppValidez) || null,
+      observaciones: ppObs.trim() || null,
+      items: ppLineas.map((l, i) => ({
+        tipo: l.tipo,
+        ref_id: l.ref_id,
+        descripcion: l.descripcion.trim(),
+        cantidad: l.cantidad,
+        precio_unitario: l.precio_unitario,
+        sort_order: i,
+      })),
+    });
+    setPpGuardando(false);
+    if (!res) {
+      setPpError("No se pudo guardar el presupuesto.");
+      return;
+    }
+    setPresupuestos(await getPresupuestos(id));
+    cerrarFormPresupuesto();
   };
 
   if (cargando) {
@@ -205,51 +329,252 @@ export default function EventoDetallePage() {
           )}
 
           {tab === "presupuestos" && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
-              {presupuestos.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-400">
-                  Sin presupuestos. Podés armar uno desde el detalle.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {presupuestos.map((p) => (
-                    <div
-                      key={p.id}
-                      className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-slate-800">
-                          Versión {p.version}
-                        </span>
-                        <Badge
-                          tone={
-                            p.estado === "aprobado"
-                              ? "success"
-                              : p.estado === "enviado"
-                              ? "info"
-                              : p.estado === "rechazado"
-                              ? "danger"
-                              : "neutral"
-                          }
-                        >
-                          {p.estado}
-                        </Badge>
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                {!ppFormAbierto && (
+                  <Button variant="primary" size="sm" onClick={abrirFormPresupuesto}>
+                    + Nuevo presupuesto
+                  </Button>
+                )}
+              </div>
+
+              {ppFormAbierto && (
+                <div className="rounded-xl border border-slate-200 bg-white p-5">
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                    Nuevo presupuesto
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="font-medium text-slate-600">Fecha</span>
+                      <input
+                        type="date"
+                        value={ppFecha}
+                        onChange={(e) => setPpFecha(e.target.value)}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="font-medium text-slate-600">Validez (días)</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={ppValidez}
+                        onChange={(e) => setPpValidez(e.target.value)}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs md:col-span-1">
+                      <span className="font-medium text-slate-600">Observaciones</span>
+                      <input
+                        type="text"
+                        value={ppObs}
+                        onChange={(e) => setPpObs(e.target.value)}
+                        placeholder="Opcional"
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between">
+                      <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                        Líneas
+                      </h4>
+                      <div className="flex gap-1">
+                        <Button variant="secondary" size="sm" onClick={() => addLinea("servicio")}>
+                          + Servicio
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => addLinea("paquete")}>
+                          + Paquete
+                        </Button>
+                        <Button variant="secondary" size="sm" onClick={() => addLinea("texto")}>
+                          + Texto libre
+                        </Button>
                       </div>
-                      <div className="mt-1 flex justify-between text-xs text-slate-500">
-                        <span>{fmtFecha(p.fecha)}</span>
-                        <span className="font-semibold text-slate-800">{fmtMoney(p.total)}</span>
-                      </div>
-                      {p.estado !== "aprobado" && p.estado !== "rechazado" && (
-                        <div className="mt-2 flex justify-end">
-                          <Button variant="secondary" size="sm" onClick={() => aprobar(p.id)}>
-                            Marcar aprobado
-                          </Button>
-                        </div>
-                      )}
                     </div>
-                  ))}
+
+                    {ppLineas.length === 0 ? (
+                      <p className="rounded-lg border border-dashed border-slate-200 py-4 text-center text-xs text-slate-400">
+                        Agregá al menos una línea.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {ppLineas.map((l, idx) => (
+                          <div
+                            key={idx}
+                            className="grid grid-cols-12 gap-2 rounded-lg border border-slate-100 bg-slate-50 p-2"
+                          >
+                            <span className="col-span-2 flex items-center text-[11px] font-semibold uppercase text-slate-500">
+                              {l.tipo}
+                            </span>
+                            {l.tipo === "servicio" ? (
+                              <select
+                                value={l.ref_id ?? ""}
+                                onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
+                                className="col-span-4 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                              >
+                                <option value="">Seleccionar servicio…</option>
+                                {catServicios.map((s) => (
+                                  <option key={s.id} value={s.id}>
+                                    {s.nombre}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : l.tipo === "paquete" ? (
+                              <select
+                                value={l.ref_id ?? ""}
+                                onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
+                                className="col-span-4 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                              >
+                                <option value="">Seleccionar paquete…</option>
+                                {catPaquetes.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.nombre}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <span className="col-span-4" />
+                            )}
+                            <input
+                              type="text"
+                              value={l.descripcion}
+                              onChange={(e) => updateLinea(idx, { descripcion: e.target.value })}
+                              placeholder="Descripción"
+                              className="col-span-3 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                            />
+                            <input
+                              type="number"
+                              min={1}
+                              value={l.cantidad}
+                              onChange={(e) => updateLinea(idx, { cantidad: parseFloat(e.target.value) || 0 })}
+                              className="col-span-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right text-sm"
+                            />
+                            <input
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              value={l.precio_unitario}
+                              onChange={(e) => updateLinea(idx, { precio_unitario: parseFloat(e.target.value) || 0 })}
+                              className="col-span-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right text-sm"
+                            />
+                            <span className="col-span-1 flex items-center justify-end text-right text-sm font-semibold text-slate-800">
+                              {fmtMoney(l.cantidad * l.precio_unitario)}
+                            </span>
+                            <button
+                              onClick={() => removeLinea(idx)}
+                              className="col-span-1 text-xs text-red-600 hover:underline"
+                            >
+                              Quitar
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-3 flex items-center justify-end gap-3 border-t border-slate-100 pt-3">
+                      <span className="text-sm text-slate-500">Total</span>
+                      <span className="text-lg font-bold text-slate-800">{fmtMoney(ppTotal)}</span>
+                    </div>
+                  </div>
+
+                  {ppError && (
+                    <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                      {ppError}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <Button variant="secondary" onClick={cerrarFormPresupuesto}>
+                      Cancelar
+                    </Button>
+                    <Button variant="primary" onClick={guardarPresupuesto} disabled={ppGuardando}>
+                      {ppGuardando ? "Guardando…" : "Guardar presupuesto"}
+                    </Button>
+                  </div>
                 </div>
               )}
+
+              <div className="rounded-xl border border-slate-200 bg-white p-5">
+                {presupuestos.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-slate-400">
+                    Sin presupuestos todavía.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {presupuestos.map((p) => (
+                      <details
+                        key={p.id}
+                        className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm"
+                      >
+                        <summary className="cursor-pointer">
+                          <div className="inline-flex w-[calc(100%-1rem)] items-center justify-between">
+                            <span className="font-medium text-slate-800">
+                              Versión {p.version}
+                            </span>
+                            <Badge
+                              tone={
+                                p.estado === "aprobado"
+                                  ? "success"
+                                  : p.estado === "enviado"
+                                  ? "info"
+                                  : p.estado === "rechazado"
+                                  ? "danger"
+                                  : "neutral"
+                              }
+                            >
+                              {p.estado}
+                            </Badge>
+                          </div>
+                          <div className="mt-1 flex justify-between text-xs text-slate-500">
+                            <span>{fmtFecha(p.fecha)}</span>
+                            <span className="font-semibold text-slate-800">{fmtMoney(p.total)}</span>
+                          </div>
+                        </summary>
+
+                        {p.items && p.items.length > 0 && (
+                          <div className="mt-3 border-t border-slate-200 pt-3">
+                            <table className="w-full text-xs">
+                              <thead className="text-left text-[10px] uppercase text-slate-500">
+                                <tr>
+                                  <th className="py-1">Tipo</th>
+                                  <th className="py-1">Descripción</th>
+                                  <th className="py-1 text-right">Cant.</th>
+                                  <th className="py-1 text-right">Precio</th>
+                                  <th className="py-1 text-right">Subtotal</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {p.items.map((it) => (
+                                  <tr key={it.id} className="border-t border-slate-100">
+                                    <td className="py-1 capitalize text-slate-500">{it.tipo}</td>
+                                    <td className="py-1 text-slate-700">{it.descripcion}</td>
+                                    <td className="py-1 text-right text-slate-600">{it.cantidad}</td>
+                                    <td className="py-1 text-right text-slate-600">
+                                      {fmtMoney(it.precio_unitario)}
+                                    </td>
+                                    <td className="py-1 text-right font-semibold text-slate-800">
+                                      {fmtMoney(it.subtotal)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        {p.estado !== "aprobado" && p.estado !== "rechazado" && (
+                          <div className="mt-3 flex justify-end">
+                            <Button variant="secondary" size="sm" onClick={() => aprobar(p.id)}>
+                              Marcar aprobado
+                            </Button>
+                          </div>
+                        )}
+                      </details>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
