@@ -99,6 +99,7 @@ const MENU_STRUCTURE: MenuItem[] = [
   { key: "dashboard",        slug: "dashboard",     label: "Dashboard",        href: "/",                       icon: LayoutDashboard },
 
   { key: "clientes",         slug: "clientes",      label: "Clientes",         href: "/clientes",               icon: Users },
+  { key: "ventas",           slug: "ventas",        label: "Ventas",           href: "/ventas",                 icon: ShoppingCart },
 
   {
     key: "eventos", slug: "proyectos", label: "Eventos", href: "/eventos", icon: FolderKanban,
@@ -155,7 +156,7 @@ const MENU_STRUCTURE: MenuItem[] = [
 // Agrupación visual en secciones (header pequeño en uppercase + ítems debajo).
 const MENU_SECTIONS: { label: string; keys: string[] }[] = [
   { label: "General",     keys: ["dashboard"] },
-  { label: "Comercial",   keys: ["clientes"] },
+  { label: "Comercial",   keys: ["clientes", "ventas"] },
   { label: "Eventos",     keys: ["eventos"] },
   { label: "Operaciones", keys: ["inventario", "compras", "gastos"] },
   { label: "Contable",    keys: ["libros", "reportes"] },
