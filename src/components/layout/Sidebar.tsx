@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -88,11 +87,18 @@ function adminEmpresasMatchesQuery(queryRaw: string): boolean {
 // Ítems planos del sidebar. Sin children → sin acordeones ni flechas.
 // Labels cortos. Integran funcionalidad implícita (Ventas incluye Presupuestos,
 // Pagos incluye Cobros, Productos incluye Materiales, Proyectos incluye Obras).
+// ERP simplificado para NCG Eventos: solo lo que la clienta usa en el día a día.
+// Ítems ocultos por decisión de negocio (código intacto, accesibles por URL directa):
+//   - Ventas, Alquileres, Pagos, Reportes, Panel financiero (no hay facturación
+//     ni contabilidad compleja).
+//   - Notas de crédito (sin facturación no aplica).
+//   - Catálogo de Servicios/Paquetes/Recursos dentro de Eventos (son features
+//     de empresa de servicios full-service, no de alquiler de items).
+//   - Control-horario / nómina compleja (RRHH simplificado).
 const MENU_STRUCTURE: MenuItem[] = [
   { key: "dashboard",        slug: "dashboard",     label: "Dashboard",        href: "/",                       icon: LayoutDashboard },
 
   { key: "clientes",         slug: "clientes",      label: "Clientes",         href: "/clientes",               icon: Users },
-  { key: "ventas",           slug: "ventas",        label: "Ventas",           href: "/ventas",                 icon: ShoppingCart },
 
   {
     key: "eventos", slug: "proyectos", label: "Eventos", href: "/eventos", icon: FolderKanban,
@@ -100,13 +106,9 @@ const MENU_STRUCTURE: MenuItem[] = [
       { label: "Lista",         href: "/eventos", exactMatch: true },
       { label: "Calendario",    href: "/eventos/calendario" },
       { label: "Presupuestos",  href: "/eventos/presupuestos" },
-      { label: "Catálogo",      href: "/eventos/catalogo" },
     ],
   },
-  { key: "alquileres",       slug: "alquileres",    label: "Alquileres",       href: "/alquileres",             icon: Ticket },
 
-  // "Inventario" y "Compras" son ítems padre con children (accordion). Viven
-  // ambos dentro de la sección OPERACIONES.
   {
     key: "inventario", slug: "inventario", label: "Inventario", href: "/inventario", icon: Package,
     children: [
@@ -122,14 +124,8 @@ const MENU_STRUCTURE: MenuItem[] = [
       { label: "Proveedores", href: "/proveedores" },
     ],
   },
-
-  { key: "pagos",            slug: "pagos",         label: "Pagos",            href: "/pagos",                  icon: Receipt },
   { key: "gastos",           slug: "gastos",        label: "Gastos",           href: "/gastos",                 icon: Receipt },
-  { key: "reportes",         slug: "reportes",      label: "Reportes",         href: "/reportes",               icon: BarChart3 },
-  { key: "panel_financiero", slug: "contabilidad",  label: "Panel financiero", href: "/finanzas",               icon: BarChart3 },
 
-  // RRHH simplificado para NCG Eventos: sin control-horario ni nómina compleja.
-  // El item padre lleva a /rrhh; los sub-items visibles son Empleados y Vacaciones.
   {
     key: "rrhh", slug: "rrhh", label: "Recursos Humanos", href: "/rrhh", icon: Users,
     children: [
@@ -146,14 +142,13 @@ const MENU_STRUCTURE: MenuItem[] = [
 
 // Agrupación visual en secciones (header pequeño en uppercase + ítems debajo).
 const MENU_SECTIONS: { label: string; keys: string[] }[] = [
-  { label: "General",    keys: ["dashboard"] },
-  { label: "Comercial",  keys: ["clientes", "ventas"] },
-  { label: "Eventos",    keys: ["eventos", "alquileres"] },
-  { label: "Operaciones", keys: ["inventario", "compras"] },
-  { label: "Finanzas",   keys: ["pagos", "gastos", "reportes", "panel_financiero"] },
-  { label: "RRHH",       keys: ["rrhh"] },
-  { label: "Empresa",    keys: ["certificados"] },
-  { label: "Admin",      keys: ["configuracion"] },
+  { label: "General",     keys: ["dashboard"] },
+  { label: "Comercial",   keys: ["clientes"] },
+  { label: "Eventos",     keys: ["eventos"] },
+  { label: "Operaciones", keys: ["inventario", "compras", "gastos"] },
+  { label: "RRHH",        keys: ["rrhh"] },
+  { label: "Empresa",     keys: ["certificados"] },
+  { label: "Admin",       keys: ["configuracion"] },
 ];
 
 function modulosSyntheticFromMenu(): ModuloEmpresa[] {
@@ -561,22 +556,22 @@ export default function Sidebar() {
             : "fixed inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0 transition-transform duration-200"
         }`}
       >
-      {/* Logo oficial ZENTRA (blanco sobre azul marca) */}
+      {/* Cabecera con nombre en texto (sin logo por decisión de la clienta). */}
       <div className="flex h-[7.25rem] shrink-0 items-center justify-center border-b border-[color:var(--zentra-sidebar-border)] bg-[color:var(--zentra-sidebar-elevated)]/35 px-3 py-2.5">
-        <Link href="/" className="flex items-center justify-center min-w-0 overflow-hidden">
-          <div
-            className={`relative flex items-center justify-center ${collapsed ? "h-11 w-11" : "h-[4.5rem] w-full max-w-[200px]"}`}
-          >
-            <Image
-              src={collapsed ? "/brand/zentra-icon.png" : "/brand/zentra-logo-official.png"}
-              alt="ZENTRA"
-              width={400}
-              height={220}
-              sizes={collapsed ? "44px" : "200px"}
-              className="h-full w-full object-contain object-center"
-              priority
-            />
-          </div>
+        <Link
+          href="/"
+          className="flex items-center justify-center text-center text-white transition-opacity hover:opacity-90"
+        >
+          {collapsed ? (
+            <span className="text-xl font-bold tracking-tight">NCG</span>
+          ) : (
+            <div className="leading-tight">
+              <div className="text-xl font-bold tracking-tight">NCG</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-300">
+                Eventos
+              </div>
+            </div>
+          )}
         </Link>
       </div>
 

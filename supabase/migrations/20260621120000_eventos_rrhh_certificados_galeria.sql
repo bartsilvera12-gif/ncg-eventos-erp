@@ -283,7 +283,7 @@ DECLARE
   emp_row RECORD;
   categorias CONSTANT text[] := ARRAY[
     'Mantelería', 'Muebles', 'Juguetería', 'Decoración',
-    'Vajilla y cubertería', 'Iluminación', 'Sonido', 'Menaje de cocina',
+    'Vajilla y cubertería', 'Iluminación', 'Sonido',
     'Textil y sillones', 'Extras'
   ];
   cat text;

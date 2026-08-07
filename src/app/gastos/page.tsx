@@ -13,7 +13,7 @@ import Badge from "@/components/ui/Badge";
 import ImputarObraSelect from "@/components/proyectos/ImputarObraSelect";
 
 function formatGs(valor: number) {
-  return `${valor.toLocaleString("es-PY")} ₲`;
+  return `€ ${valor.toLocaleString("es-PY")}`;
 }
 
 function formatFecha(fecha: string) {
