@@ -7,6 +7,7 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import {
   borrarFoto,
+  borrarReservaStock,
   getEvento,
   getGaleria,
   getPagosEvento,
@@ -17,10 +18,14 @@ import {
   getServicios,
   getServiciosEvento,
   registrarFoto,
+  saveReservaStock,
   savePresupuesto,
   updatePresupuestoEstado,
+  updateReservaStock,
   type FotoEvento,
 } from "@/lib/eventos/storage";
+import { getProductos } from "@/lib/inventario/storage";
+import type { Producto } from "@/lib/inventario/types";
 import { supabase } from "@/lib/supabase";
 import type {
   Evento,
@@ -79,6 +84,17 @@ export default function EventoDetallePage() {
   const [fotos, setFotos] = useState<FotoEvento[]>([]);
   const [subiendo, setSubiendo] = useState(false);
   const [cargando, setCargando] = useState(true);
+
+  // Form de nueva reserva (solo cuando se abre)
+  const [resFormAbierto, setResFormAbierto] = useState(false);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [productosCargados, setProductosCargados] = useState(false);
+  const [resProductoId, setResProductoId] = useState<string>("");
+  const [resCantidad, setResCantidad] = useState<string>("1");
+  const [resFechaDesde, setResFechaDesde] = useState<string>("");
+  const [resFechaHasta, setResFechaHasta] = useState<string>("");
+  const [resGuardando, setResGuardando] = useState(false);
+  const [resError, setResError] = useState<string | null>(null);
 
   // Form de nuevo presupuesto (solo cuando se abre)
   const [ppFormAbierto, setPpFormAbierto] = useState(false);
@@ -147,6 +163,68 @@ export default function EventoDetallePage() {
     if (!id || !confirm("¿Eliminar esta foto?")) return;
     await borrarFoto(id, fotoId);
     setFotos((prev) => prev.filter((f) => f.id !== fotoId));
+  };
+
+  // ── Reservas de insumos ──────────────────────────────────────────────────
+  const abrirFormReserva = async () => {
+    setResFormAbierto(true);
+    setResError(null);
+    if (!productosCargados) {
+      setProductos(await getProductos());
+      setProductosCargados(true);
+    }
+    // Autofill fechas con las del evento si están.
+    if (evento?.fecha_evento && !resFechaDesde) {
+      setResFechaDesde(evento.fecha_evento);
+      setResFechaHasta(evento.fecha_evento);
+    }
+  };
+  const cerrarFormReserva = () => {
+    setResFormAbierto(false);
+    setResProductoId("");
+    setResCantidad("1");
+    setResError(null);
+  };
+  const guardarReserva = async () => {
+    if (!id) return;
+    setResError(null);
+    if (!resProductoId) return setResError("Elegí un producto.");
+    const cant = parseFloat(resCantidad) || 0;
+    if (cant <= 0) return setResError("La cantidad debe ser mayor a 0.");
+    if (!resFechaDesde || !resFechaHasta) return setResError("Cargá las fechas.");
+    setResGuardando(true);
+    const r = await saveReservaStock({
+      proyecto_id: id,
+      producto_id: resProductoId,
+      cantidad: cant,
+      fecha_inicio: new Date(resFechaDesde).toISOString(),
+      fecha_fin: new Date(resFechaHasta).toISOString(),
+    });
+    setResGuardando(false);
+    if (!r) {
+      setResError("No se pudo reservar. Puede que no haya stock disponible en ese rango.");
+      return;
+    }
+    setReservas(await getReservasStock(id));
+    cerrarFormReserva();
+  };
+  const cambiarEstadoReserva = async (
+    reservaId: string,
+    estado: "entregado" | "devuelto" | "anulado",
+    cantidadDanada?: number
+  ) => {
+    if (!id) return;
+    const ok = await updateReservaStock(id, reservaId, {
+      estado,
+      ...(cantidadDanada !== undefined ? { cantidad_danada: cantidadDanada } : {}),
+    });
+    if (ok) setReservas(await getReservasStock(id));
+  };
+  const eliminarReserva = async (reservaId: string) => {
+    if (!id || !confirm("¿Eliminar esta reserva?")) return;
+    if (await borrarReservaStock(id, reservaId)) {
+      setReservas((prev) => prev.filter((r) => r.id !== reservaId));
+    }
   };
 
   // ── Presupuesto: form ────────────────────────────────────────────────────
@@ -618,39 +696,177 @@ export default function EventoDetallePage() {
           )}
 
           {tab === "reservas" && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
-              {reservas.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-400">
-                  Sin insumos reservados.
-                </p>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="text-left text-xs uppercase tracking-wider text-slate-500">
-                    <tr>
-                      <th className="py-2">Producto</th>
-                      <th className="py-2 text-right">Cantidad</th>
-                      <th className="py-2">Desde</th>
-                      <th className="py-2">Hasta</th>
-                      <th className="py-2">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reservas.map((r) => (
-                      <tr key={r.id} className="border-t border-slate-100">
-                        <td className="py-2 text-slate-800">{r.producto_nombre ?? "—"}</td>
-                        <td className="py-2 text-right text-slate-600">{r.cantidad}</td>
-                        <td className="py-2 text-slate-600">{fmtFecha(r.fecha_inicio)}</td>
-                        <td className="py-2 text-slate-600">{fmtFecha(r.fecha_fin)}</td>
-                        <td className="py-2">
-                          <Badge tone={r.estado === "anulado" ? "danger" : r.estado === "devuelto" ? "neutral" : "info"}>
-                            {r.estado}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                {!resFormAbierto && (
+                  <Button variant="primary" size="sm" onClick={abrirFormReserva}>
+                    + Reservar insumo
+                  </Button>
+                )}
+              </div>
+
+              {resFormAbierto && (
+                <div className="rounded-xl border border-slate-200 bg-white p-5">
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
+                    Nueva reserva
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
+                    <label className="md:col-span-3 flex flex-col gap-1 text-xs">
+                      <span className="font-medium text-slate-600">Producto</span>
+                      <select
+                        value={resProductoId}
+                        onChange={(e) => setResProductoId(e.target.value)}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      >
+                        <option value="">Seleccionar…</option>
+                        {productos.map((p) => {
+                          const disp =
+                            p.stock_actual -
+                            (p.cantidad_reservada ?? 0) -
+                            (p.cantidad_en_evento ?? 0) -
+                            (p.cantidad_mantenimiento ?? 0);
+                          return (
+                            <option key={p.id} value={p.id}>
+                              {p.nombre} — disp. {disp}
+                            </option>
+                          );
+                        })}
+                      </select>
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="font-medium text-slate-600">Cantidad</span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={resCantidad}
+                        onChange={(e) => setResCantidad(e.target.value)}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="font-medium text-slate-600">Desde</span>
+                      <input
+                        type="date"
+                        value={resFechaDesde}
+                        onChange={(e) => setResFechaDesde(e.target.value)}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs">
+                      <span className="font-medium text-slate-600">Hasta</span>
+                      <input
+                        type="date"
+                        value={resFechaHasta}
+                        onChange={(e) => setResFechaHasta(e.target.value)}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      />
+                    </label>
+                  </div>
+                  {resError && (
+                    <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                      {resError}
+                    </div>
+                  )}
+                  <div className="mt-4 flex justify-end gap-2">
+                    <Button variant="secondary" onClick={cerrarFormReserva}>
+                      Cancelar
+                    </Button>
+                    <Button variant="primary" onClick={guardarReserva} disabled={resGuardando}>
+                      {resGuardando ? "Guardando…" : "Reservar"}
+                    </Button>
+                  </div>
+                </div>
               )}
+
+              <div className="rounded-xl border border-slate-200 bg-white p-5">
+                {reservas.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-slate-400">
+                    Sin insumos reservados.
+                  </p>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead className="text-left text-xs uppercase tracking-wider text-slate-500">
+                      <tr>
+                        <th className="py-2">Producto</th>
+                        <th className="py-2 text-right">Cantidad</th>
+                        <th className="py-2">Desde</th>
+                        <th className="py-2">Hasta</th>
+                        <th className="py-2">Estado</th>
+                        <th className="py-2 text-right">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reservas.map((r) => (
+                        <tr key={r.id} className="border-t border-slate-100">
+                          <td className="py-2 text-slate-800">{r.producto_nombre ?? "—"}</td>
+                          <td className="py-2 text-right text-slate-600">{r.cantidad}</td>
+                          <td className="py-2 text-slate-600">{fmtFecha(r.fecha_inicio)}</td>
+                          <td className="py-2 text-slate-600">{fmtFecha(r.fecha_fin)}</td>
+                          <td className="py-2">
+                            <Badge
+                              tone={
+                                r.estado === "anulado"
+                                  ? "danger"
+                                  : r.estado === "devuelto"
+                                  ? "neutral"
+                                  : r.estado === "entregado"
+                                  ? "success"
+                                  : "info"
+                              }
+                            >
+                              {r.estado}
+                            </Badge>
+                          </td>
+                          <td className="py-2 text-right">
+                            <div className="flex flex-wrap justify-end gap-1">
+                              {r.estado === "reservado" && (
+                                <>
+                                  <button
+                                    onClick={() => cambiarEstadoReserva(r.id, "entregado")}
+                                    className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700 hover:bg-emerald-100"
+                                  >
+                                    Entregar
+                                  </button>
+                                  <button
+                                    onClick={() => cambiarEstadoReserva(r.id, "anulado")}
+                                    className="rounded bg-red-50 px-2 py-0.5 text-[11px] text-red-700 hover:bg-red-100"
+                                  >
+                                    Anular
+                                  </button>
+                                </>
+                              )}
+                              {r.estado === "entregado" && (
+                                <button
+                                  onClick={() => {
+                                    const raw = prompt(
+                                      "¿Cuántas unidades dañadas al devolver? (0 si ninguna)",
+                                      "0"
+                                    );
+                                    if (raw === null) return;
+                                    const n = Math.max(parseInt(raw) || 0, 0);
+                                    cambiarEstadoReserva(r.id, "devuelto", n);
+                                  }}
+                                  className="rounded bg-sky-50 px-2 py-0.5 text-[11px] text-sky-700 hover:bg-sky-100"
+                                >
+                                  Devolver
+                                </button>
+                              )}
+                              {(r.estado === "anulado" || r.estado === "devuelto") && (
+                                <button
+                                  onClick={() => eliminarReserva(r.id)}
+                                  className="rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100"
+                                >
+                                  Eliminar
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           )}
 

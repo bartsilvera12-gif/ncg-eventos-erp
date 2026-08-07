@@ -229,6 +229,33 @@ export async function saveReservaStock(
   return data?.reserva ?? null;
 }
 
+export async function updateReservaStock(
+  eventoId: string,
+  reservaId: string,
+  input: {
+    estado: "reservado" | "entregado" | "devuelto" | "anulado";
+    cantidad_danada?: number;
+    observaciones?: string;
+  }
+): Promise<boolean> {
+  const data = await apiJson<{ ok?: boolean }>(
+    `/api/eventos/${eventoId}/reservas/${reservaId}`,
+    { method: "PATCH", body: JSON.stringify(input) }
+  );
+  return Boolean(data?.ok);
+}
+
+export async function borrarReservaStock(
+  eventoId: string,
+  reservaId: string
+): Promise<boolean> {
+  const data = await apiJson<{ ok?: boolean }>(
+    `/api/eventos/${eventoId}/reservas/${reservaId}`,
+    { method: "DELETE" }
+  );
+  return Boolean(data?.ok);
+}
+
 // ── Pagos + rentabilidad ─────────────────────────────────────────────────────
 
 export interface PagosResumen {
