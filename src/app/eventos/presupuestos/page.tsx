@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
-import type { EstadoPresupuesto } from "@/lib/eventos/types";
+import Button from "@/components/ui/Button";
+import { getEventos } from "@/lib/eventos/storage";
+import type { Evento, EstadoPresupuesto } from "@/lib/eventos/types";
 
 interface PresupuestoGlobal {
   id: string;
@@ -42,10 +45,29 @@ function fmtFecha(iso?: string | null) {
 }
 
 export default function PresupuestosGlobalPage() {
+  const router = useRouter();
   const [lista, setLista] = useState<PresupuestoGlobal[]>([]);
   const [cargando, setCargando] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState<EstadoPresupuesto | "">("");
   const [busqueda, setBusqueda] = useState("");
+
+  // Selector inline de evento para crear un nuevo presupuesto. El form real
+  // vive dentro de /eventos/[id] tab Presupuestos — acá solo navegamos con
+  // ?tab=presupuestos&nuevo=1 para que se abra automáticamente al cargar.
+  const [selectorAbierto, setSelectorAbierto] = useState(false);
+  const [eventosLista, setEventosLista] = useState<Evento[]>([]);
+  const [eventoElegido, setEventoElegido] = useState<string>("");
+
+  const abrirSelector = async () => {
+    setSelectorAbierto(true);
+    if (eventosLista.length === 0) {
+      setEventosLista(await getEventos());
+    }
+  };
+  const irAlEvento = () => {
+    if (!eventoElegido) return;
+    router.push(`/eventos/${eventoElegido}?tab=presupuestos&nuevo=1`);
+  };
 
   useEffect(() => {
     let cancel = false;
@@ -84,9 +106,54 @@ export default function PresupuestosGlobalPage() {
         <PageHeader
           eyebrow="NCG · Eventos"
           title="Presupuestos"
-          description="Presupuestos de todos los eventos. Se crean desde el detalle de cada evento."
+          description="Presupuestos de todos los eventos. Cada uno pertenece a un evento."
           backHref="/eventos"
+          actions={
+            <Button variant="primary" size="sm" onClick={abrirSelector}>
+              + Nuevo presupuesto
+            </Button>
+          }
         />
+
+        {selectorAbierto && (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+            <p className="mb-2 text-sm text-slate-600">
+              Elegí para qué evento vas a crear el presupuesto:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={eventoElegido}
+                onChange={(e) => setEventoElegido(e.target.value)}
+                className="min-w-[280px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]"
+              >
+                <option value="">Seleccionar evento…</option>
+                {eventosLista.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.titulo}
+                    {e.fecha_evento ? ` — ${e.fecha_evento}` : ""}
+                    {e.cliente_nombre ? ` (${e.cliente_nombre})` : ""}
+                  </option>
+                ))}
+              </select>
+              <Button variant="primary" size="sm" onClick={irAlEvento} disabled={!eventoElegido}>
+                Ir al evento
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setSelectorAbierto(false);
+                  setEventoElegido("");
+                }}
+              >
+                Cancelar
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-slate-400">
+              El form del presupuesto se abre en el detalle del evento (tab Presupuestos).
+            </p>
+          </div>
+        )}
 
         <div className="mt-6 flex flex-wrap gap-2">
           <input

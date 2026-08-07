@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
@@ -73,9 +73,15 @@ function fmtFecha(iso?: string | null) {
 
 export default function EventoDetallePage() {
   const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
   const id = params?.id;
+  // Query params soportados:
+  //   ?tab=presupuestos → cambia el tab activo al cargar
+  //   ?nuevo=1 (con tab=presupuestos) → auto-abre el form de nuevo presupuesto
+  const qsTab = searchParams?.get("tab") as TabKey | null;
+  const qsNuevo = searchParams?.get("nuevo") === "1";
   const [evento, setEvento] = useState<Evento | null>(null);
-  const [tab, setTab] = useState<TabKey>("resumen");
+  const [tab, setTab] = useState<TabKey>(qsTab && TABS.some((t) => t.key === qsTab) ? qsTab : "resumen");
   const [presupuestos, setPresupuestos] = useState<EventoPresupuesto[]>([]);
   const [servicios, setServicios] = useState<EventoServicio[]>([]);
   const [reservas, setReservas] = useState<StockReserva[]>([]);
@@ -238,6 +244,15 @@ export default function EventoDetallePage() {
       setCatCargado(true);
     }
   };
+
+  // Deep-link ?tab=presupuestos&nuevo=1 → auto-abre el form al terminar de cargar.
+  // Solo dispara una vez (cuando cargando pasa a false y el flag qsNuevo está).
+  useEffect(() => {
+    if (!cargando && qsNuevo && tab === "presupuestos" && !ppFormAbierto) {
+      abrirFormPresupuesto();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cargando, qsNuevo, tab]);
   const cerrarFormPresupuesto = () => {
     setPpFormAbierto(false);
     setPpLineas([]);
