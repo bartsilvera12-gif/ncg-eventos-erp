@@ -136,18 +136,7 @@ const MENU_STRUCTURE: MenuItem[] = [
       { label: "IVA mensual",    href: "/finanzas/iva-mensual" },
     ],
   },
-  {
-    key: "reportes", slug: "reportes", label: "Reportes", href: "/reportes", icon: BarChart3,
-    children: [
-      { label: "Eventos del mes",       href: "/reportes/eventos-mes" },
-      { label: "Pendientes de pago",    href: "/reportes/eventos-pendientes-pago" },
-      { label: "Rentabilidad eventos",  href: "/reportes/rentabilidad-eventos" },
-      { label: "Compras",               href: "/reportes/compras" },
-      { label: "Ventas",                href: "/reportes/ventas" },
-      { label: "Stock bajo",            href: "/reportes/stock-bajo" },
-      { label: "Estado de cuenta",      href: "/reportes/estado-cuenta" },
-    ],
-  },
+  { key: "reportes",         slug: "reportes",      label: "Reportes",         href: "/reportes",               icon: BarChart3 },
 
   {
     key: "rrhh", slug: "rrhh", label: "Recursos Humanos", href: "/rrhh", icon: Users,

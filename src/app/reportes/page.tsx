@@ -2,7 +2,10 @@
 
 import PageHeader from "@/components/ui/PageHeader";
 import { ReportCard } from "@/components/reportes/ReportCard";
-import { Wallet, ShoppingCart, Package, Truck, ArrowLeftRight, TrendingUp, Users, AlertTriangle } from "lucide-react";
+import {
+  Wallet, ShoppingCart, Package, Truck, ArrowLeftRight,
+  TrendingUp, Users, AlertTriangle, CalendarDays, AlertCircle,
+} from "lucide-react";
 
 /** Hub de reportería operativa: cards estilo Configuración Global. */
 export default function ReportesPage() {
@@ -17,11 +20,29 @@ export default function ReportesPage() {
       <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
         <li>
           <ReportCard
-            title="Rentabilidad por obra"
-            subtitle="Comparativo presupuesto vs costo real"
+            title="Eventos del mes"
+            subtitle="Agenda del período"
+            icon={CalendarDays}
+            description="Lista de eventos con fecha dentro del mes seleccionado, filtrable por estado."
+            href="/reportes/eventos-mes"
+          />
+        </li>
+        <li>
+          <ReportCard
+            title="Pendientes de pago"
+            subtitle="Cobros pendientes por evento"
+            icon={AlertCircle}
+            description="Eventos con saldo pendiente contra el último presupuesto aprobado."
+            href="/reportes/eventos-pendientes-pago"
+          />
+        </li>
+        <li>
+          <ReportCard
+            title="Rentabilidad de eventos"
+            subtitle="Cobrado vs costos por evento"
             icon={TrendingUp}
-            description="Todas las obras con presupuesto, facturado, costo real y margen %, ordenable."
-            href="/reportes/rentabilidad-obras"
+            description="Total cobrado, costos imputados y ganancia neta con margen %."
+            href="/reportes/rentabilidad-eventos"
           />
         </li>
         <li>
