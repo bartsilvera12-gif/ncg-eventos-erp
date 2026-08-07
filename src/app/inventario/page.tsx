@@ -598,10 +598,43 @@ export default function InventarioPage() {
                     <td className={`py-4 pr-4 text-gray-700 ${tab === "herramienta" ? "hidden lg:table-cell" : ""}`}>{formatGs(p.costo_promedio)}</td>
                     <td className={`py-4 pr-4 text-gray-700 ${tab === "consumible" ? "" : "hidden"}`}>{formatGs(p.ultimo_costo ?? p.costo_promedio)}</td>
                     <td className={`py-4 pr-4 text-gray-700 ${tab === "consumible" || tab === "herramienta" ? "hidden" : ""}`}>{formatGs(p.precio_venta)}</td>
-                    <td className={`py-4 pr-4 text-center ${tab !== "herramienta" ? "" : "hidden"}`}>
-                      <span className={`font-semibold ${stockBajo ? "text-red-600" : "text-gray-800"}`}>
-                        {p.stock_actual}
-                      </span>
+                    {/* Stock con desglose por estado (Reservado / En evento / Reparación / Disponible).
+                        Solo Materiales y Consumibles. Los campos vienen del GET /api/productos
+                        que agrega Σ stock_reservas por producto. */}
+                    <td className={`py-4 pr-4 ${tab !== "herramienta" ? "" : "hidden"}`}>
+                      {(() => {
+                        const total = p.stock_actual;
+                        const reservada = p.cantidad_reservada ?? 0;
+                        const enEvento = p.cantidad_en_evento ?? 0;
+                        const mant = p.cantidad_mantenimiento ?? 0;
+                        const disp = total - reservada - enEvento - mant;
+                        return (
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span
+                              className={`text-base font-semibold ${stockBajo ? "text-red-600" : "text-gray-800"}`}
+                              title="Total en stock"
+                            >
+                              {total}
+                            </span>
+                            <div className="flex flex-col text-[10px] leading-tight items-center">
+                              {reservada > 0 && (
+                                <span className="text-amber-700">Reserv. · {reservada}</span>
+                              )}
+                              {enEvento > 0 && (
+                                <span className="text-sky-700">En evento · {enEvento}</span>
+                              )}
+                              {mant > 0 && (
+                                <span className="text-slate-500">Reparación · {mant}</span>
+                              )}
+                              <span
+                                className={`font-semibold ${disp <= 0 ? "text-red-600" : "text-emerald-700"}`}
+                              >
+                                Disp. · {disp}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className={`py-4 pr-4 text-center text-gray-500 ${tab !== "herramienta" ? "hidden md:table-cell" : "hidden"}`}>{p.stock_minimo}</td>
                     {/* Estado (solo herramienta) */}

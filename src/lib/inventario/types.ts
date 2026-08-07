@@ -58,6 +58,10 @@ export interface Producto {
   tarifa_alquiler_hora?: number;
   /** Tarifa de alquiler por día (eventos). */
   tarifa_alquiler_dia?: number;
+  /** Unidades reservadas para eventos (stock_reservas.estado='reservado'). */
+  cantidad_reservada?: number;
+  /** Unidades entregadas a un evento activo (stock_reservas.estado='entregado'). */
+  cantidad_en_evento?: number;
 }
 
 export interface MovimientoInventario {

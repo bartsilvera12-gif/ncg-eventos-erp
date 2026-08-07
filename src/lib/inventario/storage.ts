@@ -48,6 +48,8 @@ interface ProductoRow {
   descripcion?: string | null;
   tarifa_alquiler_hora?: number | string | null;
   tarifa_alquiler_dia?: number | string | null;
+  cantidad_reservada?: number | string | null;
+  cantidad_en_evento?: number | string | null;
 }
 
 interface MovimientoRow {
@@ -133,6 +135,10 @@ function rowToProducto(row: ProductoRow): Producto {
       row.tarifa_alquiler_hora != null ? Number(row.tarifa_alquiler_hora) : 0,
     tarifa_alquiler_dia:
       row.tarifa_alquiler_dia != null ? Number(row.tarifa_alquiler_dia) : 0,
+    cantidad_reservada:
+      row.cantidad_reservada != null ? Number(row.cantidad_reservada) : 0,
+    cantidad_en_evento:
+      row.cantidad_en_evento != null ? Number(row.cantidad_en_evento) : 0,
   };
 }
 

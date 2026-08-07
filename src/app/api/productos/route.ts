@@ -91,6 +91,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Estados de reserva por producto (Eventos): agregamos cantidad_reservada
+    // (stock_reservas.estado='reservado') y cantidad_en_evento (estado='entregado').
+    // El disponible = stock_actual - reservada - en_evento - cantidad_mantenimiento
+    // se calcula en el cliente para que sea reactivo si algo cambia.
+    // Defensivo: si la tabla stock_reservas no existe todavía (migración no
+    // corrida), se ignora el error y los productos quedan sin esos campos.
+    try {
+      const { data: resRows, error: resErr } = await ctx.supabase
+        .from("stock_reservas")
+        .select("producto_id, estado, cantidad")
+        .eq("empresa_id", ctx.auth.empresa_id)
+        .in("estado", ["reservado", "entregado"]);
+      if (!resErr && resRows) {
+        const agg = new Map<string, { reservada: number; en_evento: number }>();
+        for (const r of resRows as { producto_id: string; estado: string; cantidad: number | string }[]) {
+          const cur = agg.get(r.producto_id) ?? { reservada: 0, en_evento: 0 };
+          const c = Number(r.cantidad) || 0;
+          if (r.estado === "reservado") cur.reservada += c;
+          else if (r.estado === "entregado") cur.en_evento += c;
+          agg.set(r.producto_id, cur);
+        }
+        for (const row of rows) {
+          const id = String(row.id ?? "");
+          const a = agg.get(id);
+          row.cantidad_reservada = a?.reservada ?? 0;
+          row.cantidad_en_evento = a?.en_evento ?? 0;
+        }
+      }
+    } catch (e) {
+      console.warn("[/api/productos GET] stock_reservas no disponible:", e instanceof Error ? e.message : e);
+    }
+
     return NextResponse.json(successResponse({ productos: rows }));
   } catch (err) {
     console.error("[/api/productos GET]", err instanceof Error ? err.message : err);
