@@ -127,6 +127,29 @@ const MENU_STRUCTURE: MenuItem[] = [
   { key: "gastos",           slug: "gastos",        label: "Gastos",           href: "/gastos",                 icon: Receipt },
 
   {
+    key: "libros", slug: "reportes", label: "Libros", href: "/reportes/libro-diario", icon: BarChart3,
+    children: [
+      { label: "Libro diario",   href: "/reportes/libro-diario" },
+      { label: "Libro mayor",    href: "/reportes/libro-mayor" },
+      { label: "Libro compras",  href: "/finanzas/libro-compras" },
+      { label: "Libro ventas",   href: "/finanzas/libro-ventas" },
+      { label: "IVA mensual",    href: "/finanzas/iva-mensual" },
+    ],
+  },
+  {
+    key: "reportes", slug: "reportes", label: "Reportes", href: "/reportes", icon: BarChart3,
+    children: [
+      { label: "Eventos del mes",       href: "/reportes/eventos-mes" },
+      { label: "Pendientes de pago",    href: "/reportes/eventos-pendientes-pago" },
+      { label: "Rentabilidad eventos",  href: "/reportes/rentabilidad-eventos" },
+      { label: "Compras",               href: "/reportes/compras" },
+      { label: "Ventas",                href: "/reportes/ventas" },
+      { label: "Stock bajo",            href: "/reportes/stock-bajo" },
+      { label: "Estado de cuenta",      href: "/reportes/estado-cuenta" },
+    ],
+  },
+
+  {
     key: "rrhh", slug: "rrhh", label: "Recursos Humanos", href: "/rrhh", icon: Users,
     children: [
       { label: "Empleados",  href: "/rrhh/empleados" },
@@ -146,6 +169,7 @@ const MENU_SECTIONS: { label: string; keys: string[] }[] = [
   { label: "Comercial",   keys: ["clientes"] },
   { label: "Eventos",     keys: ["eventos"] },
   { label: "Operaciones", keys: ["inventario", "compras", "gastos"] },
+  { label: "Contable",    keys: ["libros", "reportes"] },
   { label: "RRHH",        keys: ["rrhh"] },
   { label: "Empresa",     keys: ["certificados"] },
   { label: "Admin",       keys: ["configuracion"] },
