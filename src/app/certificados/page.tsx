@@ -14,6 +14,7 @@ import {
   type CategoriaCertificado,
   type Certificado,
 } from "@/lib/certificados/types";
+import { supabase } from "@/lib/supabase";
 
 const CATEGORIAS: CategoriaCertificado[] = [
   "habilitacion", "seguro", "certificado", "licencia",
@@ -52,10 +53,20 @@ function fmtFecha(iso?: string | null) {
   }
 }
 
+interface ArchivoDraft {
+  storage_path: string;
+  nombre: string;
+  mime: string;
+  tamano: number;
+}
+
 export default function CertificadosPage() {
   const [lista, setLista] = useState<Certificado[]>([]);
   const [cargando, setCargando] = useState(true);
   const [form, setForm] = useState<FormState>(initial);
+  const [archivo, setArchivo] = useState<ArchivoDraft | null>(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [mostrarForm, setMostrarForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,6 +80,32 @@ export default function CertificadosPage() {
     cargar();
   }, []);
 
+  const onSubirArchivo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setSubiendo(true);
+    try {
+      const ext = file.name.split(".").pop() ?? "bin";
+      const path = `certificados/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("certificados")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (upErr) throw upErr;
+      setArchivo({
+        storage_path: path,
+        nombre: file.name,
+        mime: file.type,
+        tamano: file.size,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al subir";
+      setUploadError(msg + " (¿existe el bucket 'certificados' en Supabase Storage?)");
+    } finally {
+      setSubiendo(false);
+    }
+  };
+
   const onGuardar = async () => {
     setError(null);
     if (!form.nombre.trim()) return setError("Cargá el nombre.");
@@ -81,11 +118,26 @@ export default function CertificadosPage() {
       fecha_vencimiento: form.fecha_vencimiento || null,
       alerta_dias_antes: parseInt(form.alerta_dias_antes) || 30,
       descripcion: form.descripcion || null,
+      storage_path: archivo?.storage_path ?? null,
+      archivo_nombre: archivo?.nombre ?? null,
+      archivo_mime: archivo?.mime ?? null,
+      archivo_tamano: archivo?.tamano ?? null,
     });
     if (!c) return setError("No se pudo guardar.");
     setForm(initial);
+    setArchivo(null);
     setMostrarForm(false);
     await cargar();
+  };
+
+  const descargarArchivo = async (c: Certificado) => {
+    if (!c.storage_path) return;
+    const bucket = c.storage_bucket ?? "certificados";
+    const { data, error: sErr } = await supabase.storage
+      .from(bucket)
+      .createSignedUrl(c.storage_path, 60);
+    if (sErr || !data?.signedUrl) return;
+    window.open(data.signedUrl, "_blank");
   };
 
   const porVencer = lista.filter((c) => estadoVencimiento(c) === "por_vencer");
@@ -196,6 +248,40 @@ export default function CertificadosPage() {
                 className={inputClass + " md:col-span-3"}
                 rows={2}
               />
+
+              {/* Archivo adjunto opcional. Se sube al bucket 'certificados' de
+                  Supabase Storage; el registro en DB guarda solo la ruta. */}
+              <div className="md:col-span-3">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-500">
+                  Archivo adjunto (opcional)
+                </p>
+                {archivo ? (
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                    <span className="truncate text-slate-700">📎 {archivo.nombre}</span>
+                    <button
+                      type="button"
+                      onClick={() => setArchivo(null)}
+                      className="ml-2 text-xs text-red-600 hover:underline"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                ) : (
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                    {subiendo ? "Subiendo…" : "Subir archivo (PDF/imagen)"}
+                    <input
+                      type="file"
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                      disabled={subiendo}
+                      onChange={onSubirArchivo}
+                    />
+                  </label>
+                )}
+                {uploadError && (
+                  <p className="mt-1 text-xs text-red-600">{uploadError}</p>
+                )}
+              </div>
             </div>
 
             {error && (
@@ -274,6 +360,14 @@ export default function CertificadosPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right">
+                        {c.storage_path && (
+                          <button
+                            onClick={() => descargarArchivo(c)}
+                            className="mr-2 text-xs text-[#0EA5E9] hover:underline"
+                          >
+                            Ver archivo
+                          </button>
+                        )}
                         <button
                           onClick={async () => {
                             if (!confirm("¿Eliminar certificado?")) return;
@@ -292,11 +386,6 @@ export default function CertificadosPage() {
             </tbody>
           </table>
         </div>
-
-        <p className="mt-3 text-xs text-slate-400">
-          El upload de archivos al bucket <code>certificados</code> se agrega en la próxima
-          iteración. Por ahora podés cargar los metadatos.
-        </p>
       </div>
     </div>
   );

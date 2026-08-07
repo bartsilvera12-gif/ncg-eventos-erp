@@ -14,6 +14,10 @@ export type Gasto = {
   frecuencia?: string;
   fecha: string;
   created_at: string;
+  proyecto_id?: string | null;
+  comprobante_path?: string | null;
+  comprobante_nombre?: string | null;
+  comprobante_mime?: string | null;
 };
 
 export type GastoInput = {
@@ -24,6 +28,10 @@ export type GastoInput = {
   recurrente: boolean;
   frecuencia?: string;
   fecha: string;
+  proyecto_id?: string | null;
+  comprobante_path?: string | null;
+  comprobante_nombre?: string | null;
+  comprobante_mime?: string | null;
 };
 
 function mapRow(r: Record<string, unknown>): Gasto {
@@ -38,6 +46,10 @@ function mapRow(r: Record<string, unknown>): Gasto {
     frecuencia: r.frecuencia as string | undefined,
     fecha: (r.fecha as string) ?? "",
     created_at: (r.created_at as string) ?? "",
+    proyecto_id: (r.proyecto_id as string | null) ?? null,
+    comprobante_path: (r.comprobante_path as string | null) ?? null,
+    comprobante_nombre: (r.comprobante_nombre as string | null) ?? null,
+    comprobante_mime: (r.comprobante_mime as string | null) ?? null,
   };
 }
 
@@ -101,6 +113,10 @@ export async function createGasto(input: GastoInput): Promise<Gasto> {
       // Gastos se asumen liquidados al cargarlos (mismo criterio que el backfill).
       monto_pagado: input.monto,
       fecha_pago: input.fecha,
+      proyecto_id: input.proyecto_id || null,
+      comprobante_path: input.comprobante_path || null,
+      comprobante_nombre: input.comprobante_nombre || null,
+      comprobante_mime: input.comprobante_mime || null,
     })
     .select()
     .single();
@@ -121,6 +137,10 @@ export async function updateGasto(id: string, input: Partial<GastoInput>): Promi
   if (input.recurrente !== undefined) update.recurrente = input.recurrente;
   if (input.frecuencia !== undefined) update.frecuencia = input.frecuencia?.trim() || null;
   if (input.fecha !== undefined) update.fecha = input.fecha;
+  if (input.proyecto_id !== undefined) update.proyecto_id = input.proyecto_id || null;
+  if (input.comprobante_path !== undefined) update.comprobante_path = input.comprobante_path || null;
+  if (input.comprobante_nombre !== undefined) update.comprobante_nombre = input.comprobante_nombre || null;
+  if (input.comprobante_mime !== undefined) update.comprobante_mime = input.comprobante_mime || null;
 
   const { data, error } = await supabase
     .from("gastos")
