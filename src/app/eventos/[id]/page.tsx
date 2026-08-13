@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
@@ -27,15 +27,17 @@ import {
 import { getProductos } from "@/lib/inventario/storage";
 import type { Producto } from "@/lib/inventario/types";
 import { supabase } from "@/lib/supabase";
-import type {
-  Evento,
-  EventoPresupuesto,
-  EventoServicio,
-  Paquete,
-  RentabilidadEvento,
-  ServicioCatalogo,
-  StockReserva,
-  TipoItemPresupuesto,
+import {
+  UNIDADES_PRESUPUESTO,
+  type Evento,
+  type EventoPresupuesto,
+  type EventoServicio,
+  type IvaPresupuesto,
+  type Paquete,
+  type RentabilidadEvento,
+  type ServicioCatalogo,
+  type StockReserva,
+  type TipoItemPresupuesto,
 } from "@/lib/eventos/types";
 import type { PagosResumen } from "@/lib/eventos/storage";
 
@@ -45,6 +47,10 @@ interface PresupuestoLineaDraft {
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
+  unidad: string;
+  categoria: string;
+  descuento_pct: number;
+  iva_pct: IvaPresupuesto;
 }
 
 type TabKey = "resumen" | "presupuestos" | "servicios" | "reservas" | "pagos" | "rentabilidad" | "galeria";
@@ -60,7 +66,7 @@ const TABS: { key: TabKey; label: string }[] = [
 ];
 
 function fmtMoney(n?: number) {
-  return `€ ${(n ?? 0).toLocaleString("es-PY")}`;
+  return `Gs. ${Math.round(n ?? 0).toLocaleString("es-PY")}`;
 }
 function fmtFecha(iso?: string | null) {
   if (!iso) return "—";
@@ -107,6 +113,7 @@ export default function EventoDetallePage() {
   const [ppFecha, setPpFecha] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [ppValidez, setPpValidez] = useState<string>("30");
   const [ppObs, setPpObs] = useState<string>("");
+  const [ppCondiciones, setPpCondiciones] = useState<string>("50% de seña a la firma, saldo al finalizar el evento.");
   const [ppLineas, setPpLineas] = useState<PresupuestoLineaDraft[]>([]);
   const [ppGuardando, setPpGuardando] = useState(false);
   const [ppError, setPpError] = useState<string | null>(null);
@@ -261,10 +268,24 @@ export default function EventoDetallePage() {
     setPpError(null);
   };
   const addLinea = (tipo: TipoItemPresupuesto = "servicio") => {
-    setPpLineas((prev) => [
-      ...prev,
-      { tipo, ref_id: null, descripcion: "", cantidad: 1, precio_unitario: 0 },
-    ]);
+    setPpLineas((prev) => {
+      const ultima = prev[prev.length - 1];
+      return [
+        ...prev,
+        {
+          tipo,
+          ref_id: null,
+          descripcion: "",
+          cantidad: 1,
+          precio_unitario: 0,
+          unidad: tipo === "paquete" ? "paquete" : tipo === "servicio" ? "servicio" : "u",
+          // Heredá la categoría de la línea anterior para agrupar rápido.
+          categoria: ultima?.categoria ?? "",
+          descuento_pct: 0,
+          iva_pct: 10,
+        },
+      ];
+    });
   };
   const updateLinea = (idx: number, patch: Partial<PresupuestoLineaDraft>) => {
     setPpLineas((prev) =>
@@ -298,7 +319,18 @@ export default function EventoDetallePage() {
   const removeLinea = (idx: number) => {
     setPpLineas((prev) => prev.filter((_, i) => i !== idx));
   };
-  const ppTotal = ppLineas.reduce((s, l) => s + l.cantidad * l.precio_unitario, 0);
+  const ppTotales = ppLineas.reduce(
+    (acc, l) => {
+      const bruto = l.cantidad * l.precio_unitario;
+      const sub = bruto * (1 - l.descuento_pct / 100);
+      const iva = sub * (l.iva_pct / 100);
+      acc.base += sub;
+      acc.iva += iva;
+      return acc;
+    },
+    { base: 0, iva: 0 }
+  );
+  const ppTotal = ppTotales.base + ppTotales.iva;
   const guardarPresupuesto = async () => {
     if (!id) return;
     setPpError(null);
@@ -322,12 +354,17 @@ export default function EventoDetallePage() {
       fecha: ppFecha,
       validez_dias: parseInt(ppValidez) || null,
       observaciones: ppObs.trim() || null,
+      condiciones_pago: ppCondiciones.trim() || null,
       items: ppLineas.map((l, i) => ({
         tipo: l.tipo,
         ref_id: l.ref_id,
         descripcion: l.descripcion.trim(),
         cantidad: l.cantidad,
         precio_unitario: l.precio_unitario,
+        unidad: l.unidad,
+        categoria: l.categoria.trim() || null,
+        descuento_pct: l.descuento_pct,
+        iva_pct: l.iva_pct,
         sort_order: i,
       })),
     });
@@ -357,8 +394,19 @@ export default function EventoDetallePage() {
 
   const aprobar = async (presupuestoId: string) => {
     if (!id) return;
+    if (!confirm("Al aprobar se marcará el evento como confirmado y se generará una venta. ¿Continuar?")) return;
     const ok = await updatePresupuestoEstado(id, presupuestoId, "aprobado");
-    if (ok) setPresupuestos((prev) => prev.map((p) => (p.id === presupuestoId ? { ...p, estado: "aprobado" } : p)));
+    if (ok) {
+      // Recargamos evento (estado cambia) + presupuestos (venta_id se completa).
+      const [ev, ps] = await Promise.all([getEvento(id), getPresupuestos(id)]);
+      if (ev) setEvento(ev);
+      setPresupuestos(ps);
+    }
+  };
+  const rechazar = async (presupuestoId: string) => {
+    if (!id) return;
+    const ok = await updatePresupuestoEstado(id, presupuestoId, "rechazado");
+    if (ok) setPresupuestos((prev) => prev.map((p) => (p.id === presupuestoId ? { ...p, estado: "rechazado" } : p)));
   };
 
   return (
@@ -436,7 +484,7 @@ export default function EventoDetallePage() {
                   <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
                     Nuevo presupuesto
                   </h3>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
                     <label className="flex flex-col gap-1 text-xs">
                       <span className="font-medium text-slate-600">Fecha</span>
                       <input
@@ -456,8 +504,18 @@ export default function EventoDetallePage() {
                         className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                       />
                     </label>
-                    <label className="flex flex-col gap-1 text-xs md:col-span-1">
-                      <span className="font-medium text-slate-600">Observaciones</span>
+                    <label className="flex flex-col gap-1 text-xs md:col-span-2">
+                      <span className="font-medium text-slate-600">Condiciones de pago</span>
+                      <input
+                        type="text"
+                        value={ppCondiciones}
+                        onChange={(e) => setPpCondiciones(e.target.value)}
+                        placeholder="Ej. 50% seña, saldo al finalizar"
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1 text-xs md:col-span-4">
+                      <span className="font-medium text-slate-600">Observaciones internas</span>
                       <input
                         type="text"
                         value={ppObs}
@@ -469,11 +527,11 @@ export default function EventoDetallePage() {
                   </div>
 
                   <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                        Líneas
+                        Líneas del presupuesto
                       </h4>
-                      <div className="flex gap-1">
+                      <div className="flex flex-wrap gap-1">
                         <Button variant="secondary" size="sm" onClick={() => addLinea("servicio")}>
                           + Servicio
                         </Button>
@@ -488,86 +546,175 @@ export default function EventoDetallePage() {
 
                     {ppLineas.length === 0 ? (
                       <p className="rounded-lg border border-dashed border-slate-200 py-4 text-center text-xs text-slate-400">
-                        Agregá al menos una línea.
+                        Agregá al menos una línea. Podés agrupar por categoría (ej. CATERING, DECORACIÓN).
                       </p>
                     ) : (
-                      <div className="space-y-2">
-                        {ppLineas.map((l, idx) => (
-                          <div
-                            key={idx}
-                            className="grid grid-cols-12 gap-2 rounded-lg border border-slate-100 bg-slate-50 p-2"
-                          >
-                            <span className="col-span-2 flex items-center text-[11px] font-semibold uppercase text-slate-500">
-                              {l.tipo}
-                            </span>
-                            {l.tipo === "servicio" ? (
-                              <select
-                                value={l.ref_id ?? ""}
-                                onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
-                                className="col-span-4 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
-                              >
-                                <option value="">Seleccionar servicio…</option>
-                                {catServicios.map((s) => (
-                                  <option key={s.id} value={s.id}>
-                                    {s.nombre}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : l.tipo === "paquete" ? (
-                              <select
-                                value={l.ref_id ?? ""}
-                                onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
-                                className="col-span-4 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
-                              >
-                                <option value="">Seleccionar paquete…</option>
-                                {catPaquetes.map((p) => (
-                                  <option key={p.id} value={p.id}>
-                                    {p.nombre}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span className="col-span-4" />
-                            )}
-                            <input
-                              type="text"
-                              value={l.descripcion}
-                              onChange={(e) => updateLinea(idx, { descripcion: e.target.value })}
-                              placeholder="Descripción"
-                              className="col-span-3 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
-                            />
-                            <input
-                              type="number"
-                              min={1}
-                              value={l.cantidad}
-                              onChange={(e) => updateLinea(idx, { cantidad: parseFloat(e.target.value) || 0 })}
-                              className="col-span-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right text-sm"
-                            />
-                            <input
-                              type="number"
-                              step="0.01"
-                              min={0}
-                              value={l.precio_unitario}
-                              onChange={(e) => updateLinea(idx, { precio_unitario: parseFloat(e.target.value) || 0 })}
-                              className="col-span-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-right text-sm"
-                            />
-                            <span className="col-span-1 flex items-center justify-end text-right text-sm font-semibold text-slate-800">
-                              {fmtMoney(l.cantidad * l.precio_unitario)}
-                            </span>
-                            <button
-                              onClick={() => removeLinea(idx)}
-                              className="col-span-1 text-xs text-red-600 hover:underline"
-                            >
-                              Quitar
-                            </button>
-                          </div>
-                        ))}
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[900px] text-xs">
+                          <thead className="text-left text-[10px] uppercase text-slate-500">
+                            <tr>
+                              <th className="py-1 pr-2">Categoría</th>
+                              <th className="py-1 pr-2">Descripción</th>
+                              <th className="py-1 pr-2">Ref. catálogo</th>
+                              <th className="py-1 pr-2 text-right">Cant.</th>
+                              <th className="py-1 pr-2">Unidad</th>
+                              <th className="py-1 pr-2 text-right">Precio unit.</th>
+                              <th className="py-1 pr-2 text-right">Desc. %</th>
+                              <th className="py-1 pr-2 text-right">IVA %</th>
+                              <th className="py-1 pr-2 text-right">Subtotal</th>
+                              <th className="py-1" />
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ppLineas.map((l, idx) => {
+                              const bruto = l.cantidad * l.precio_unitario;
+                              const sub = bruto * (1 - l.descuento_pct / 100);
+                              return (
+                                <tr key={idx} className="border-t border-slate-100 align-top">
+                                  <td className="py-1 pr-2">
+                                    <input
+                                      type="text"
+                                      list="categorias-presupuesto"
+                                      value={l.categoria}
+                                      onChange={(e) => updateLinea(idx, { categoria: e.target.value })}
+                                      placeholder="CATERING"
+                                      className="w-28 rounded border border-slate-200 bg-white px-2 py-1 text-xs uppercase"
+                                    />
+                                  </td>
+                                  <td className="py-1 pr-2">
+                                    <input
+                                      type="text"
+                                      value={l.descripcion}
+                                      onChange={(e) => updateLinea(idx, { descripcion: e.target.value })}
+                                      placeholder="Descripción"
+                                      className="w-full min-w-[180px] rounded border border-slate-200 bg-white px-2 py-1 text-xs"
+                                    />
+                                  </td>
+                                  <td className="py-1 pr-2">
+                                    {l.tipo === "servicio" ? (
+                                      <select
+                                        value={l.ref_id ?? ""}
+                                        onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
+                                        className="w-40 rounded border border-slate-200 bg-white px-1 py-1 text-xs"
+                                      >
+                                        <option value="">Servicio…</option>
+                                        {catServicios.map((s) => (
+                                          <option key={s.id} value={s.id}>{s.nombre}</option>
+                                        ))}
+                                      </select>
+                                    ) : l.tipo === "paquete" ? (
+                                      <select
+                                        value={l.ref_id ?? ""}
+                                        onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
+                                        className="w-40 rounded border border-slate-200 bg-white px-1 py-1 text-xs"
+                                      >
+                                        <option value="">Paquete…</option>
+                                        {catPaquetes.map((p) => (
+                                          <option key={p.id} value={p.id}>{p.nombre}</option>
+                                        ))}
+                                      </select>
+                                    ) : (
+                                      <span className="text-[10px] uppercase text-slate-400">texto</span>
+                                    )}
+                                  </td>
+                                  <td className="py-1 pr-2 text-right">
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      step="0.01"
+                                      value={l.cantidad}
+                                      onChange={(e) => updateLinea(idx, { cantidad: parseFloat(e.target.value) || 0 })}
+                                      className="w-16 rounded border border-slate-200 bg-white px-1 py-1 text-right text-xs"
+                                    />
+                                  </td>
+                                  <td className="py-1 pr-2">
+                                    <input
+                                      type="text"
+                                      list="unidades-presupuesto"
+                                      value={l.unidad}
+                                      onChange={(e) => updateLinea(idx, { unidad: e.target.value })}
+                                      className="w-20 rounded border border-slate-200 bg-white px-1 py-1 text-xs"
+                                    />
+                                  </td>
+                                  <td className="py-1 pr-2 text-right">
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      min={0}
+                                      value={l.precio_unitario}
+                                      onChange={(e) => updateLinea(idx, { precio_unitario: parseFloat(e.target.value) || 0 })}
+                                      className="w-28 rounded border border-slate-200 bg-white px-1 py-1 text-right text-xs"
+                                    />
+                                  </td>
+                                  <td className="py-1 pr-2 text-right">
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={100}
+                                      step="0.5"
+                                      value={l.descuento_pct}
+                                      onChange={(e) => updateLinea(idx, { descuento_pct: Math.max(0, Math.min(100, parseFloat(e.target.value) || 0)) })}
+                                      className="w-14 rounded border border-slate-200 bg-white px-1 py-1 text-right text-xs"
+                                    />
+                                  </td>
+                                  <td className="py-1 pr-2 text-right">
+                                    <select
+                                      value={l.iva_pct}
+                                      onChange={(e) => updateLinea(idx, { iva_pct: (parseInt(e.target.value) as IvaPresupuesto) })}
+                                      className="w-16 rounded border border-slate-200 bg-white px-1 py-1 text-right text-xs"
+                                    >
+                                      <option value={10}>10%</option>
+                                      <option value={5}>5%</option>
+                                      <option value={0}>Exenta</option>
+                                    </select>
+                                  </td>
+                                  <td className="py-1 pr-2 text-right text-xs font-semibold text-slate-800">
+                                    {fmtMoney(sub)}
+                                  </td>
+                                  <td className="py-1 text-right">
+                                    <button
+                                      onClick={() => removeLinea(idx)}
+                                      className="text-[11px] text-red-600 hover:underline"
+                                    >
+                                      Quitar
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                        <datalist id="categorias-presupuesto">
+                          <option value="CATERING" />
+                          <option value="DECORACIÓN" />
+                          <option value="SONIDO E ILUMINACIÓN" />
+                          <option value="MOBILIARIO" />
+                          <option value="ANIMACIÓN" />
+                          <option value="FOTOGRAFÍA Y VIDEO" />
+                          <option value="TRANSPORTE" />
+                          <option value="EXTRAS" />
+                        </datalist>
+                        <datalist id="unidades-presupuesto">
+                          {UNIDADES_PRESUPUESTO.map((u) => (
+                            <option key={u} value={u} />
+                          ))}
+                        </datalist>
                       </div>
                     )}
 
-                    <div className="mt-3 flex items-center justify-end gap-3 border-t border-slate-100 pt-3">
-                      <span className="text-sm text-slate-500">Total</span>
-                      <span className="text-lg font-bold text-slate-800">{fmtMoney(ppTotal)}</span>
+                    <div className="mt-3 flex flex-col items-end gap-1 border-t border-slate-100 pt-3 text-sm">
+                      <div className="flex w-full max-w-xs justify-between">
+                        <span className="text-slate-500">Base imponible</span>
+                        <span className="text-slate-700">{fmtMoney(ppTotales.base)}</span>
+                      </div>
+                      <div className="flex w-full max-w-xs justify-between">
+                        <span className="text-slate-500">IVA</span>
+                        <span className="text-slate-700">{fmtMoney(ppTotales.iva)}</span>
+                      </div>
+                      <div className="flex w-full max-w-xs justify-between border-t border-slate-100 pt-1">
+                        <span className="font-semibold text-slate-500">Total</span>
+                        <span className="text-lg font-bold text-slate-800">{fmtMoney(ppTotal)}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -595,76 +742,128 @@ export default function EventoDetallePage() {
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {presupuestos.map((p) => (
-                      <details
-                        key={p.id}
-                        className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm"
-                      >
-                        <summary className="cursor-pointer">
-                          <div className="inline-flex w-[calc(100%-1rem)] items-center justify-between">
-                            <span className="font-medium text-slate-800">
-                              Versión {p.version}
-                            </span>
-                            <Badge
-                              tone={
-                                p.estado === "aprobado"
-                                  ? "success"
-                                  : p.estado === "enviado"
-                                  ? "info"
-                                  : p.estado === "rechazado"
-                                  ? "danger"
-                                  : "neutral"
-                              }
-                            >
-                              {p.estado}
-                            </Badge>
-                          </div>
-                          <div className="mt-1 flex justify-between text-xs text-slate-500">
-                            <span>{fmtFecha(p.fecha)}</span>
-                            <span className="font-semibold text-slate-800">{fmtMoney(p.total)}</span>
-                          </div>
-                        </summary>
+                    {presupuestos.map((p) => {
+                      const itemsPorCategoria = new Map<string, typeof p.items>();
+                      for (const it of p.items ?? []) {
+                        const cat = it.categoria?.trim() || "Sin categoría";
+                        const arr = itemsPorCategoria.get(cat) ?? [];
+                        arr.push(it);
+                        itemsPorCategoria.set(cat, arr);
+                      }
+                      return (
+                        <details
+                          key={p.id}
+                          className="rounded-lg border border-slate-100 bg-slate-50 p-3 text-sm"
+                        >
+                          <summary className="cursor-pointer">
+                            <div className="inline-flex w-[calc(100%-1rem)] items-center justify-between">
+                              <span className="font-medium text-slate-800">
+                                Versión {p.version}
+                              </span>
+                              <Badge
+                                tone={
+                                  p.estado === "aprobado"
+                                    ? "success"
+                                    : p.estado === "enviado"
+                                    ? "info"
+                                    : p.estado === "rechazado"
+                                    ? "danger"
+                                    : "neutral"
+                                }
+                              >
+                                {p.estado}
+                              </Badge>
+                            </div>
+                            <div className="mt-1 flex justify-between text-xs text-slate-500">
+                              <span>{fmtFecha(p.fecha)}</span>
+                              <span className="font-semibold text-slate-800">{fmtMoney(p.total)}</span>
+                            </div>
+                          </summary>
 
-                        {p.items && p.items.length > 0 && (
-                          <div className="mt-3 border-t border-slate-200 pt-3">
-                            <table className="w-full text-xs">
-                              <thead className="text-left text-[10px] uppercase text-slate-500">
-                                <tr>
-                                  <th className="py-1">Tipo</th>
-                                  <th className="py-1">Descripción</th>
-                                  <th className="py-1 text-right">Cant.</th>
-                                  <th className="py-1 text-right">Precio</th>
-                                  <th className="py-1 text-right">Subtotal</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {p.items.map((it) => (
-                                  <tr key={it.id} className="border-t border-slate-100">
-                                    <td className="py-1 capitalize text-slate-500">{it.tipo}</td>
-                                    <td className="py-1 text-slate-700">{it.descripcion}</td>
-                                    <td className="py-1 text-right text-slate-600">{it.cantidad}</td>
-                                    <td className="py-1 text-right text-slate-600">
-                                      {fmtMoney(it.precio_unitario)}
-                                    </td>
-                                    <td className="py-1 text-right font-semibold text-slate-800">
-                                      {fmtMoney(it.subtotal)}
-                                    </td>
+                          {(p.items?.length ?? 0) > 0 && (
+                            <div className="mt-3 border-t border-slate-200 pt-3">
+                              <table className="w-full text-xs">
+                                <thead className="text-left text-[10px] uppercase text-slate-500">
+                                  <tr>
+                                    <th className="py-1">Descripción</th>
+                                    <th className="py-1 text-right">Cant.</th>
+                                    <th className="py-1">Unidad</th>
+                                    <th className="py-1 text-right">Precio</th>
+                                    <th className="py-1 text-right">Desc.</th>
+                                    <th className="py-1 text-right">IVA</th>
+                                    <th className="py-1 text-right">Subtotal</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                                </thead>
+                                <tbody>
+                                  {[...itemsPorCategoria.entries()].map(([cat, its]) => (
+                                    <Fragment key={`${p.id}-${cat}`}>
+                                      <tr className="border-t border-slate-200 bg-slate-100">
+                                        <td colSpan={7} className="py-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                                          {cat}
+                                        </td>
+                                      </tr>
+                                      {its?.map((it) => (
+                                        <tr key={it.id} className="border-t border-slate-100">
+                                          <td className="py-1 text-slate-700">{it.descripcion}</td>
+                                          <td className="py-1 text-right text-slate-600">{it.cantidad}</td>
+                                          <td className="py-1 text-slate-500">{it.unidad}</td>
+                                          <td className="py-1 text-right text-slate-600">
+                                            {fmtMoney(it.precio_unitario)}
+                                          </td>
+                                          <td className="py-1 text-right text-slate-500">
+                                            {it.descuento_pct ? `${it.descuento_pct}%` : "—"}
+                                          </td>
+                                          <td className="py-1 text-right text-slate-500">
+                                            {it.iva_pct === 0 ? "Ex." : `${it.iva_pct}%`}
+                                          </td>
+                                          <td className="py-1 text-right font-semibold text-slate-800">
+                                            {fmtMoney(it.subtotal)}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </Fragment>
+                                  ))}
+                                </tbody>
+                              </table>
+                              <div className="mt-2 flex flex-col items-end gap-0.5 text-xs">
+                                <span className="text-slate-500">Base: <span className="font-medium text-slate-700">{fmtMoney(p.base_imponible)}</span></span>
+                                <span className="text-slate-500">IVA: <span className="font-medium text-slate-700">{fmtMoney(p.monto_iva)}</span></span>
+                                <span className="text-sm text-slate-700">Total: <span className="font-bold text-slate-900">{fmtMoney(p.total)}</span></span>
+                              </div>
+                            </div>
+                          )}
 
-                        {p.estado !== "aprobado" && p.estado !== "rechazado" && (
-                          <div className="mt-3 flex justify-end">
-                            <Button variant="secondary" size="sm" onClick={() => aprobar(p.id)}>
-                              Marcar aprobado
-                            </Button>
+                          <div className="mt-3 flex flex-wrap justify-end gap-2">
+                            <a
+                              href={`/eventos/${id}/presupuestos/${p.id}/imprimir`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                            >
+                              Imprimir / PDF
+                            </a>
+                            {p.estado !== "aprobado" && p.estado !== "rechazado" && (
+                              <>
+                                <Button variant="secondary" size="sm" onClick={() => rechazar(p.id)}>
+                                  Rechazar
+                                </Button>
+                                <Button variant="primary" size="sm" onClick={() => aprobar(p.id)}>
+                                  Aprobar y generar venta
+                                </Button>
+                              </>
+                            )}
+                            {p.estado === "aprobado" && p.venta_id && (
+                              <a
+                                href={`/ventas/${p.venta_id}`}
+                                className="inline-flex items-center rounded-lg bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
+                              >
+                                Ver venta
+                              </a>
+                            )}
                           </div>
-                        )}
-                      </details>
-                    ))}
+                        </details>
+                      );
+                    })}
                   </div>
                 )}
               </div>

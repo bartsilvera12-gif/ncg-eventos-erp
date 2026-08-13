@@ -34,6 +34,21 @@ export type EstadoPresupuesto = "borrador" | "enviado" | "aprobado" | "rechazado
 
 export type TipoItemPresupuesto = "servicio" | "paquete" | "producto" | "texto";
 
+/** IVA paraguayo aplicable a una línea del presupuesto. */
+export type IvaPresupuesto = 0 | 5 | 10;
+
+/** Unidades sugeridas en el UI (input libre). */
+export const UNIDADES_PRESUPUESTO = [
+  "u",         // unidad
+  "pax",       // persona
+  "hora",
+  "día",
+  "servicio",
+  "paquete",
+  "noche",
+] as const;
+export type UnidadPresupuesto = (typeof UNIDADES_PRESUPUESTO)[number] | string;
+
 export type EstadoStockReserva = "reservado" | "entregado" | "devuelto" | "anulado";
 
 // ── Evento (proyecto con campos evento) ──────────────────────────────────────
@@ -156,8 +171,17 @@ export interface EventoPresupuesto {
   estado: EstadoPresupuesto;
   fecha: string;
   validez_dias?: number | null;
+  /** Suma de subtotales netos (con descuentos, sin IVA). */
+  base_imponible: number;
+  /** Suma del IVA de todas las líneas. */
+  monto_iva: number;
+  /** base_imponible + monto_iva. */
   total: number;
   observaciones?: string | null;
+  /** Condiciones de pago mostradas al pie del documento impreso. */
+  condiciones_pago?: string | null;
+  /** Venta generada al aprobar el presupuesto (si corresponde). */
+  venta_id?: string | null;
   aprobado_at?: string | null;
   items?: EventoPresupuestoItem[];
   created_at?: string;
@@ -172,6 +196,15 @@ export interface EventoPresupuestoItem {
   descripcion: string;
   cantidad: number;
   precio_unitario: number;
+  /** Unidad de medida (u, pax, hora, día, servicio, paquete, noche…). */
+  unidad: string;
+  /** Agrupador visible (ej. "CATERING", "DECORACIÓN"). Opcional. */
+  categoria?: string | null;
+  /** Descuento porcentual aplicado a la línea (0-100). */
+  descuento_pct: number;
+  /** IVA aplicado a la línea (0, 5, 10). */
+  iva_pct: IvaPresupuesto;
+  /** cantidad * precio_unitario * (1 - descuento_pct/100). Neto sin IVA. */
   subtotal: number;
   sort_order: number;
 }
@@ -232,12 +265,17 @@ export interface NuevoPresupuestoInput {
   fecha?: string;
   validez_dias?: number | null;
   observaciones?: string | null;
+  condiciones_pago?: string | null;
   items: Array<{
     tipo: TipoItemPresupuesto;
     ref_id?: string | null;
     descripcion: string;
     cantidad: number;
     precio_unitario: number;
+    unidad?: string;
+    categoria?: string | null;
+    descuento_pct?: number;
+    iva_pct?: IvaPresupuesto;
     sort_order?: number;
   }>;
 }
