@@ -14,7 +14,7 @@ interface EmpresaCabecera {
 }
 
 function fmtMoney(n?: number) {
-  return `Gs. ${Math.round(n ?? 0).toLocaleString("es-PY")}`;
+  return `€ ${(n ?? 0).toLocaleString("es-PY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function fmtFecha(iso?: string | null) {
   if (!iso) return "—";

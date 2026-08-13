@@ -50,7 +50,7 @@ const ESTADO_TONE: Record<EstadoPresupuesto, "neutral" | "info" | "success" | "d
 
 function fmtMoney(n: number | string) {
   const v = typeof n === "string" ? Number(n) || 0 : n;
-  return `Gs. ${Math.round(v).toLocaleString("es-PY")}`;
+  return `€ ${v.toLocaleString("es-PY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function fmtFecha(iso?: string | null) {
   if (!iso) return "—";
