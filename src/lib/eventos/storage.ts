@@ -151,6 +151,33 @@ export async function saveEvento(input: NuevoEventoInput): Promise<Evento | null
   return data?.evento ?? null;
 }
 
+/** Variante que devuelve el mensaje de error para mostrar al usuario en vez
+ *  de tragarlo. Útil en forms donde el error preciso importa. */
+export async function saveEventoConError(
+  input: NuevoEventoInput
+): Promise<{ ok: true; evento: Evento } | { ok: false; error: string }> {
+  try {
+    const r = await fetch("/api/eventos", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const j = (await r.json().catch(() => ({}))) as {
+      success?: boolean;
+      error?: string;
+      data?: { evento?: Evento };
+    };
+    if (!r.ok || !j.success) {
+      return { ok: false, error: j.error ?? `Error ${r.status}` };
+    }
+    if (!j.data?.evento) return { ok: false, error: "Respuesta inválida del servidor." };
+    return { ok: true, evento: j.data.evento };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error de red" };
+  }
+}
+
 export async function updateEvento(id: string, patch: Partial<Evento>): Promise<Evento | null> {
   const data = await apiJson<{ evento?: Evento }>(`/api/eventos/${id}`, {
     method: "PATCH",

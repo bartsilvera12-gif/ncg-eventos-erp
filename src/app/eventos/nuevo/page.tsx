@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import { getClientes } from "@/lib/clientes/storage";
-import { getRecursos, saveEvento } from "@/lib/eventos/storage";
+import { getRecursos, saveEventoConError } from "@/lib/eventos/storage";
 import type { Cliente } from "@/lib/clientes/types";
 import type { Recurso } from "@/lib/eventos/types";
 
@@ -57,7 +57,7 @@ export default function NuevoEventoPage() {
     if (!clienteId) return setError("Elegí un cliente.");
     if (!titulo.trim()) return setError("Cargá el nombre del evento.");
     setGuardando(true);
-    const evento = await saveEvento({
+    const res = await saveEventoConError({
       cliente_id: clienteId,
       titulo: titulo.trim(),
       tipo_evento: tipoEvento || null,
@@ -70,13 +70,11 @@ export default function NuevoEventoPage() {
       observaciones: observaciones.trim() || null,
     });
     setGuardando(false);
-    if (!evento) {
-      setError(
-        "No se pudo crear el evento. Si el salón/horario está ocupado, elegí otro."
-      );
+    if (!res.ok) {
+      setError(res.error);
       return;
     }
-    router.push(`/eventos/${evento.id}`);
+    router.push(`/eventos/${res.evento.id}`);
   };
 
   return (
