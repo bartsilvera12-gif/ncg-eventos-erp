@@ -77,6 +77,40 @@ export async function POST(request: Request) {
     }
   }
 
+  // Resolver tipo_id: proyectos.tipo_id es NOT NULL. Si no viene en el body,
+  // uso el primer tipo activo de la empresa. Si no existe ninguno, creo un
+  // catch-all "Evento" para no dejar la creación bloqueada.
+  let tipoId = typeof body.tipo_id === "string" ? body.tipo_id : null;
+  if (!tipoId) {
+    const { data: tipos } = await sb
+      .from("proyecto_tipos")
+      .select("id")
+      .eq("empresa_id", auth.empresaId)
+      .eq("activo", true)
+      .order("nombre")
+      .limit(1);
+    tipoId = ((tipos ?? [])[0]?.id as string | undefined) ?? null;
+    if (!tipoId) {
+      const { data: nuevo, error: errTipo } = await sb
+        .from("proyecto_tipos")
+        .insert({
+          empresa_id: auth.empresaId,
+          nombre: "Evento",
+          codigo: "evento",
+          activo: true,
+        })
+        .select("id")
+        .single();
+      if (errTipo) {
+        return NextResponse.json(
+          errorResponse(`No se pudo resolver el tipo de evento: ${errTipo.message}`),
+          { status: 500 }
+        );
+      }
+      tipoId = (nuevo as { id: string }).id;
+    }
+  }
+
   const prioridadRaw = String(body.prioridad ?? "normal");
   const prioridad = PRIORIDADES.has(prioridadRaw) ? prioridadRaw : "normal";
 
@@ -84,6 +118,7 @@ export async function POST(request: Request) {
     empresa_id: auth.empresaId,
     cliente_id: typeof body.cliente_id === "string" ? body.cliente_id : null,
     estado_id: estadoId,
+    tipo_id: tipoId,
     titulo,
     descripcion: typeof body.descripcion === "string" ? body.descripcion : null,
     prioridad,

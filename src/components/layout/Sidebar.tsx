@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -570,22 +571,22 @@ export default function Sidebar() {
             : "fixed inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0 transition-transform duration-200"
         }`}
       >
-      {/* Cabecera con nombre en texto (sin logo por decisión de la clienta). */}
+      {/* Logo oficial ZENTRA (blanco sobre azul marca) */}
       <div className="flex h-[7.25rem] shrink-0 items-center justify-center border-b border-[color:var(--zentra-sidebar-border)] bg-[color:var(--zentra-sidebar-elevated)]/35 px-3 py-2.5">
-        <Link
-          href="/"
-          className="flex items-center justify-center text-center text-white transition-opacity hover:opacity-90"
-        >
-          {collapsed ? (
-            <span className="text-xl font-bold tracking-tight">NCG</span>
-          ) : (
-            <div className="leading-tight">
-              <div className="text-xl font-bold tracking-tight">NCG</div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-300">
-                Eventos
-              </div>
-            </div>
-          )}
+        <Link href="/" className="flex items-center justify-center min-w-0 overflow-hidden">
+          <div
+            className={`relative flex items-center justify-center ${collapsed ? "h-11 w-11" : "h-[4.5rem] w-full max-w-[200px]"}`}
+          >
+            <Image
+              src={collapsed ? "/brand/zentra-icon.png" : "/brand/zentra-logo-official.png"}
+              alt="ZENTRA"
+              width={400}
+              height={220}
+              sizes={collapsed ? "44px" : "200px"}
+              className="h-full w-full object-contain object-center"
+              priority
+            />
+          </div>
         </Link>
       </div>
 
