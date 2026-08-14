@@ -57,6 +57,9 @@ export async function POST(request: Request) {
 
   // Resolver estado inicial: si viene explícito lo uso; si no, tomo el marcado
   // como es_estado_inicial=true. Fallback al primer estado por sort_order.
+  // Si la empresa no tiene ningún estado cargado, seedeamos los 7 estados
+  // estándar de evento (mismo set que el seed de la migración) para no dejar
+  // bloqueada la creación.
   let estadoId = typeof body.estado_id === "string" ? body.estado_id : null;
   if (!estadoId) {
     const { data: estIni } = await sb
@@ -74,6 +77,39 @@ export async function POST(request: Request) {
         .order("sort_order")
         .limit(1);
       estadoId = ((primer ?? [])[0]?.id as string) ?? null;
+    }
+  }
+  if (!estadoId) {
+    // Seed on-demand para empresas sin estados. Coincide con el set del
+    // migration 20260620120000_eventos_modulo.sql.
+    const seedEstados = [
+      { codigo: "consulta",       nombre: "Consulta",       color: "#94A3B8", sort_order: 1,  tipo_sla: "interno", es_estado_inicial: true,  es_estado_final: false },
+      { codigo: "presupuestado",  nombre: "Presupuestado",  color: "#0EA5E9", sort_order: 2,  tipo_sla: "cliente", es_estado_inicial: false, es_estado_final: false },
+      { codigo: "reservado",      nombre: "Reservado",      color: "#F59E0B", sort_order: 3,  tipo_sla: "cliente", es_estado_inicial: false, es_estado_final: false },
+      { codigo: "confirmado",     nombre: "Confirmado",     color: "#10B981", sort_order: 4,  tipo_sla: "interno", es_estado_inicial: false, es_estado_final: false },
+      { codigo: "en_preparacion", nombre: "En preparación", color: "#8B5CF6", sort_order: 5,  tipo_sla: "interno", es_estado_inicial: false, es_estado_final: false },
+      { codigo: "realizado",      nombre: "Realizado",      color: "#059669", sort_order: 6,  tipo_sla: "final",   es_estado_inicial: false, es_estado_final: true  },
+      { codigo: "cancelado",      nombre: "Cancelado",      color: "#EF4444", sort_order: 99, tipo_sla: "final",   es_estado_inicial: false, es_estado_final: true  },
+    ];
+    const { data: seeded, error: errSeed } = await sb
+      .from("proyecto_estados")
+      .insert(seedEstados.map((e) => ({ empresa_id: auth.empresaId, activo: true, ...e })))
+      .select("id, es_estado_inicial");
+    if (errSeed) {
+      return NextResponse.json(
+        errorResponse(`No se pudo inicializar los estados de evento: ${errSeed.message}`),
+        { status: 500 }
+      );
+    }
+    const iniRow = ((seeded ?? []) as { id: string; es_estado_inicial: boolean }[]).find(
+      (r) => r.es_estado_inicial
+    );
+    estadoId = iniRow?.id ?? ((seeded ?? [])[0] as { id?: string } | undefined)?.id ?? null;
+    if (!estadoId) {
+      return NextResponse.json(
+        errorResponse("No se pudo resolver el estado inicial del evento."),
+        { status: 500 }
+      );
     }
   }
 
