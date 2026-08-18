@@ -24,6 +24,9 @@ async function crearEventoDesdeCotizacion(
   presupuesto: {
     id: string;
     cliente_id: string | null;
+    cliente_nombre_snapshot: string | null;
+    cliente_telefono_snapshot: string | null;
+    cliente_email_snapshot: string | null;
     titulo_evento: string | null;
     tipo_evento: string | null;
     fecha_evento_aprox: string | null;
@@ -31,8 +34,41 @@ async function crearEventoDesdeCotizacion(
     total: number | string;
   }
 ): Promise<{ eventoId: string | null; error: string | null }> {
-  if (!presupuesto.cliente_id || !presupuesto.titulo_evento) {
-    return { eventoId: null, error: "Faltan datos del cliente o título en la cotización." };
+  if (!presupuesto.titulo_evento) {
+    return { eventoId: null, error: "Falta el título del evento en la cotización." };
+  }
+
+  // Resolver cliente_id: si no hay uno vinculado pero sí snapshot, crear el
+  // cliente ahora y usarlo. Es el flujo típico de la cotización que finalmente
+  // se aprueba: recién ahí el "interesado" pasa a ser un cliente en la DB.
+  let clienteId = presupuesto.cliente_id;
+  if (!clienteId) {
+    const nombre = (presupuesto.cliente_nombre_snapshot ?? "").trim();
+    if (!nombre) {
+      return { eventoId: null, error: "Faltan datos del cliente en la cotización." };
+    }
+    const { data: cli, error: eCli } = await sb
+      .from("clientes")
+      .insert({
+        empresa_id: empresaId,
+        tipo_cliente: "persona",
+        nombre_contacto: nombre,
+        empresa: null,
+        telefono: presupuesto.cliente_telefono_snapshot ?? null,
+        email: presupuesto.cliente_email_snapshot ?? null,
+      })
+      .select("id")
+      .single();
+    if (eCli || !cli) {
+      return { eventoId: null, error: `No se pudo crear el cliente: ${eCli?.message ?? "unknown"}` };
+    }
+    clienteId = (cli as { id: string }).id;
+    // Vincular al presupuesto para no perder la referencia.
+    await sb
+      .from("evento_presupuestos")
+      .update({ cliente_id: clienteId, updated_at: new Date().toISOString() })
+      .eq("empresa_id", empresaId)
+      .eq("id", presupuesto.id);
   }
 
   // Resolver tipo_id (NOT NULL en proyectos). Igual patrón que POST /api/eventos.
@@ -80,7 +116,7 @@ async function crearEventoDesdeCotizacion(
     .from("proyectos")
     .insert({
       empresa_id: empresaId,
-      cliente_id: presupuesto.cliente_id,
+      cliente_id: clienteId,
       tipo_id: tipoId,
       estado_id: estadoId,
       titulo: presupuesto.titulo_evento,
@@ -128,7 +164,7 @@ export async function PATCH(
   const { data: pres, error: eGet } = await sb
     .from("evento_presupuestos")
     .select(
-      "id, proyecto_id, cliente_id, titulo_evento, tipo_evento, fecha_evento_aprox, cantidad_invitados, total"
+      "id, proyecto_id, cliente_id, titulo_evento, tipo_evento, fecha_evento_aprox, cantidad_invitados, total, cliente_nombre_snapshot, cliente_telefono_snapshot, cliente_email_snapshot"
     )
     .eq("empresa_id", auth.empresaId)
     .eq("id", presupuestoId)

@@ -43,6 +43,7 @@ export async function GET(request: Request) {
       `id, version, estado, fecha, total, observaciones, aprobado_at, created_at,
        proyecto_id, cliente_id, titulo_evento, tipo_evento, fecha_evento_aprox,
        cantidad_invitados,
+       cliente_nombre_snapshot, cliente_telefono_snapshot, cliente_email_snapshot,
        proyectos:proyecto_id(titulo, fecha_evento, cliente_id,
          clientes:cliente_id(empresa, nombre_contacto)),
        clientes:cliente_id(empresa, nombre_contacto)`
@@ -68,7 +69,8 @@ export async function GET(request: Request) {
     const cliDir = r.clientes as { empresa?: string; nombre_contacto?: string } | null;
     const clienteNombre =
       proy?.clientes?.empresa || proy?.clientes?.nombre_contacto ||
-      cliDir?.empresa || cliDir?.nombre_contacto || null;
+      cliDir?.empresa || cliDir?.nombre_contacto ||
+      (r.cliente_nombre_snapshot as string | null) || null;
     return {
       id: r.id,
       version: r.version,
@@ -100,9 +102,28 @@ export async function POST(request: Request) {
   if (!auth.ok) return NextResponse.json(errorResponse(auth.message), { status: auth.status });
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
-  const clienteId = typeof body.cliente_id === "string" ? body.cliente_id : null;
+  const clienteId = typeof body.cliente_id === "string" && body.cliente_id.trim()
+    ? body.cliente_id.trim()
+    : null;
+  const clienteNombreSnap =
+    typeof body.cliente_nombre_snapshot === "string" && body.cliente_nombre_snapshot.trim()
+      ? body.cliente_nombre_snapshot.trim()
+      : null;
+  const clienteTelefonoSnap =
+    typeof body.cliente_telefono_snapshot === "string" && body.cliente_telefono_snapshot.trim()
+      ? body.cliente_telefono_snapshot.trim()
+      : null;
+  const clienteEmailSnap =
+    typeof body.cliente_email_snapshot === "string" && body.cliente_email_snapshot.trim()
+      ? body.cliente_email_snapshot.trim()
+      : null;
   const tituloEvento = String(body.titulo_evento ?? "").trim();
-  if (!clienteId) return NextResponse.json(errorResponse("Cliente obligatorio."), { status: 400 });
+  if (!clienteId && !clienteNombreSnap) {
+    return NextResponse.json(
+      errorResponse("Elegí un cliente existente o cargá los datos del nuevo cliente."),
+      { status: 400 }
+    );
+  }
   if (!tituloEvento)
     return NextResponse.json(errorResponse("Título del evento obligatorio."), { status: 400 });
 
@@ -168,6 +189,9 @@ export async function POST(request: Request) {
       total,
       observaciones: typeof body.observaciones === "string" ? body.observaciones : null,
       cliente_id: clienteId,
+      cliente_nombre_snapshot: clienteNombreSnap,
+      cliente_telefono_snapshot: clienteTelefonoSnap,
+      cliente_email_snapshot: clienteEmailSnap,
       titulo_evento: tituloEvento,
       tipo_evento: typeof body.tipo_evento === "string" ? body.tipo_evento : null,
       fecha_evento_aprox:

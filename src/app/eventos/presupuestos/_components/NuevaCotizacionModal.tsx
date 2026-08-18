@@ -74,7 +74,13 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
   const [catCargado, setCatCargado] = useState(false);
 
   // Cabecera.
+  // Cliente: 2 modos. 'existente' usa el select; 'nuevo' guarda snapshot.
+  // El cliente en la DB se crea recién si la cotización se aprueba.
+  const [modoCliente, setModoCliente] = useState<"existente" | "nuevo">("nuevo");
   const [clienteId, setClienteId] = useState("");
+  const [clienteNombreSnap, setClienteNombreSnap] = useState("");
+  const [clienteTelefonoSnap, setClienteTelefonoSnap] = useState("");
+  const [clienteEmailSnap, setClienteEmailSnap] = useState("");
   const [eventoId, setEventoId] = useState("");
   const [titulo, setTitulo] = useState("");
   const [tipoEvento, setTipoEvento] = useState("");
@@ -160,7 +166,11 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
 
   const reset = () => {
     setModo("nuevo");
+    setModoCliente("nuevo");
     setClienteId("");
+    setClienteNombreSnap("");
+    setClienteTelefonoSnap("");
+    setClienteEmailSnap("");
     setEventoId("");
     setTitulo("");
     setTipoEvento("");
@@ -177,7 +187,12 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
     if (modo === "existente") {
       if (!eventoId) return setError("Elegí un evento existente.");
     } else {
-      if (!clienteId) return setError("Elegí un cliente.");
+      if (modoCliente === "existente" && !clienteId) {
+        return setError("Elegí un cliente existente o cambiá a Cliente nuevo.");
+      }
+      if (modoCliente === "nuevo" && !clienteNombreSnap.trim()) {
+        return setError("Cargá al menos el nombre del cliente.");
+      }
       if (!titulo.trim()) return setError("Cargá el título del evento.");
     }
     if (lineas.length === 0) return setError("Agregá al menos una línea.");
@@ -213,7 +228,11 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
     } else {
       url = "/api/eventos/presupuestos";
       body = {
-        cliente_id: clienteId,
+        // Uno de los dos: cliente_id existente O snapshot manual.
+        cliente_id: modoCliente === "existente" ? clienteId : null,
+        cliente_nombre_snapshot: modoCliente === "nuevo" ? clienteNombreSnap.trim() : null,
+        cliente_telefono_snapshot: modoCliente === "nuevo" ? clienteTelefonoSnap.trim() || null : null,
+        cliente_email_snapshot: modoCliente === "nuevo" ? clienteEmailSnap.trim() || null : null,
         titulo_evento: titulo.trim(),
         tipo_evento: tipoEvento || null,
         fecha_evento_aprox: fechaEvento || null,
@@ -295,22 +314,80 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
           </label>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
-            <label className="flex flex-col gap-1 md:col-span-3">
-              <span className={labelCls}>Cliente *</span>
-              <select
-                value={clienteId}
-                onChange={(e) => setClienteId(e.target.value)}
-                className={inputCls}
-              >
-                <option value="">Seleccionar cliente…</option>
-                {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {nombreCliente(c)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 md:col-span-3">
+            {/* Bloque cliente: 2 modos. En "nuevo" no se toca la tabla clientes
+                hasta que se apruebe la cotización — recién ahí se crea. */}
+            <div className="md:col-span-6">
+              <div className="mb-2 flex items-center gap-2">
+                <span className={labelCls}>Cliente *</span>
+                <div className="flex gap-1 rounded-lg bg-slate-100 p-0.5 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setModoCliente("nuevo")}
+                    className={`rounded-md px-2 py-0.5 font-medium transition-colors ${
+                      modoCliente === "nuevo"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    Nuevo (a mano)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModoCliente("existente")}
+                    className={`rounded-md px-2 py-0.5 font-medium transition-colors ${
+                      modoCliente === "existente"
+                        ? "bg-white text-slate-900 shadow-sm"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    De la lista
+                  </button>
+                </div>
+              </div>
+              {modoCliente === "existente" ? (
+                <select
+                  value={clienteId}
+                  onChange={(e) => setClienteId(e.target.value)}
+                  className={inputCls}
+                >
+                  <option value="">Seleccionar cliente…</option>
+                  {clientes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {nombreCliente(c)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <input
+                    type="text"
+                    value={clienteNombreSnap}
+                    onChange={(e) => setClienteNombreSnap(e.target.value)}
+                    placeholder="Nombre / razón social *"
+                    className={inputCls}
+                  />
+                  <input
+                    type="tel"
+                    value={clienteTelefonoSnap}
+                    onChange={(e) => setClienteTelefonoSnap(e.target.value)}
+                    placeholder="Teléfono"
+                    className={inputCls}
+                  />
+                  <input
+                    type="email"
+                    value={clienteEmailSnap}
+                    onChange={(e) => setClienteEmailSnap(e.target.value)}
+                    placeholder="Email"
+                    className={inputCls}
+                  />
+                  <p className="md:col-span-3 text-[11px] text-slate-500">
+                    El cliente se crea automáticamente en la base recién al aprobar esta cotización.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <label className="flex flex-col gap-1 md:col-span-6">
               <span className={labelCls}>Título del evento *</span>
               <input
                 type="text"
