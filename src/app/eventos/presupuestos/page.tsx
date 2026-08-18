@@ -35,10 +35,13 @@ interface PresupuestoGlobal {
   observaciones: string | null;
   aprobado_at: string | null;
   created_at: string;
-  proyecto_id: string;
+  proyecto_id: string | null;
+  es_cotizacion: boolean;
   evento_titulo: string | null;
   evento_fecha: string | null;
   cliente_nombre: string | null;
+  tipo_evento?: string | null;
+  cantidad_invitados?: number | null;
 }
 
 const ESTADO_TONE: Record<EstadoPresupuesto, "neutral" | "info" | "success" | "danger"> = {
@@ -82,6 +85,9 @@ export default function PresupuestosGlobalPage() {
   const [nuevoTitulo, setNuevoTitulo] = useState<string>("");
   const [nuevoTipo, setNuevoTipo] = useState<string>("");
   const [nuevoFecha, setNuevoFecha] = useState<string>("");
+  const [nuevoInvitados, setNuevoInvitados] = useState<string>("");
+  const [nuevoDescripcion, setNuevoDescripcion] = useState<string>("");
+  const [nuevoTotalEstimado, setNuevoTotalEstimado] = useState<string>("");
   const [creando, setCreando] = useState(false);
   const [errorCrear, setErrorCrear] = useState<string | null>(null);
 
@@ -101,29 +107,105 @@ export default function PresupuestosGlobalPage() {
     setNuevoTitulo("");
     setNuevoTipo("");
     setNuevoFecha("");
+    setNuevoInvitados("");
+    setNuevoDescripcion("");
+    setNuevoTotalEstimado("");
     setErrorCrear(null);
   };
   const irAlEvento = () => {
     if (!eventoElegido) return;
     router.push(`/eventos/${eventoElegido}?tab=presupuestos&nuevo=1`);
   };
+  /**
+   * Guarda una cotización STANDALONE (sin crear evento). Queda en el listado
+   * con badge "Cotización" y botones Aprobar / Rechazar. Al aprobar se crea
+   * el evento y se vincula.
+   */
   const crearEventoYPresupuesto = async () => {
     setErrorCrear(null);
     if (!nuevoClienteId) return setErrorCrear("Elegí un cliente.");
     if (!nuevoTitulo.trim()) return setErrorCrear("Cargá el nombre del evento.");
+    const total = parseFloat(nuevoTotalEstimado);
+    if (isNaN(total) || total < 0) return setErrorCrear("Cargá un total estimado válido (0 o mayor).");
     setCreando(true);
-    const res = await saveEventoConError({
-      cliente_id: nuevoClienteId,
-      titulo: nuevoTitulo.trim(),
-      tipo_evento: nuevoTipo || null,
-      fecha_evento: nuevoFecha || null,
+    const r = await fetch("/api/eventos/presupuestos", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cliente_id: nuevoClienteId,
+        titulo_evento: nuevoTitulo.trim(),
+        tipo_evento: nuevoTipo || null,
+        fecha_evento_aprox: nuevoFecha || null,
+        cantidad_invitados: nuevoInvitados ? parseInt(nuevoInvitados) : null,
+        observaciones: nuevoDescripcion.trim() || null,
+        validez_dias: 30,
+        items: [
+          {
+            tipo: "texto",
+            descripcion: nuevoDescripcion.trim() || `Cotización ${nuevoTitulo.trim()}`,
+            cantidad: 1,
+            precio_unitario: total,
+            unidad: "servicio",
+            descuento_pct: 0,
+            iva_pct: 0,
+            sort_order: 0,
+          },
+        ],
+      }),
     });
     setCreando(false);
-    if (!res.ok) {
-      setErrorCrear(res.error);
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !(j as { success?: boolean }).success) {
+      setErrorCrear((j as { error?: string }).error ?? `Error ${r.status}`);
       return;
     }
-    router.push(`/eventos/${res.evento.id}?tab=presupuestos&nuevo=1`);
+    cerrarSelector();
+    // Recargar lista para que aparezca la cotización nueva.
+    const qs = filtroEstado ? `?estado=${filtroEstado}` : "";
+    const rl = await fetch(`/api/eventos/presupuestos${qs}`, { credentials: "include", cache: "no-store" });
+    const jl = await rl.json().catch(() => ({}));
+    if ((jl as { success?: boolean }).success) {
+      setLista(((jl as { data?: { presupuestos?: PresupuestoGlobal[] } }).data?.presupuestos ?? []));
+    }
+  };
+
+  const cambiarEstadoPresupuesto = async (
+    id: string,
+    estado: EstadoPresupuesto
+  ) => {
+    const r = await fetch(`/api/eventos/presupuestos/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ estado }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !(j as { success?: boolean }).success) {
+      alert((j as { error?: string }).error ?? `Error ${r.status}`);
+      return;
+    }
+    // Recargar lista.
+    const qs = filtroEstado ? `?estado=${filtroEstado}` : "";
+    const rl = await fetch(`/api/eventos/presupuestos${qs}`, { credentials: "include", cache: "no-store" });
+    const jl = await rl.json().catch(() => ({}));
+    if ((jl as { success?: boolean }).success) {
+      setLista(((jl as { data?: { presupuestos?: PresupuestoGlobal[] } }).data?.presupuestos ?? []));
+    }
+  };
+
+  const eliminarPresupuesto = async (id: string) => {
+    if (!confirm("¿Eliminar esta cotización? No se puede deshacer.")) return;
+    const r = await fetch(`/api/eventos/presupuestos/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      alert((j as { error?: string }).error ?? `Error ${r.status}`);
+      return;
+    }
+    setLista((prev) => prev.filter((p) => p.id !== id));
   };
 
   useEffect(() => {
@@ -196,7 +278,9 @@ export default function PresupuestosGlobalPage() {
             {modoCreacion === "nuevo" ? (
               <>
                 <p className="mb-2 text-sm text-slate-600">
-                  Cargá los datos mínimos del evento; luego se abre el form del presupuesto.
+                  <strong>Cotización rápida</strong> para una consulta que puede o no confirmarse.
+                  Guardamos el evento en estado &quot;consulta&quot; con un total estimado.
+                  Si el cliente confirma, después podés armar el presupuesto detallado desde el evento.
                 </p>
                 <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
                   <label className="flex flex-col gap-1 text-xs md:col-span-2">
@@ -238,11 +322,44 @@ export default function PresupuestosGlobalPage() {
                     </select>
                   </label>
                   <label className="flex flex-col gap-1 text-xs">
-                    <span className="font-medium text-slate-600">Fecha del evento</span>
+                    <span className="font-medium text-slate-600">Fecha aprox.</span>
                     <input
                       type="date"
                       value={nuevoFecha}
                       onChange={(e) => setNuevoFecha(e.target.value)}
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs">
+                    <span className="font-medium text-slate-600">Cantidad invitados</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={nuevoInvitados}
+                      onChange={(e) => setNuevoInvitados(e.target.value)}
+                      placeholder="—"
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs">
+                    <span className="font-medium text-slate-600">Total estimado (€) *</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={nuevoTotalEstimado}
+                      onChange={(e) => setNuevoTotalEstimado(e.target.value)}
+                      placeholder="0"
+                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]"
+                    />
+                  </label>
+                  <label className="flex flex-col gap-1 text-xs md:col-span-4">
+                    <span className="font-medium text-slate-600">Descripción / detalle</span>
+                    <textarea
+                      value={nuevoDescripcion}
+                      onChange={(e) => setNuevoDescripcion(e.target.value)}
+                      placeholder="Qué incluye el aproximado (catering para 120, decoración, música, etc.)"
+                      rows={2}
                       className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]"
                     />
                   </label>
@@ -254,15 +371,12 @@ export default function PresupuestosGlobalPage() {
                 )}
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button variant="primary" size="sm" onClick={crearEventoYPresupuesto} disabled={creando}>
-                    {creando ? "Creando…" : "Crear evento y continuar"}
+                    {creando ? "Creando…" : "Guardar cotización"}
                   </Button>
                   <Button variant="secondary" size="sm" onClick={cerrarSelector}>
                     Cancelar
                   </Button>
                 </div>
-                <p className="mt-2 text-xs text-slate-400">
-                  Podés completar el resto (horario, lugar, invitados…) más tarde desde el detalle del evento.
-                </p>
               </>
             ) : (
               <>
@@ -351,12 +465,21 @@ export default function PresupuestosGlobalPage() {
                 filtrados.map((p) => (
                   <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/eventos/${p.proyecto_id}`}
-                        className="font-medium text-slate-800 hover:underline"
-                      >
-                        {p.evento_titulo ?? "—"}
-                      </Link>
+                      {p.proyecto_id ? (
+                        <Link
+                          href={`/eventos/${p.proyecto_id}`}
+                          className="font-medium text-slate-800 hover:underline"
+                        >
+                          {p.evento_titulo ?? "—"}
+                        </Link>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-slate-800">
+                            {p.evento_titulo ?? "—"}
+                          </span>
+                          <Badge tone="warning">Cotización</Badge>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-600">{p.cliente_nombre ?? "—"}</td>
                     <td className="px-4 py-3 text-slate-600">{fmtFecha(p.evento_fecha)}</td>
@@ -369,12 +492,43 @@ export default function PresupuestosGlobalPage() {
                       <Badge tone={ESTADO_TONE[p.estado]}>{p.estado}</Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/eventos/${p.proyecto_id}`}
-                        className="text-xs text-[#0EA5E9] hover:underline"
-                      >
-                        Ver evento
-                      </Link>
+                      <div className="flex flex-wrap justify-end gap-1">
+                        {/* Cotización standalone (sin evento) → aprobar/rechazar */}
+                        {p.es_cotizacion && p.estado !== "aprobado" && p.estado !== "rechazado" && (
+                          <>
+                            <button
+                              onClick={() => cambiarEstadoPresupuesto(p.id, "aprobado")}
+                              className="rounded bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700 hover:bg-emerald-100"
+                            >
+                              Aprobar
+                            </button>
+                            <button
+                              onClick={() => cambiarEstadoPresupuesto(p.id, "rechazado")}
+                              className="rounded bg-red-50 px-2 py-0.5 text-[11px] text-red-700 hover:bg-red-100"
+                            >
+                              Rechazar
+                            </button>
+                          </>
+                        )}
+                        {/* Rechazado → botón eliminar */}
+                        {p.estado === "rechazado" && (
+                          <button
+                            onClick={() => eliminarPresupuesto(p.id)}
+                            className="rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100"
+                          >
+                            Eliminar
+                          </button>
+                        )}
+                        {/* Aprobado o presupuesto normal con evento → link */}
+                        {p.proyecto_id && (
+                          <Link
+                            href={`/eventos/${p.proyecto_id}`}
+                            className="text-xs text-[#0EA5E9] hover:underline"
+                          >
+                            Ver evento
+                          </Link>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
