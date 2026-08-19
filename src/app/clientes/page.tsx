@@ -79,14 +79,14 @@ type ClienteColumnDef = {
   render: (cliente: Cliente) => ReactNode;
 };
 
+// NCG Eventos: se sacan 'plan_activo' y 'tipo_servicio' del default
+// (heredado de constructora, no aplica a eventos).
 const DEFAULT_VISIBLE_COLUMN_KEYS: ClienteColumnKey[] = [
   "codigo",
   "empresa_nombre",
   "contacto",
   "telefono",
-  "plan_activo",
   "origen",
-  "tipo_servicio",
   "estado",
   "desde",
 ];
@@ -460,21 +460,7 @@ export default function ClientesPage() {
             { value: "MANUAL", label: "Manual" },
           ]}
         />
-        <FancySelect
-          value={filtroTipoServicio}
-          onChange={(v) => setFiltroTipoServicio(v)}
-          ariaLabel="Filtrar por tipo de servicio"
-          className="w-44"
-          size="sm"
-          options={[
-            { value: "", label: "Tipo servicio" },
-            ...filasTipoCatalogo.map((t) => ({ value: t.slug, label: t.nombre })),
-            ...slugsExtraFiltro.map((slug) => ({
-              value: slug,
-              label: etiquetaVisibleTipoServicio(slug, mapNombreTipo),
-            })),
-          ]}
-        />
+        {/* Filtro 'Tipo servicio' oculto: no aplica a NCG Eventos. */}
         {hayFiltros && (
           <button
             onClick={() => { setBusqueda(""); setFiltroEstado(""); setFiltroOrigen(""); setFiltroTipo(""); setFiltroTipoServicio(""); }}
