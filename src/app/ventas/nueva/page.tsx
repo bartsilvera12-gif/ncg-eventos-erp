@@ -816,14 +816,15 @@ function DatosObraSection({ meta, setMeta }: { meta: ObraMeta; setMeta: React.Di
 // ── Modal de partida manual ─────────────────────────────────────────────────
 
 const TIPO_PARTIDA_OPTS: { value: string; label: string }[] = [
-  { value: "mano_obra", label: "Mano de obra" },
   { value: "servicio", label: "Servicio" },
+  { value: "alquiler", label: "Alquiler" },
+  { value: "personal", label: "Personal" },
   { value: "transporte", label: "Transporte" },
-  { value: "otro", label: "Otro gasto" },
+  { value: "otro", label: "Otro" },
 ];
 
 function PartidaManualModal({ onClose, onAgregar }: { onClose: () => void; onAgregar: (l: LineaVenta) => void }) {
-  const [tipo, setTipo] = React.useState<string>("mano_obra");
+  const [tipo, setTipo] = React.useState<string>("servicio");
   const [descripcion, setDescripcion] = React.useState("");
   const [cantidad, setCantidad] = React.useState("1");
   const [unidad, setUnidad] = React.useState("UNIDAD");
@@ -886,7 +887,7 @@ function PartidaManualModal({ onClose, onAgregar }: { onClose: () => void; onAgr
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Descripción <span className="text-red-500">*</span></label>
               <input value={descripcion} onChange={(e) => setDescripcion(e.target.value)}
-                placeholder="Ej. Mano de obra instalación lámina impermeabilizante"
+                placeholder="Ej. DJ para boda 6 horas"
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
             </div>
             <div>

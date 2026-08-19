@@ -202,7 +202,7 @@ export default function VentasPage() {
         description="Ventas directas y presupuestos de servicios / alquileres"
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button href="/ventas/nueva?tipo=presupuesto" size="sm" variant="secondary">
+            <Button href="/eventos/presupuestos" size="sm" variant="secondary">
               <span aria-hidden>+</span> Nuevo presupuesto
             </Button>
             <Button href="/ventas/nueva" size="sm">
