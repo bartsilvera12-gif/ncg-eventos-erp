@@ -128,16 +128,7 @@ const MENU_STRUCTURE: MenuItem[] = [
   },
   { key: "gastos",           slug: "gastos",        label: "Gastos",           href: "/gastos",                 icon: Receipt },
 
-  {
-    key: "libros", slug: "reportes", label: "Libros", href: "/reportes/libro-diario", icon: BarChart3,
-    children: [
-      { label: "Libro diario",   href: "/reportes/libro-diario" },
-      { label: "Libro mayor",    href: "/reportes/libro-mayor" },
-      { label: "Libro compras",  href: "/finanzas/libro-compras" },
-      { label: "Libro ventas",   href: "/finanzas/libro-ventas" },
-      { label: "IVA mensual",    href: "/finanzas/iva-mensual" },
-    ],
-  },
+  { key: "libros",           slug: "reportes",      label: "Libros",           href: "/libros",                 icon: BarChart3 },
   { key: "reportes",         slug: "reportes",      label: "Reportes",         href: "/reportes",               icon: BarChart3 },
 
   {

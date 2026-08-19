@@ -507,19 +507,29 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
                     </div>
                     {l.tipo === "servicio" || l.tipo === "paquete" ? (
                       <div className="md:col-span-3">
-                        <span className={labelCls}>Catálogo</span>
-                        <select
-                          value={l.ref_id ?? ""}
-                          onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
-                          className={inputSm}
-                        >
-                          <option value="">Seleccionar…</option>
-                          {(l.tipo === "servicio" ? servicios : paquetes).map((x) => (
-                            <option key={x.id} value={x.id}>
-                              {x.nombre}
-                            </option>
-                          ))}
-                        </select>
+                        <span className={labelCls}>
+                          Elegir del catálogo (opcional)
+                        </span>
+                        {(l.tipo === "servicio" ? servicios : paquetes).length === 0 ? (
+                          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-500">
+                            Sin {l.tipo === "servicio" ? "servicios" : "paquetes"} cargados.
+                            Podés dejar la descripción a mano o cargarlos en{" "}
+                            <span className="font-medium">Eventos → Catálogo</span>.
+                          </div>
+                        ) : (
+                          <select
+                            value={l.ref_id ?? ""}
+                            onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
+                            className={inputSm}
+                          >
+                            <option value="">— Elegir para autocompletar —</option>
+                            {(l.tipo === "servicio" ? servicios : paquetes).map((x) => (
+                              <option key={x.id} value={x.id}>
+                                {x.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     ) : (
                       <div className="md:col-span-3">
