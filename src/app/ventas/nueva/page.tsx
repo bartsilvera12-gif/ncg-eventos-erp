@@ -291,10 +291,10 @@ export default function NuevaVentaPage() {
     <div className="space-y-8">
 
       <PageHeader
-        eyebrow={esPresupuesto ? "NCG · Comercial" : "NCG · Operaciones"}
-        title={esPresupuesto ? "Nuevo presupuesto de obra" : "Nueva venta de material"}
+        eyebrow="NCG · Comercial"
+        title={esPresupuesto ? "Nuevo presupuesto" : "Nueva venta"}
         description={esPresupuesto
-          ? "Cotización de obra para el cliente. No descuenta stock ni genera movimientos. Al aprobarse puede convertirse en obra."
+          ? "Cotización para el cliente. No descuenta stock ni genera movimientos. Al aprobarse puede convertirse en evento."
           : undefined}
         backHref="/ventas"
         backLabel="Ventas"
