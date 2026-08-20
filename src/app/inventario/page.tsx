@@ -336,7 +336,7 @@ export default function InventarioPage() {
       <PageHeader
         eyebrow="NCG · Stock"
         title="Inventario"
-        description="Gestión de productos y control de stock"
+        description="Artículos de alquiler y equipamiento propio para eventos"
         actions={
           <>
             <ExportExcelButton url="/api/inventario/productos/export" />
@@ -353,13 +353,12 @@ export default function InventarioPage() {
         }
       />
 
-      {/* Tabs gastronómicos (filtran por tipo de producto) */}
+      {/* Tabs por tipo de producto (adaptados a eventos) */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex flex-wrap gap-6" aria-label="Tabs">
           {([
-            { id: "material",    label: "Materiales",  subtitle: "Materiales principales que se consumen en cada obra" },
-            { id: "herramienta", label: "Herramientas", subtitle: "Activos de la empresa: equipos y herramientas" },
-            { id: "consumible",  label: "Consumibles",  subtitle: "Insumos que se gastan seguido" },
+            { id: "material",    label: "Artículos de alquiler", subtitle: "Mantelería, muebles, juguetería y demás artículos que se alquilan" },
+            { id: "herramienta", label: "Equipamiento propio",   subtitle: "Sonido, luces, mobiliario propio y otros activos" },
           ] as const).map((t) => (
             <button
               key={t.id}
@@ -394,9 +393,7 @@ export default function InventarioPage() {
               href="/inventario/nuevo"
               className="rounded-lg bg-[#4FAEB2] px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-[#4FAEB2]/25 transition-colors hover:bg-[#3F8E91] active:scale-95"
             >
-              {tab === "consumible" ? "Nuevo consumible"
-                : tab === "herramienta" ? "Nueva herramienta"
-                : "Nuevo material"}
+              {tab === "herramienta" ? "Nuevo equipamiento" : "Nuevo artículo"}
             </Link>
             <input
               type="text"
