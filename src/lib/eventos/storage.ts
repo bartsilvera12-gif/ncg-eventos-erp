@@ -186,6 +186,19 @@ export async function updateEvento(id: string, patch: Partial<Evento>): Promise<
   return data?.evento ?? null;
 }
 
+export async function deleteEvento(id: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const r = await fetch(`/api/eventos/${id}`, { method: "DELETE", credentials: "include", cache: "no-store" });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !(j as { success?: boolean }).success) {
+      return { ok: false, error: (j as { error?: string })?.error ?? `Error ${r.status}` };
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error de red." };
+  }
+}
+
 export async function getEventosCalendario(desde: string, hasta: string): Promise<Evento[]> {
   const data = await apiJson<{ eventos?: Evento[] }>(
     `/api/eventos/calendario?desde=${desde}&hasta=${hasta}`

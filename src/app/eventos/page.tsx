@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
-import { getEventos } from "@/lib/eventos/storage";
+import { getEventos, deleteEvento } from "@/lib/eventos/storage";
 import type { Evento } from "@/lib/eventos/types";
 
 function fmtFecha(iso?: string | null) {
@@ -145,12 +145,30 @@ export default function EventosPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/eventos/${e.id}`}
-                        className="text-sm font-medium text-[#0EA5E9] hover:underline"
-                      >
-                        Ver
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/eventos/${e.id}`}
+                          className="text-sm font-medium text-[#0EA5E9] hover:underline"
+                        >
+                          Ver
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!window.confirm(`¿Eliminar el evento "${e.titulo}"? Esta accion es definitiva.`)) return;
+                            const r = await deleteEvento(e.id);
+                            if (r.ok) {
+                              setLista((prev) => prev.filter((x) => x.id !== e.id));
+                            } else {
+                              window.alert(r.error);
+                            }
+                          }}
+                          className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
+                          title="Eliminar evento"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

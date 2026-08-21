@@ -66,3 +66,38 @@ export async function PATCH(
   }
   return NextResponse.json(successResponse({ evento: data }));
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireProyectosApiAccess(request);
+  if (!auth.ok) return NextResponse.json(errorResponse(auth.message), { status: auth.status });
+  const { id } = await params;
+  const sb = await getChatServiceClientForEmpresa(auth.empresaId);
+
+  const { data: existing, error: getErr } = await sb
+    .from("proyectos")
+    .select("id")
+    .eq("empresa_id", auth.empresaId)
+    .eq("id", id)
+    .maybeSingle();
+  if (getErr) return NextResponse.json(errorResponse(getErr.message), { status: 500 });
+  if (!existing) return NextResponse.json(errorResponse("Evento no encontrado."), { status: 404 });
+
+  const { error } = await sb
+    .from("proyectos")
+    .delete()
+    .eq("empresa_id", auth.empresaId)
+    .eq("id", id);
+  if (error) {
+    if (error.code === "23503" || /foreign key|violates foreign/i.test(error.message)) {
+      return NextResponse.json(
+        errorResponse("No se puede eliminar: el evento tiene presupuestos, pagos o servicios asociados. Cancelalo en lugar de borrarlo."),
+        { status: 409 }
+      );
+    }
+    return NextResponse.json(errorResponse(error.message), { status: 500 });
+  }
+  return NextResponse.json(successResponse({ ok: true }));
+}
