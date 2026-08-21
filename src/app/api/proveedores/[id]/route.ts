@@ -7,6 +7,7 @@ import type { Proveedor, ProveedorCategoria } from "@/lib/proveedores/types";
 import {
   getProveedorById,
   updateProveedor,
+  deleteProveedor,
   listRelacionesDeProveedor,
   replaceRelacionesProveedor,
   findProveedorByRuc,
@@ -168,5 +169,38 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
   } catch (err) {
     console.error("[/api/proveedores/[id] PATCH] outer", err instanceof Error ? err.message : err);
     return NextResponse.json(errorResponse("No se pudo actualizar el proveedor."), { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  try {
+    const tenant = await getTenantSupabaseFromAuth(request);
+    if (!tenant) return NextResponse.json(errorResponse(API_ERRORS.UNAUTHORIZED), { status: 401 });
+    const schema = await fetchDataSchemaForEmpresaId(tenant.auth.empresa_id);
+    const empresaId = tenant.auth.empresa_id;
+    const { id } = await ctx.params;
+
+    const existing = await getProveedorById(schema, empresaId, id);
+    if (!existing) return NextResponse.json(errorResponse("Proveedor no encontrado."), { status: 404 });
+
+    try {
+      await deleteProveedor(schema, empresaId, id);
+      return NextResponse.json(successResponse({ ok: true }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      const code = (e as { code?: string })?.code;
+      // FK: hay compras u otras referencias que impiden borrar.
+      if (code === "23503" || /foreign key|violates foreign/i.test(msg)) {
+        return NextResponse.json(
+          errorResponse("No se puede eliminar: el proveedor tiene compras u otros movimientos asociados. Cambialo a inactivo."),
+          { status: 409 }
+        );
+      }
+      console.error("[/api/proveedores/[id] DELETE]", { schema, id, msg, code });
+      return NextResponse.json(errorResponse("No se pudo eliminar el proveedor."), { status: 500 });
+    }
+  } catch (err) {
+    console.error("[/api/proveedores/[id] DELETE] outer", err instanceof Error ? err.message : err);
+    return NextResponse.json(errorResponse("No se pudo eliminar el proveedor."), { status: 500 });
   }
 }

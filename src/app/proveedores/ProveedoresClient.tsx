@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getProveedores, getResumenProveedores, getComprasStatsProveedores } from "@/lib/proveedores/storage";
+import { getProveedores, getResumenProveedores, getComprasStatsProveedores, deleteProveedor } from "@/lib/proveedores/storage";
 import ExportExcelButton from "@/components/ui/ExportExcelButton";
 import ImportExcelButton from "@/components/ui/ImportExcelButton";
 import PageHeader from "@/components/ui/PageHeader";
@@ -255,6 +255,24 @@ export default function ProveedoresClient({
                         >
                           Editar
                         </Link>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              if (!window.confirm(`¿Eliminar proveedor "${p.nombre}"? Esta accion es definitiva.`)) return;
+                              const r = await deleteProveedor(p.id);
+                              if (r.ok) {
+                                setLista((prev) => prev.filter((x) => x.id !== p.id));
+                              } else {
+                                window.alert(r.error);
+                              }
+                            }}
+                            className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
+                            title="Eliminar proveedor"
+                          >
+                            Eliminar
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
