@@ -4,7 +4,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import { ReportCard } from "@/components/reportes/ReportCard";
 import {
   Wallet, ShoppingCart, Package, Truck, ArrowLeftRight,
-  TrendingUp, Users, AlertTriangle, CalendarDays, AlertCircle,
+  TrendingUp, AlertTriangle, CalendarDays, AlertCircle,
 } from "lucide-react";
 
 /** Hub de reportería operativa: cards estilo Configuración Global. */
@@ -43,15 +43,6 @@ export default function ReportesPage() {
             icon={TrendingUp}
             description="Total cobrado, costos imputados y ganancia neta con margen %."
             href="/reportes/rentabilidad-eventos"
-          />
-        </li>
-        <li>
-          <ReportCard
-            title="Personal por obra"
-            subtitle="Mano de obra consolidada"
-            icon={Users}
-            description="Horas y costo de personal por obra, con desglose por empleado expandible."
-            href="/reportes/personal-por-obra"
           />
         </li>
         <li>
