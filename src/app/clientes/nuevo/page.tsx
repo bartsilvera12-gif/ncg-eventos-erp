@@ -211,21 +211,21 @@ function NuevoClienteForm() {
               <label className={labelCls}>Persona de contacto</label>
               <input value={form.contacto_persona} onChange={(e) => set("contacto_persona", e.target.value)} className={inputCls} />
             </div>
-            <div>
+            <div className="md:col-span-3">
               <label className={labelCls}>Fecha alta</label>
               <input type="date" value={form.fecha_alta} onChange={(e) => set("fecha_alta", e.target.value)} className={inputCls} />
             </div>
-            <div>
+            <div className="md:col-span-3">
               <label className={labelCls}>Fecha baja</label>
               <input type="date" value={form.fecha_baja} onChange={(e) => set("fecha_baja", e.target.value)} className={inputCls} />
             </div>
-            <div>
+            <div className="md:col-span-3">
               <label className={labelCls}>Régimen fiscal</label>
               <select value={form.regimen_fiscal} onChange={(e) => set("regimen_fiscal", e.target.value)} className={inputCls}>
                 {REGIMEN_FISCAL_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
-            <div>
+            <div className="md:col-span-3">
               <label className={labelCls}>Forma de pago</label>
               <select value={form.forma_pago} onChange={(e) => set("forma_pago", e.target.value)} className={inputCls}>
                 {FORMA_PAGO_OPTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

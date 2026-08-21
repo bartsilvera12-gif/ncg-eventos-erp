@@ -945,35 +945,35 @@ export default function ClienteDetailPage() {
 
       {/* ── Panel resumen ─────────────────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-[#0EA5E9] to-[#0284C7] px-6 py-5">
+        <div className="bg-gradient-to-r from-slate-50 to-white border-b border-slate-200 px-6 py-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-4">
               {/* Avatar */}
               <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold text-white shrink-0 ${
-                cliente.tipo_cliente === "empresa" ? "bg-blue-500/80" : "bg-violet-500/80"
+                cliente.tipo_cliente === "empresa" ? "bg-[#4FAEB2]" : "bg-violet-500"
               }`}>
                 {nombre.slice(0, 2).toUpperCase()}
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white leading-tight">{nombre}</h1>
+                <h1 className="text-xl font-bold text-slate-900 leading-tight">{nombre}</h1>
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
-                  <span className="text-gray-300 font-mono text-xs">{cliente.codigo_cliente}</span>
+                  <span className="text-slate-500 font-mono text-xs">{cliente.codigo_cliente}</span>
                   {cliente.ruc && (
-                    <span className="text-gray-300 text-xs">NIF: {cliente.ruc}</span>
+                    <span className="text-slate-500 text-xs">NIF: {cliente.ruc}</span>
                   )}
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                     cliente.estado === "activo"
-                      ? "bg-green-500/20 text-green-300"
-                      : "bg-gray-500/30 text-gray-300"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-slate-100 text-slate-600 border border-slate-200"
                   }`}>
                     ● {cliente.estado === "activo" ? "Activo" : "Inactivo"}
                   </span>
                   {cliente.perfil_tributario_activo && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-white/15 text-white border border-white/25">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                       Tributario
                     </span>
                   )}
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-slate-500">
                     Cliente desde {formatFecha(cliente.created_at)}
                   </span>
                 </div>
@@ -985,14 +985,14 @@ export default function ClienteDetailPage() {
                 esAdmin ? (
                   <button
                     onClick={abrirModalBajaOperativa}
-                    className="text-xs font-medium border border-amber-400/60 text-amber-200 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg transition-colors"
+                    className="text-xs font-medium border border-amber-300 text-amber-700 hover:bg-amber-50 px-3 py-1.5 rounded-lg transition-colors"
                   >
                     Dar de baja cliente
                   </button>
                 ) : (
                   <button
                     onClick={handleToggleEstado}
-                    className="text-xs font-medium border border-white/20 text-white/80 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors"
+                    className="text-xs font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors"
                   >
                     Desactivar
                   </button>
@@ -1000,7 +1000,7 @@ export default function ClienteDetailPage() {
               ) : (
                 <button
                   onClick={handleToggleEstado}
-                  className="text-xs font-medium border border-white/20 text-white/80 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors"
+                  className="text-xs font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 px-3 py-1.5 rounded-lg transition-colors"
                 >
                   Reactivar
                 </button>
@@ -1009,7 +1009,7 @@ export default function ClienteDetailPage() {
                 <button
                   type="button"
                   onClick={() => void abrirModalEliminar()}
-                  className="text-red-200 hover:text-white hover:bg-red-900/40 border border-red-400/40 flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-xs font-medium"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-300 flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors text-xs font-medium"
                   title="Eliminar cliente (baja lógica)"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden>
@@ -1020,25 +1020,7 @@ export default function ClienteDetailPage() {
               )}
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-white/15 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setFormSusc({
-                  plan_id: "",
-                  precio: "",
-                  fecha_inicio: new Date().toISOString().slice(0, 10),
-                  duracion_meses: "12",
-                  dia_facturacion: "1",
-                  dia_vencimiento: "10",
-                  generar_factura_este_mes: false,
-                });
-                setModalSuscripcion(true);
-              }}
-              className="text-xs font-medium bg-white/15 hover:bg-white/25 text-white border border-white/30 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Nueva suscripción
-            </button>
+          <div className="mt-4 pt-4 border-t border-slate-200 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => {
@@ -1046,14 +1028,14 @@ export default function ClienteDetailPage() {
                 setErrorFacturaContado(null);
                 setModalFacturaContado(true);
               }}
-              className="text-xs font-medium bg-white/15 hover:bg-white/25 text-white border border-white/30 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg transition-colors"
             >
               Factura al contado
             </button>
             <button
               type="button"
               onClick={abrirRegistrarPago}
-              className="text-xs font-medium bg-white/15 hover:bg-white/25 text-white border border-white/30 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg transition-colors"
             >
               Registrar pago
             </button>
@@ -1061,29 +1043,12 @@ export default function ClienteDetailPage() {
         </div>
 
         {/* Estadísticas rápidas */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 border-t border-gray-100">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 border-t border-gray-100">
           {(
             [
               { label: "Origen", value: cliente.origen },
-              {
-                label: "Tipo servicio",
-                value: etiquetaVisibleTipoServicio(
-                  cliente.tipo_servicio_cliente ?? null,
-                  labelTipoServicioMap
-                ),
-              },
               { label: "Condición", value: cliente.condicion_pago ?? "—" },
-              {
-                label: "Plan activo",
-                value: cargandoDetalleCliente ? (
-                  <span className="inline-block h-4 w-36 max-w-full animate-pulse rounded-md bg-slate-200" aria-hidden />
-                ) : suscripcionActiva ? (
-                  `${planes.find((p) => p.id === suscripcionActiva.plan_id)?.nombre ?? suscripcionActiva.plan_nombre ?? "Plan"} (${suscripcionActiva.moneda})`
-                ) : (
-                  "—"
-                ),
-              },
-              { label: "Moneda", value: cliente.moneda_preferida ?? "GS" },
+              { label: "Moneda", value: cliente.moneda_preferida ?? "EUR" },
               {
                 label: "Vendedor",
                 value: (() => {
