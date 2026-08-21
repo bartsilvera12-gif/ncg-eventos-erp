@@ -59,9 +59,7 @@ type ClienteColumnKey =
   | "empresa_nombre"
   | "contacto"
   | "telefono"
-  | "plan_activo"
   | "origen"
-  | "tipo_servicio"
   | "estado"
   | "desde"
   | "creado_por"
@@ -195,34 +193,12 @@ function buildClienteColumns(mapNombreTipo: Record<string, string>): ClienteColu
       render: (c) => c.telefono ?? "—",
     },
     {
-      key: "plan_activo",
-      label: "Plan activo",
-      visibleDefault: true,
-      headerClassName: th,
-      className: td,
-      render: (c) => c.plan_activo ? (
-        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap">
-          {c.plan_activo}
-        </span>
-      ) : (
-        <span className="text-xs text-gray-400 whitespace-nowrap">Sin suscripción</span>
-      ),
-    },
-    {
       key: "origen",
       label: "Origen",
       visibleDefault: true,
       headerClassName: th,
       className: td,
       render: (c) => <BadgeOrigen origen={c.origen} />,
-    },
-    {
-      key: "tipo_servicio",
-      label: "Tipo servicio",
-      visibleDefault: true,
-      headerClassName: th,
-      className: `${td} text-xs text-gray-600 whitespace-nowrap`,
-      render: (c) => etiquetaVisibleTipoServicio(c.tipo_servicio_cliente ?? null, mapNombreTipo),
     },
     {
       key: "estado",
