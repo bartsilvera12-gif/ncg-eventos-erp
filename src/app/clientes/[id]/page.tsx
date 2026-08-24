@@ -372,7 +372,7 @@ export default function ClienteDetailPage() {
         linkedin:            c.linkedin            ?? "",
         valor_cliente:       c.valor_cliente != null ? String(c.valor_cliente) : "",
         condicion_pago:       c.condicion_pago      ?? "",
-        moneda_preferida:     c.moneda_preferida    ?? "GS",
+        moneda_preferida:     c.moneda_preferida    ?? "EUR",
         vendedor_asignado:    c.vendedor_asignado   ?? "",
         vendedor_usuario_id:  c.vendedor_usuario_id ?? "",
         tipo_servicio_cliente: c.tipo_servicio_cliente ?? "",
@@ -1555,12 +1555,6 @@ export default function ClienteDetailPage() {
                   </div>
                 </div>
 
-                {form.tipo_cliente === "empresa" && (
-                  <div>
-                    <label className={labelClass}>Persona de contacto</label>
-                    <input type="text" name="contacto_persona" value={form.contacto_persona} onChange={handleChange} className={inputClass} />
-                  </div>
-                )}
               </section>
 
               {/* Fiscal / Pago (ES) */}
@@ -1608,24 +1602,7 @@ export default function ClienteDetailPage() {
                 </div>
               </section>
 
-              {/* Digital */}
-              <section className="space-y-4">
-                <SectionTitle>Presencia digital</SectionTitle>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className={labelClass}>Sitio web</label>
-                    <input type="text" name="sitio_web" value={form.sitio_web} onChange={handleChange} placeholder="https://" className={inputClass} />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Instagram</label>
-                    <input type="text" name="instagram" value={form.instagram} onChange={handleChange} placeholder="@usuario" className={inputClass} />
-                  </div>
-                  <div>
-                    <label className={labelClass}>LinkedIn</label>
-                    <input type="text" name="linkedin" value={form.linkedin} onChange={handleChange} placeholder="URL o perfil" className={inputClass} />
-                  </div>
-                </div>
-              </section>
+              {/* 'Presencia digital' sacada en NCG Eventos. */}
 
               {/* Comercial */}
               <section className="space-y-4">
@@ -1677,7 +1654,7 @@ export default function ClienteDetailPage() {
                       onChange={(e) => setForm((p) => ({ ...p, moneda_preferida: e.target.value as "GS" | "USD" | "EUR" }))}
                       className={inputClass}
                     >
-                      <option value="GS">Guaraníes (GS)</option>
+                      <option value="EUR">Euros (€)</option>
                       <option value="USD">Dólares (USD)</option>
                     </select>
                   </div>
@@ -1709,10 +1686,6 @@ export default function ClienteDetailPage() {
                       <p className="mt-1 text-xs text-slate-500">No hay usuarios activos disponibles para asignar.</p>
                     ) : null}
                   </div>
-                  <div>
-                    <label className={labelClass}>Vendedor asignado (texto libre)</label>
-                    <input type="text" name="vendedor_asignado" value={form.vendedor_asignado} onChange={handleChange} className={`${inputClass} uppercase`} />
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -1730,50 +1703,7 @@ export default function ClienteDetailPage() {
                   </div>
                 </div>
 
-                {/* Campos factura Contado */}
-                {form.condicion_pago === "CONTADO" && (
-                  <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-                    <SectionTitle>Facturación al contado</SectionTitle>
-                    {facturas.length > 0 ? (
-                      <p className="text-sm text-slate-600">Este cliente ya tiene {facturas.length} factura(s).</p>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="emitir_contado_edit"
-                            checked={formContadoEdit.emitir_factura}
-                            onChange={(e) => setFormContadoEdit((p) => ({ ...p, emitir_factura: e.target.checked }))}
-                          />
-                          <label htmlFor="emitir_contado_edit" className="text-sm text-slate-600">Emitir factura inicial</label>
-                        </div>
-                        {formContadoEdit.emitir_factura && (
-                          <>
-                            <div>
-                              <label className={labelClass}>Monto (€)</label>
-                              <MontoInput
-                                value={formContadoEdit.monto}
-                                onChange={(n) => setFormContadoEdit((p) => ({ ...p, monto: String(n) }))}
-                                className={inputClass}
-                                placeholder="Monto de la factura"
-                              />
-                            </div>
-                            <div>
-                              <label className={labelClass}>Descripción</label>
-                              <input
-                                type="text"
-                                value={formContadoEdit.descripcion}
-                                onChange={(e) => setFormContadoEdit((p) => ({ ...p, descripcion: e.target.value }))}
-                                className={inputClass}
-                                placeholder="Venta al contado"
-                              />
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
+                {/* 'Facturación al contado' quedó fuera en NCG Eventos: no aplica al negocio de eventos. */}
 
                 {/* Campos de suscripción (solo cuando condicion_pago = MENSUAL y no tiene suscripciones) */}
                 {form.condicion_pago === "MENSUAL" && (
