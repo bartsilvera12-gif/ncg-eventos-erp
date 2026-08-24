@@ -558,7 +558,8 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
                       <input
                         type="number"
                         min={1}
-                        value={l.cantidad}
+                        step={1}
+                        value={l.cantidad === 0 ? "" : l.cantidad}
                         onChange={(e) => updateLinea(idx, { cantidad: parseFloat(e.target.value) || 0 })}
                         className={inputSm + " text-right"}
                       />
@@ -569,7 +570,8 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
                         type="number"
                         step="0.01"
                         min={0}
-                        value={l.precio_unitario}
+                        value={l.precio_unitario === 0 ? "" : l.precio_unitario}
+                        placeholder="0,00"
                         onChange={(e) =>
                           updateLinea(idx, { precio_unitario: parseFloat(e.target.value) || 0 })
                         }

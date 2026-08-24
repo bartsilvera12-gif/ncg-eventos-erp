@@ -620,9 +620,9 @@ export default function EventoDetallePage() {
                                   <td className="py-1 pr-2 text-right">
                                     <input
                                       type="number"
-                                      min={0}
-                                      step="0.01"
-                                      value={l.cantidad}
+                                      min={1}
+                                      step={1}
+                                      value={l.cantidad === 0 ? "" : l.cantidad}
                                       onChange={(e) => updateLinea(idx, { cantidad: parseFloat(e.target.value) || 0 })}
                                       className="w-16 rounded border border-slate-200 bg-white px-1 py-1 text-right text-xs"
                                     />
@@ -641,7 +641,8 @@ export default function EventoDetallePage() {
                                       type="number"
                                       step="0.01"
                                       min={0}
-                                      value={l.precio_unitario}
+                                      value={l.precio_unitario === 0 ? "" : l.precio_unitario}
+                                      placeholder="0,00"
                                       onChange={(e) => updateLinea(idx, { precio_unitario: parseFloat(e.target.value) || 0 })}
                                       className="w-28 rounded border border-slate-200 bg-white px-1 py-1 text-right text-xs"
                                     />
