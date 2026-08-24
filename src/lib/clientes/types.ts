@@ -41,6 +41,17 @@ export interface Cliente {
   ciudad?:             string;
   pais?:               string;
 
+  // NCG Eventos (ES): datos fiscales y de facturación específicos de España.
+  codigo_postal?:      string;
+  provincia?:          string;
+  contacto_persona?:   string;
+  fecha_alta?:         string;  // ISO yyyy-mm-dd
+  fecha_baja?:         string;  // ISO yyyy-mm-dd
+  regimen_fiscal?:     string;
+  forma_pago?:         string;
+  iban?:               string;
+  bic_swift?:          string;
+
   sitio_web?:          string;
   instagram?:          string;
   linkedin?:           string;
@@ -48,7 +59,7 @@ export interface Cliente {
   valor_cliente?:      number;          // valor estimado anual en GS
 
   condicion_pago?:     string;          // CONTADO / 30 DÍAS / 60 DÍAS…
-  moneda_preferida?:   "GS" | "USD";
+  moneda_preferida?:   "GS" | "USD" | "EUR";
   vendedor_asignado?:  string;
   /** Usuario ERP responsable comercial (FK zentra_erp.usuarios); el texto libre sigue en vendedor_asignado. */
   vendedor_usuario_id?: string | null;

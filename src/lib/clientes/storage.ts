@@ -32,6 +32,15 @@ interface SupabaseRow {
   direccion:          string | null;
   ciudad:             string | null;
   pais:               string | null;
+  codigo_postal?:     string | null;
+  provincia?:         string | null;
+  contacto_persona?:  string | null;
+  fecha_alta?:        string | null;
+  fecha_baja?:        string | null;
+  regimen_fiscal?:    string | null;
+  forma_pago?:        string | null;
+  iban?:              string | null;
+  bic_swift?:         string | null;
   sifen_receptor_extranjero?: boolean | null;
   sifen_codigo_pais?: string | null;
   sifen_tipo_doc_receptor?: number | string | null;
@@ -94,12 +103,21 @@ function rowToCliente(row: SupabaseRow): Cliente {
     direccion:           row.direccion ?? undefined,
     ciudad:              row.ciudad ?? undefined,
     pais:                row.pais ?? undefined,
+    codigo_postal:       row.codigo_postal ?? undefined,
+    provincia:           row.provincia ?? undefined,
+    contacto_persona:    row.contacto_persona ?? undefined,
+    fecha_alta:          row.fecha_alta ?? undefined,
+    fecha_baja:          row.fecha_baja ?? undefined,
+    regimen_fiscal:      row.regimen_fiscal ?? undefined,
+    forma_pago:          row.forma_pago ?? undefined,
+    iban:                row.iban ?? undefined,
+    bic_swift:           row.bic_swift ?? undefined,
     sitio_web:           row.sitio_web ?? undefined,
     instagram:           row.instagram ?? undefined,
     linkedin:            row.linkedin ?? undefined,
     valor_cliente:       row.valor_cliente ?? undefined,
     condicion_pago:      row.condicion_pago ?? undefined,
-    moneda_preferida:    (row.moneda_preferida === "USD" ? "USD" : "GS") as "GS" | "USD",
+    moneda_preferida:    (row.moneda_preferida === "USD" ? "USD" : row.moneda_preferida === "EUR" ? "EUR" : "GS") as "GS" | "USD" | "EUR",
     vendedor_asignado:   row.vendedor_asignado ?? undefined,
     vendedor_usuario_id: row.vendedor_usuario_id ?? undefined,
     vendedor_usuario_nombre: row.vendedor_usuario_nombre ?? undefined,
@@ -279,6 +297,15 @@ export async function saveCliente(datos: NuevoClienteData): Promise<Cliente | nu
     direccion:          datos.direccion ?? null,
     ciudad:             datos.ciudad ?? null,
     pais:               datos.pais ?? null,
+    codigo_postal:      datos.codigo_postal ?? null,
+    provincia:          datos.provincia ?? null,
+    contacto_persona:   datos.contacto_persona ?? null,
+    fecha_alta:         datos.fecha_alta ?? null,
+    fecha_baja:         datos.fecha_baja ?? null,
+    regimen_fiscal:     datos.regimen_fiscal ?? null,
+    forma_pago:         datos.forma_pago ?? null,
+    iban:               datos.iban ?? null,
+    bic_swift:          datos.bic_swift ?? null,
     sitio_web:          datos.sitio_web ?? null,
     instagram:          datos.instagram ?? null,
     linkedin:           datos.linkedin ?? null,
@@ -361,6 +388,15 @@ export function construirPatchActualizacionCliente(datos: ActualizarClienteInput
   if (datos.direccion !== undefined) patch.direccion = datos.direccion ?? null;
   if (datos.ciudad !== undefined) patch.ciudad = datos.ciudad ?? null;
   if (datos.pais !== undefined) patch.pais = datos.pais ?? null;
+  if (datos.codigo_postal !== undefined) patch.codigo_postal = datos.codigo_postal ?? null;
+  if (datos.provincia !== undefined) patch.provincia = datos.provincia ?? null;
+  if (datos.contacto_persona !== undefined) patch.contacto_persona = datos.contacto_persona ?? null;
+  if (datos.fecha_alta !== undefined) patch.fecha_alta = datos.fecha_alta ?? null;
+  if (datos.fecha_baja !== undefined) patch.fecha_baja = datos.fecha_baja ?? null;
+  if (datos.regimen_fiscal !== undefined) patch.regimen_fiscal = datos.regimen_fiscal ?? null;
+  if (datos.forma_pago !== undefined) patch.forma_pago = datos.forma_pago ?? null;
+  if (datos.iban !== undefined) patch.iban = datos.iban ?? null;
+  if (datos.bic_swift !== undefined) patch.bic_swift = datos.bic_swift ?? null;
   if (datos.sifen_receptor_extranjero !== undefined) {
     patch.sifen_receptor_extranjero = Boolean(datos.sifen_receptor_extranjero);
   }

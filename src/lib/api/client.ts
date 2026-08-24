@@ -83,6 +83,15 @@ export async function apiCreateCliente(data: {
   direccion?: string;
   ciudad?: string;
   pais?: string;
+  codigo_postal?: string;
+  provincia?: string;
+  contacto_persona?: string;
+  fecha_alta?: string;
+  fecha_baja?: string;
+  regimen_fiscal?: string;
+  forma_pago?: string;
+  iban?: string;
+  bic_swift?: string;
   condicion_pago?: string;
   moneda_preferida?: string;
   estado?: string;

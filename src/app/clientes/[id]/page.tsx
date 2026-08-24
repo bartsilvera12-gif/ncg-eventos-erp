@@ -193,12 +193,21 @@ export default function ClienteDetailPage() {
     direccion:           "",
     ciudad:              "",
     pais:                "",
+    codigo_postal:       "",
+    provincia:           "",
+    contacto_persona:    "",
+    fecha_alta:          "",
+    fecha_baja:          "",
+    regimen_fiscal:      "",
+    forma_pago:          "",
+    iban:                "",
+    bic_swift:           "",
     sitio_web:           "",
     instagram:           "",
     linkedin:            "",
     valor_cliente:       "",
     condicion_pago:      "",
-    moneda_preferida:      "GS" as "GS" | "USD",
+    moneda_preferida:      "EUR" as "GS" | "USD" | "EUR",
     vendedor_asignado:     "",
     vendedor_usuario_id:   "",
     tipo_servicio_cliente: "" as string,
@@ -349,6 +358,15 @@ export default function ClienteDetailPage() {
         direccion:           c.direccion           ?? "",
         ciudad:              c.ciudad              ?? "",
         pais:                c.pais                ?? "",
+        codigo_postal:       c.codigo_postal       ?? "",
+        provincia:           c.provincia           ?? "",
+        contacto_persona:    c.contacto_persona    ?? "",
+        fecha_alta:          c.fecha_alta          ?? "",
+        fecha_baja:          c.fecha_baja          ?? "",
+        regimen_fiscal:      c.regimen_fiscal      ?? "",
+        forma_pago:          c.forma_pago          ?? "",
+        iban:                c.iban                ?? "",
+        bic_swift:           c.bic_swift           ?? "",
         sitio_web:           c.sitio_web           ?? "",
         instagram:           c.instagram           ?? "",
         linkedin:            c.linkedin            ?? "",
@@ -630,6 +648,15 @@ export default function ClienteDetailPage() {
         direccion:           form.direccion.trim()           || undefined,
         ciudad:              form.ciudad.trim().toUpperCase()  || undefined,
         pais:                form.pais.trim().toUpperCase()    || undefined,
+        codigo_postal:       form.codigo_postal.trim()         || null,
+        provincia:           form.provincia.trim().toUpperCase() || null,
+        contacto_persona:    form.contacto_persona.trim()      || null,
+        fecha_alta:          form.fecha_alta                    || null,
+        fecha_baja:          form.fecha_baja                    || null,
+        regimen_fiscal:      form.regimen_fiscal                || null,
+        forma_pago:          form.forma_pago                    || null,
+        iban:                form.iban.trim()                   || null,
+        bic_swift:           form.bic_swift.trim()              || null,
         sitio_web:           form.sitio_web.trim()           || undefined,
         instagram:           form.instagram.trim()           || undefined,
         linkedin:            form.linkedin.trim()            || undefined,
@@ -1502,15 +1529,25 @@ export default function ClienteDetailPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className={labelClass}>Dirección</label>
-                  <input type="text" name="direccion" value={form.direccion} onChange={handleChange} className={inputClass} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>Dirección</label>
+                    <input type="text" name="direccion" value={form.direccion} onChange={handleChange} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Código postal</label>
+                    <input type="text" name="codigo_postal" value={form.codigo_postal} onChange={handleChange} placeholder="28030" className={inputClass} />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className={labelClass}>Ciudad</label>
+                    <label className={labelClass}>Población</label>
                     <input type="text" name="ciudad" value={form.ciudad} onChange={handleChange} className={`${inputClass} uppercase`} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Provincia</label>
+                    <input type="text" name="provincia" value={form.provincia} onChange={handleChange} placeholder="Madrid" className={`${inputClass} uppercase`} />
                   </div>
                   <div>
                     <label className={labelClass}>País</label>
@@ -1518,7 +1555,57 @@ export default function ClienteDetailPage() {
                   </div>
                 </div>
 
-                {/* SIFEN ocultado en NCG (España): no aplica facturación electrónica paraguaya. */}
+                {form.tipo_cliente === "empresa" && (
+                  <div>
+                    <label className={labelClass}>Persona de contacto</label>
+                    <input type="text" name="contacto_persona" value={form.contacto_persona} onChange={handleChange} className={inputClass} />
+                  </div>
+                )}
+              </section>
+
+              {/* Fiscal / Pago (ES) */}
+              <section className="space-y-4">
+                <SectionTitle>Datos fiscales y de pago</SectionTitle>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Fecha alta</label>
+                    <input type="date" name="fecha_alta" value={form.fecha_alta} onChange={handleChange} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Fecha baja</label>
+                    <input type="date" name="fecha_baja" value={form.fecha_baja} onChange={handleChange} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Régimen fiscal</label>
+                    <select name="regimen_fiscal" value={form.regimen_fiscal} onChange={handleChange} className={inputClass}>
+                      <option value="">— sin definir —</option>
+                      <option value="regimen_general">Régimen general</option>
+                      <option value="autonomo_modulos">Autónomo — módulos</option>
+                      <option value="autonomo_estimacion">Autónomo — estimación directa</option>
+                      <option value="recargo_equivalencia">Recargo de equivalencia</option>
+                      <option value="exento">Exento</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Forma de pago</label>
+                    <select name="forma_pago" value={form.forma_pago} onChange={handleChange} className={inputClass}>
+                      <option value="">— sin definir —</option>
+                      <option value="transferencia">Transferencia</option>
+                      <option value="giro_domiciliado">Giro / domiciliación</option>
+                      <option value="tarjeta">Tarjeta</option>
+                      <option value="efectivo">Efectivo</option>
+                      <option value="cheque">Cheque</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className={labelClass}>IBAN</label>
+                    <input type="text" name="iban" value={form.iban} onChange={handleChange} placeholder="ES12 3456 7890 1234 5678 9012" className={`${inputClass} font-mono`} />
+                  </div>
+                  <div>
+                    <label className={labelClass}>BIC / SWIFT</label>
+                    <input type="text" name="bic_swift" value={form.bic_swift} onChange={handleChange} placeholder="BBVAESMMXXX" className={`${inputClass} font-mono`} />
+                  </div>
+                </div>
               </section>
 
               {/* Digital */}
@@ -1587,7 +1674,7 @@ export default function ClienteDetailPage() {
                     <select
                       name="moneda_preferida"
                       value={form.moneda_preferida}
-                      onChange={(e) => setForm((p) => ({ ...p, moneda_preferida: e.target.value as "GS" | "USD" }))}
+                      onChange={(e) => setForm((p) => ({ ...p, moneda_preferida: e.target.value as "GS" | "USD" | "EUR" }))}
                       className={inputClass}
                     >
                       <option value="GS">Guaraníes (GS)</option>
