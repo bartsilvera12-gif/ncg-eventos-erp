@@ -12,6 +12,8 @@ export default function LibrosPage() {
         eyebrow="NCG · Contabilidad"
         title="Libros"
         description="Libros contables y auxiliares del período"
+        backHref="/"
+        backLabel="Dashboard"
       />
 
       <ul className="m-0 grid list-none gap-4 p-0 sm:grid-cols-2 xl:grid-cols-3">
