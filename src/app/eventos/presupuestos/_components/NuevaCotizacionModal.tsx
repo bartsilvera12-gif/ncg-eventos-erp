@@ -461,33 +461,66 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
 
       {/* Líneas */}
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-700">Líneas del presupuesto</h3>
-          <div className="flex flex-wrap gap-1">
-            <Button variant="secondary" size="sm" onClick={() => addLinea("servicio")}>
-              + Servicio
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => addLinea("paquete")}>
-              + Paquete
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => addLinea("texto")}>
-              + Texto libre
-            </Button>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+          <div className="flex items-center gap-2">
+            <span aria-hidden className="inline-block h-4 w-1 rounded-full bg-gradient-to-b from-[#4FAEB2] to-[#3F8E91]" />
+            <h3 className="text-sm font-semibold text-slate-800">Líneas del presupuesto</h3>
+            {lineas.length > 0 && (
+              <span className="rounded-full bg-[#E5F4F4] px-2 py-0.5 text-[10px] font-bold text-[#3F8E91] ring-1 ring-[#4FAEB2]/25">
+                {lineas.length}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => addLinea("servicio")}
+              className="group/add inline-flex items-center gap-1 rounded-lg border border-[#4FAEB2]/30 bg-white px-2.5 py-1.5 text-xs font-semibold text-[#3F8E91] shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#4FAEB2] hover:bg-[#E5F4F4] hover:shadow-md"
+            >
+              <span className="text-sm leading-none transition-transform group-hover/add:rotate-90">+</span> Servicio
+            </button>
+            <button
+              type="button"
+              onClick={() => addLinea("paquete")}
+              className="group/add inline-flex items-center gap-1 rounded-lg border border-violet-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-violet-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-violet-400 hover:bg-violet-50 hover:shadow-md"
+            >
+              <span className="text-sm leading-none transition-transform group-hover/add:rotate-90">+</span> Paquete
+            </button>
+            <button
+              type="button"
+              onClick={() => addLinea("texto")}
+              className="group/add inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 hover:shadow-md"
+            >
+              <span className="text-sm leading-none transition-transform group-hover/add:rotate-90">+</span> Texto libre
+            </button>
           </div>
         </div>
 
         {lineas.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center text-xs text-slate-400">
-            Agregá al menos una línea usando los botones de arriba.
+          <div className="rounded-xl border border-dashed border-[#4FAEB2]/25 bg-gradient-to-br from-white to-[#E5F4F4]/40 p-8 text-center">
+            <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-[#E5F4F4] text-[#3F8E91] ring-1 ring-[#4FAEB2]/20">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-slate-700">Todavía no hay líneas</p>
+            <p className="mt-1 text-xs text-slate-500">Agregá servicios, paquetes o texto libre con los botones de arriba.</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {lineas.map((l, idx) => {
               const subtotal = l.cantidad * l.precio_unitario * (1 - l.descuento_pct / 100);
+              const tipoBorder = l.tipo === "servicio"
+                ? "border-l-[3px] border-l-[#4FAEB2]"
+                : l.tipo === "paquete"
+                  ? "border-l-[3px] border-l-violet-400"
+                  : l.tipo === "producto"
+                    ? "border-l-[3px] border-l-amber-400"
+                    : "border-l-[3px] border-l-slate-300";
               return (
                 <div
                   key={idx}
-                  className="rounded-lg border border-slate-100 bg-white p-3 shadow-sm"
+                  className={`rounded-xl border border-slate-200 ${tipoBorder} bg-gradient-to-b from-white to-slate-50/50 p-3.5 shadow-sm transition-all hover:shadow-md hover:border-slate-300`}
                 >
                   <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
                     <div className="md:col-span-2">
@@ -622,15 +655,20 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
                     </label>
                     <div className="md:col-span-5 flex items-end justify-end gap-2">
                       <span className={labelCls}>Subtotal</span>
-                      <span className="text-sm font-semibold text-slate-800">
+                      <span className="rounded-lg bg-[#E5F4F4] px-2.5 py-1 text-sm font-bold text-[#3F8E91] ring-1 ring-[#4FAEB2]/25 tabular-nums">
                         {fmtEur(subtotal)}
                       </span>
                     </div>
                     <div className="md:col-span-1 flex items-end justify-end">
                       <button
+                        type="button"
                         onClick={() => removeLinea(idx)}
-                        className="text-xs text-red-600 hover:underline"
+                        className="group/rm inline-flex items-center gap-1 rounded-lg border border-red-200 bg-white px-2 py-1 text-[11px] font-semibold text-red-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-red-300 hover:bg-red-50 hover:shadow-md"
+                        title="Quitar línea"
                       >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 transition-transform group-hover/rm:scale-110">
+                          <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4Z" clipRule="evenodd" />
+                        </svg>
                         Quitar
                       </button>
                     </div>
@@ -642,19 +680,24 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
         )}
 
         {/* Totales */}
-        <div className="mt-4 flex justify-end">
-          <div className="w-full max-w-xs space-y-1 rounded-lg bg-slate-50 p-3 text-sm">
-            <div className="flex justify-between text-slate-600">
-              <span>Base imponible</span>
-              <span className="tabular-nums">{fmtEur(totales.base)}</span>
-            </div>
-            <div className="flex justify-between text-slate-600">
-              <span>IVA</span>
-              <span className="tabular-nums">{fmtEur(totales.iva)}</span>
-            </div>
-            <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-bold text-slate-900">
-              <span>Total</span>
-              <span className="tabular-nums">{fmtEur(totales.total)}</span>
+        <div className="mt-5 flex justify-end">
+          <div className="relative w-full max-w-xs overflow-hidden rounded-xl border border-[#4FAEB2]/25 bg-gradient-to-br from-white via-[#E5F4F4]/40 to-white p-4 shadow-sm">
+            <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-transparent via-[#4FAEB2] to-transparent" />
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between text-slate-600">
+                <span>Base imponible</span>
+                <span className="tabular-nums">{fmtEur(totales.base)}</span>
+              </div>
+              <div className="flex justify-between text-slate-600">
+                <span>IVA</span>
+                <span className="tabular-nums">{fmtEur(totales.iva)}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between border-t border-[#4FAEB2]/20 pt-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#3F8E91]">Total</span>
+                <span className="tabular-nums bg-gradient-to-r from-[#3F8E91] to-[#2F6F72] bg-clip-text text-xl font-extrabold text-transparent">
+                  {fmtEur(totales.total)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
