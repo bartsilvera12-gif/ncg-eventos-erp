@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import {
   borrarFoto,
   borrarReservaStock,
@@ -96,6 +97,8 @@ export default function EventoDetallePage() {
   const [fotos, setFotos] = useState<FotoEvento[]>([]);
   const [subiendo, setSubiendo] = useState(false);
   const [galeriaError, setGaleriaError] = useState<string | null>(null);
+  const [fotoAEliminar, setFotoAEliminar] = useState<string | null>(null);
+  const [eliminandoFoto, setEliminandoFoto] = useState(false);
   const [cargando, setCargando] = useState(true);
 
   // Form de nueva reserva (solo cuando se abre)
@@ -189,10 +192,16 @@ export default function EventoDetallePage() {
     }
   };
 
-  const eliminarFoto = async (fotoId: string) => {
-    if (!id || !confirm("¿Eliminar esta foto?")) return;
-    await borrarFoto(id, fotoId);
-    setFotos((prev) => prev.filter((f) => f.id !== fotoId));
+  const confirmarEliminarFoto = async () => {
+    if (!id || !fotoAEliminar) return;
+    setEliminandoFoto(true);
+    try {
+      await borrarFoto(id, fotoAEliminar);
+      setFotos((prev) => prev.filter((f) => f.id !== fotoAEliminar));
+      setFotoAEliminar(null);
+    } finally {
+      setEliminandoFoto(false);
+    }
   };
 
   // ── Reservas de insumos ──────────────────────────────────────────────────
@@ -1202,7 +1211,7 @@ export default function EventoDetallePage() {
                         </div>
                       )}
                       <button
-                        onClick={() => eliminarFoto(f.id)}
+                        onClick={() => setFotoAEliminar(f.id)}
                         className="absolute right-1 top-1 rounded-full bg-red-600/80 px-2 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100"
                       >
                         Eliminar
@@ -1215,6 +1224,17 @@ export default function EventoDetallePage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={fotoAEliminar !== null}
+        title="Eliminar foto"
+        message="¿Seguro que querés eliminar esta foto de la galería? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        tone="danger"
+        busy={eliminandoFoto}
+        onConfirm={confirmarEliminarFoto}
+        onClose={() => setFotoAEliminar(null)}
+      />
     </div>
   );
 }

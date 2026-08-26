@@ -10,6 +10,7 @@ import StatCard from "@/components/ui/StatCard";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Badge from "@/components/ui/Badge";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { useIsAdmin } from "@/lib/auth/use-is-admin";
 import type { Proveedor, ResumenProveedores, ProveedorComprasStat } from "@/lib/proveedores/types";
 
@@ -51,6 +52,8 @@ export default function ProveedoresClient({
   const [stats, setStats] = useState<Record<string, ProveedorComprasStat>>({});
   const [desde, setDesde] = useState("");
   const [hasta, setHasta] = useState("");
+  const [proveedorAEliminar, setProveedorAEliminar] = useState<Proveedor | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   // Cards + totales por proveedor se recalculan server-side según el rango.
   useEffect(() => {
@@ -258,15 +261,7 @@ export default function ProveedoresClient({
                         {isAdmin && (
                           <button
                             type="button"
-                            onClick={async () => {
-                              if (!window.confirm(`¿Eliminar proveedor "${p.nombre}"? Esta accion es definitiva.`)) return;
-                              const r = await deleteProveedor(p.id);
-                              if (r.ok) {
-                                setLista((prev) => prev.filter((x) => x.id !== p.id));
-                              } else {
-                                window.alert(r.error);
-                              }
-                            }}
+                            onClick={() => setProveedorAEliminar(p)}
                             className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
                             title="Eliminar proveedor"
                           >
@@ -283,6 +278,34 @@ export default function ProveedoresClient({
           </table>
         </div>
       </Card>
+
+      <ConfirmDialog
+        open={proveedorAEliminar !== null}
+        title="Eliminar proveedor"
+        message={
+          proveedorAEliminar ? (
+            <>
+              ¿Seguro que querés eliminar <span className="font-semibold text-slate-800">{`"${proveedorAEliminar.nombre}"`}</span>? Esta acción es definitiva.
+            </>
+          ) : null
+        }
+        confirmLabel="Eliminar"
+        tone="danger"
+        busy={eliminando}
+        onConfirm={async () => {
+          if (!proveedorAEliminar) return;
+          setEliminando(true);
+          const r = await deleteProveedor(proveedorAEliminar.id);
+          setEliminando(false);
+          if (r.ok) {
+            setLista((prev) => prev.filter((x) => x.id !== proveedorAEliminar.id));
+            setProveedorAEliminar(null);
+          } else {
+            window.alert(r.error);
+          }
+        }}
+        onClose={() => { if (!eliminando) setProveedorAEliminar(null); }}
+      />
     </div>
   );
 }

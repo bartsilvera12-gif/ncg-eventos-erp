@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { getEventos, deleteEvento } from "@/lib/eventos/storage";
 import type { Evento } from "@/lib/eventos/types";
 
@@ -35,6 +36,8 @@ export default function EventosPage() {
   const [lista, setLista] = useState<Evento[]>([]);
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState("");
+  const [eventoAEliminar, setEventoAEliminar] = useState<Evento | null>(null);
+  const [eliminando, setEliminando] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -160,15 +163,7 @@ export default function EventosPage() {
                         </Link>
                         <button
                           type="button"
-                          onClick={async () => {
-                            if (!window.confirm(`¿Eliminar el evento "${e.titulo}"? Esta accion es definitiva.`)) return;
-                            const r = await deleteEvento(e.id);
-                            if (r.ok) {
-                              setLista((prev) => prev.filter((x) => x.id !== e.id));
-                            } else {
-                              window.alert(r.error);
-                            }
-                          }}
+                          onClick={() => setEventoAEliminar(e)}
                           className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline"
                           title="Eliminar evento"
                         >
@@ -183,6 +178,34 @@ export default function EventosPage() {
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={eventoAEliminar !== null}
+        title="Eliminar evento"
+        message={
+          eventoAEliminar ? (
+            <>
+              ¿Seguro que querés eliminar <span className="font-semibold text-slate-800">{`"${eventoAEliminar.titulo}"`}</span>? Esta acción es definitiva.
+            </>
+          ) : null
+        }
+        confirmLabel="Eliminar"
+        tone="danger"
+        busy={eliminando}
+        onConfirm={async () => {
+          if (!eventoAEliminar) return;
+          setEliminando(true);
+          const r = await deleteEvento(eventoAEliminar.id);
+          setEliminando(false);
+          if (r.ok) {
+            setLista((prev) => prev.filter((x) => x.id !== eventoAEliminar.id));
+            setEventoAEliminar(null);
+          } else {
+            window.alert(r.error);
+          }
+        }}
+        onClose={() => { if (!eliminando) setEventoAEliminar(null); }}
+      />
     </div>
   );
 }
