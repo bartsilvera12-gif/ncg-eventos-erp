@@ -98,7 +98,7 @@ export default function RentabilidadObrasPage() {
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full min-w-[1000px] text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>
