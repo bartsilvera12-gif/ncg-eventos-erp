@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * Estado vacío estándar del ERP: ícono/emoji opcional, título, descripción y
- * una acción opcional. Centrado, sobrio, con buen aire.
+ * Estado vacio estandar del ERP.
+ * Rediseño 2026: icono con anillo pastel doble para dar profundidad.
  */
 export default function EmptyState({
   icon,
@@ -11,7 +11,6 @@ export default function EmptyState({
   action,
   className,
 }: {
-  /** Emoji o ícono (ReactNode). */
   icon?: ReactNode;
   title: string;
   description?: string;
@@ -23,15 +22,16 @@ export default function EmptyState({
       className={`flex flex-col items-center justify-center px-6 py-12 text-center ${className ?? ""}`}
     >
       {icon ? (
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#E5F4F4] text-2xl text-[#3F8E91]">
+        <div className="relative mb-4 grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-[#E5F4F4] to-white text-3xl text-[#3F8E91] shadow-inner ring-1 ring-[#4FAEB2]/20">
+          <span aria-hidden className="absolute -inset-1 rounded-full ring-1 ring-[#4FAEB2]/10" />
           {icon}
         </div>
       ) : null}
-      <p className="text-sm font-semibold text-slate-700">{title}</p>
+      <p className="text-base font-semibold text-slate-700">{title}</p>
       {description ? (
-        <p className="mt-1 max-w-sm text-sm text-slate-400">{description}</p>
+        <p className="mt-1 max-w-sm text-sm text-slate-500">{description}</p>
       ) : null}
-      {action ? <div className="mt-4">{action}</div> : null}
+      {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );
 }
