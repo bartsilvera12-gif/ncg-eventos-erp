@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/**
+ * En Tailwind v4 el variante `dark:` se dispara por defecto con
+ * `@media (prefers-color-scheme: dark)`. En este ERP el modo día es forzado,
+ * así que atamos `dark:` a la clase `.dark` (que no se aplica nunca) para que
+ * los text-slate-500 no se transformen en text-slate-100 sobre bg-white.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Neura ERP — Zentra (paleta turquesa rediseño 2026: #4FAEB2 primary) */
 :root {
   --background: #F8FAFC;
@@ -82,6 +90,58 @@ body {
 }
 .zentra-sidebar-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.32);
+}
+
+/* =============================================================================
+   Selects nativos — chevron teal + focus ring uniforme.
+   Se aplica a todo <select> del ERP sin tocar 100+ archivos.
+   ============================================================================= */
+select:not([multiple]):not([size]) {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233F8E91' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.7rem center !important;
+  background-size: 1rem !important;
+  padding-right: 2.25rem !important;
+}
+select:not([multiple]):not([size]):focus {
+  outline: none !important;
+  border-color: #4FAEB2 !important;
+  box-shadow: 0 0 0 2px rgba(79, 174, 178, 0.25) !important;
+}
+select:not([multiple]):not([size]):disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* =============================================================================
+   Inputs de texto: focus ring uniforme teal (no reemplaza el borde/padding
+   que setea cada componente; solo agrega el anillo y color de foco).
+   ============================================================================= */
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="search"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="datetime-local"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: #4FAEB2;
+  box-shadow: 0 0 0 2px rgba(79, 174, 178, 0.22);
+}
+
+/* =============================================================================
+   Tablas: hover de fila con tinte teal muy sutil (aplicado por default a las
+   filas del <tbody>). Si una tabla no lo quiere, agregar 'no-teal-hover' al tr.
+   ============================================================================= */
+tbody tr:not(.no-teal-hover):hover {
+  background-color: rgba(79, 174, 178, 0.05);
 }
 
 /**
