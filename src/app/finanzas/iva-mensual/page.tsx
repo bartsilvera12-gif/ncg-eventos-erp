@@ -54,8 +54,8 @@ export default function IvaMensualPage() {
         eyebrow="NCG · Finanzas"
         title="IVA del período"
         description="IVA repercutido (ventas) menos IVA soportado (compras). Resultado positivo = IVA a pagar; negativo = crédito a favor."
-        backHref="/finanzas"
-        backLabel="Finanzas"
+        backHref="/libros"
+        backLabel="Libros"
         actions={
           <input type="number" min={2000} max={9999} value={anio}
             onChange={(e) => setAnio(parseInt(e.target.value, 10) || new Date().getFullYear())}

@@ -39,8 +39,8 @@ export default function LibroMayorPage() {
         eyebrow="NCG · Contabilidad"
         title="Libro Mayor"
         description="Movimientos y saldos acumulados por cuenta contable. Click en una cuenta para ver el detalle."
-        backHref="/reportes"
-        backLabel="Reportes"
+        backHref="/libros"
+        backLabel="Libros"
       />
       <div className="rounded-xl border border-slate-200 bg-white p-4 flex flex-wrap items-center justify-between gap-3">
         <FiltrosFecha desde={desde} hasta={hasta} onChange={(v) => { if (v.desde !== undefined) setDesde(v.desde); if (v.hasta !== undefined) setHasta(v.hasta); }}

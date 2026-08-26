@@ -27,12 +27,12 @@ type Data = {
 };
 
 function fmtGs(n: number): string {
-  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtFecha(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString("es-PY");
+    return new Date(iso).toLocaleDateString("es-ES");
   } catch {
     return iso.slice(0, 10);
   }
@@ -73,8 +73,8 @@ export default function LibroVentasPage() {
         eyebrow="NCG · Finanzas"
         title="Libro de Ventas"
         description="Detalle de ventas reales del mes con subtotal, IVA y total."
-        backHref="/finanzas"
-        backLabel="Finanzas"
+        backHref="/libros"
+        backLabel="Libros"
         actions={
           <input type="month" value={mes} onChange={(e) => setMes(e.target.value)}
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" />
