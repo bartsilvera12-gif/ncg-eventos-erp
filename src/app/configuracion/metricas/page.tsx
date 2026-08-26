@@ -106,11 +106,11 @@ export default function ConfiguracionMetricasPage() {
         <ConfigFormCard>
           <ConfigSectionTitle>Metas configuradas actualmente</ConfigSectionTitle>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <ConfigMetricCard label="Ventas / mes" value={`€ ${config.meta_ventas_mensuales.toLocaleString("es-PY")}`} />
+            <ConfigMetricCard label="Ventas / mes" value={`€ ${config.meta_ventas_mensuales.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
             <ConfigMetricCard label="Clientes nuevos" value={config.meta_clientes_nuevos} sub="por mes" />
             <ConfigMetricCard
               label="Facturación / mes"
-              value={`€ ${config.meta_facturacion_mensual.toLocaleString("es-PY")}`}
+              value={`€ ${config.meta_facturacion_mensual.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             />
             <ConfigMetricCard label="Conversión leads" value={`${config.meta_conversion_leads}%`} sub="objetivo" />
           </div>

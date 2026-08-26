@@ -10,7 +10,7 @@ import { mesActualAsuncion } from "@/lib/fechas/asuncion-bounds";
 import type { EstadoCuentaReporte } from "@/lib/reportes/types";
 
 function formatGs(v: number) {
-  return `€ ${(v).toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${(v).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function formatFecha(iso: string) {
   try {

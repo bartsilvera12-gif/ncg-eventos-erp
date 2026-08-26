@@ -147,13 +147,13 @@ export function computePreviewPeriod(
 
   let etiquetaMes: string;
   try {
-    etiquetaMes = new Intl.DateTimeFormat("es-PY", {
+    etiquetaMes = new Intl.DateTimeFormat("es-ES", {
       month: "long",
       year: "numeric",
       timeZone: useTz,
     }).format(new Date(startMs));
   } catch {
-    etiquetaMes = new Intl.DateTimeFormat("es-PY", { month: "long", year: "numeric" }).format(new Date(startMs));
+    etiquetaMes = new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric" }).format(new Date(startMs));
   }
 
   return {

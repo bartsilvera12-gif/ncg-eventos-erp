@@ -71,7 +71,7 @@ function formatUltimaActualizacion(iso: unknown): string | null {
   try {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return null;
-    return d.toLocaleString("es-PY", { dateStyle: "short", timeStyle: "short" });
+    return d.toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" });
   } catch {
     return null;
   }
@@ -124,7 +124,7 @@ function parseMontoPyg(raw: string, opts?: { nullable?: boolean; label?: string 
 }
 
 function formatMontoPygNumber(n: number): string {
-  return new Intl.NumberFormat("es-PY", {
+  return new Intl.NumberFormat("es-ES", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(n);

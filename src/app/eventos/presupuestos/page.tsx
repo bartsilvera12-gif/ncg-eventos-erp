@@ -41,12 +41,12 @@ const ESTADO_LABEL: Record<EstadoPresupuesto, string> = {
 
 function fmtMoney(n: number | string) {
   const v = typeof n === "string" ? Number(n) || 0 : n;
-  return `€ ${v.toLocaleString("es-PY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `€ ${v.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function fmtFecha(iso?: string | null) {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleDateString("es-PY");
+    return new Date(iso).toLocaleDateString("es-ES");
   } catch {
     return iso;
   }

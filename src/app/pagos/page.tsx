@@ -381,10 +381,10 @@ export default function PagosPage() {
                     <td className="whitespace-nowrap px-3 py-2.5 text-slate-600 sm:px-4">{formatFecha(f.fecha)}</td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-slate-600 sm:px-4">{formatFecha(f.fecha_vencimiento)}</td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-right text-sm font-semibold tabular-nums text-slate-800 sm:px-4 sm:text-left">
-                      € {f.monto.toLocaleString("es-PY")}
+                      € {f.monto.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 text-right text-sm font-semibold tabular-nums text-amber-600 sm:px-4 sm:text-left">
-                      € {f.saldo.toLocaleString("es-PY")}
+                      € {f.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2.5 sm:px-4">
                       <span className="inline-block text-xs font-medium whitespace-nowrap rounded-full bg-amber-100 px-2.5 py-0.5 text-amber-800">
@@ -433,13 +433,13 @@ export default function PagosPage() {
                   <td className="whitespace-nowrap align-top px-3 py-3 text-right sm:px-4 sm:text-left">
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Total</span>
                     <p className="text-sm font-bold tabular-nums text-slate-800">
-                      € {totalesPendientesVista.monto.toLocaleString("es-PY")}
+                      € {totalesPendientesVista.monto.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </td>
                   <td className="whitespace-nowrap align-top px-3 py-3 text-right sm:px-4 sm:text-left">
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Saldo</span>
                     <p className="text-sm font-bold tabular-nums text-amber-600">
-                      € {totalesPendientesVista.saldo.toLocaleString("es-PY")}
+                      € {totalesPendientesVista.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </p>
                   </td>
                   <td
@@ -540,7 +540,7 @@ export default function PagosPage() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 text-right text-sm font-semibold tabular-nums text-slate-800 sm:px-4 sm:text-left">
-                        € {p.monto.toLocaleString("es-PY")}
+                        € {p.monto.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 text-slate-600 sm:px-4">
                         {formatFecha(p.fecha_pago)}
@@ -577,7 +577,7 @@ export default function PagosPage() {
                           className="min-w-0 flex-1 whitespace-nowrap text-center text-sm font-bold tabular-nums text-[#0EA5E9] sm:px-2"
                           style={{ lineHeight: 1.25 }}
                         >
-                          {`€ ${totalCobradoVista.toLocaleString("es-PY")}`}
+                          {`€ ${totalCobradoVista.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                         </p>
                         <p className="shrink-0 text-left text-[11px] text-slate-500 sm:max-w-[32%] sm:text-right">
                           {cobradosVista.length} registro{cobradosVista.length === 1 ? "" : "s"} · se

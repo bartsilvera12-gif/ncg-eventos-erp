@@ -9,7 +9,7 @@ import { getErpAttachmentPublicUrl } from "@/lib/chat/message-erp-display";
 function fmtDate(iso: string | null) {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleString("es-PY", {
+    return new Date(iso).toLocaleString("es-ES", {
       day: "2-digit",
       month: "short",
       year: "numeric",

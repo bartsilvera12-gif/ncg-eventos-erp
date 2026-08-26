@@ -48,13 +48,13 @@ export default function ReporteRentabilidadEventosPage() {
           <div className="rounded-lg bg-emerald-50 p-3 text-sm">
             <p className="text-xs text-emerald-700">Cobrado total</p>
             <p className="text-lg font-bold text-emerald-800">
-              € {totCobrado.toLocaleString("es-PY")}
+              € {totCobrado.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className="rounded-lg bg-red-50 p-3 text-sm">
             <p className="text-xs text-red-700">Costos totales</p>
             <p className="text-lg font-bold text-red-800">
-              € {totCostos.toLocaleString("es-PY")}
+              € {totCostos.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           <div className={`rounded-lg p-3 text-sm ${totGanancia >= 0 ? "bg-emerald-50" : "bg-red-50"}`}>
@@ -62,7 +62,7 @@ export default function ReporteRentabilidadEventosPage() {
               Ganancia neta
             </p>
             <p className={`text-lg font-bold ${totGanancia >= 0 ? "text-emerald-800" : "text-red-800"}`}>
-              € {totGanancia.toLocaleString("es-PY")}
+              € {totGanancia.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
         </div>
@@ -101,17 +101,17 @@ export default function ReporteRentabilidadEventosPage() {
                       <div className="text-xs text-slate-500">{evento.cliente_nombre ?? "—"}</div>
                     </td>
                     <td className="px-4 py-3 text-right text-emerald-700">
-                      € {r.total_cobrado.toLocaleString("es-PY")}
+                      € {r.total_cobrado.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3 text-right text-red-700">
-                      € {r.total_costos.toLocaleString("es-PY")}
+                      € {r.total_costos.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td
                       className={`px-4 py-3 text-right font-bold ${
                         r.ganancia >= 0 ? "text-emerald-800" : "text-red-800"
                       }`}
                     >
-                      € {r.ganancia.toLocaleString("es-PY")}
+                      € {r.ganancia.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Badge tone={r.margen_pct >= 20 ? "success" : r.margen_pct >= 0 ? "warning" : "danger"}>

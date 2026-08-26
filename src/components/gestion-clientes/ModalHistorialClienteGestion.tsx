@@ -9,7 +9,7 @@ function formatFechaHora(iso: string) {
   try {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
-    return d.toLocaleString("es-PY", {
+    return d.toLocaleString("es-ES", {
       dateStyle: "short",
       timeStyle: "short",
     });
@@ -54,7 +54,7 @@ function textoDetalle(f: ClienteHistorialRow) {
   if (d?.moneda_nueva != null && d?.precio_nuevo != null) {
     const mon = String(d.moneda_nueva);
     partes.push(
-      `Importe nuevo plan: ${mon === "USD" ? "US$ " : "€ "}${Number(d.precio_nuevo).toLocaleString("es-PY")} ${mon}`
+      `Importe nuevo plan: ${mon === "USD" ? "US$ " : "€ "}${Number(d.precio_nuevo).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${mon}`
     );
   }
   return partes.join(" · ") || f.accion;

@@ -170,7 +170,7 @@ export default function ServiciosPanel() {
                     <Badge tone="primary">{s.categoria}</Badge>
                   </td>
                   <td className="px-4 py-3 text-right text-slate-600">
-                    € {s.precio_base.toLocaleString("es-PY")}
+                    € {s.precio_base.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{s.unidad}</td>
                   <td className="px-4 py-3 text-right">

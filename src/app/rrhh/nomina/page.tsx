@@ -32,7 +32,7 @@ type Data = {
 };
 
 function fmtGs(n: number): string {
-  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export default function NominaPage() {

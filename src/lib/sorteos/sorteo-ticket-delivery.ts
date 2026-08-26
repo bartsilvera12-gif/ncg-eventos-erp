@@ -401,7 +401,7 @@ export async function maybeGenerateAndSendSorteoTicketDelivery(
       }
     }
 
-    const fechaHora = new Date().toLocaleString("es-PY", {
+    const fechaHora = new Date().toLocaleString("es-ES", {
       dateStyle: "short",
       timeStyle: "short",
     });

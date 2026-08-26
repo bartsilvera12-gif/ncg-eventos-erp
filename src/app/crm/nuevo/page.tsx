@@ -282,7 +282,7 @@ export default function NuevoProspectoPage() {
                 <input
                   type="text"
                   readOnly
-                  value={valorEstimado > 0 ? valorEstimado.toLocaleString("es-PY") : ""}
+                  value={valorEstimado > 0 ? valorEstimado.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
                   placeholder="Se calcula automáticamente"
                   className={`${inputClass} bg-slate-50 cursor-not-allowed`}
                 />

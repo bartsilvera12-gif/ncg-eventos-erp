@@ -22,11 +22,11 @@ type Fila = {
 type Data = { filas: Fila[]; totales: { cantidad: number; saldo: number } };
 
 function fmtGs(n: number): string {
-  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function fmtFecha(iso: string | null): string {
   if (!iso) return "—";
-  try { return new Date(iso).toLocaleDateString("es-PY"); } catch { return iso.slice(0, 10); }
+  try { return new Date(iso).toLocaleDateString("es-ES"); } catch { return iso.slice(0, 10); }
 }
 function diasVencimiento(vencimiento: string | null): number | null {
   if (!vencimiento) return null;

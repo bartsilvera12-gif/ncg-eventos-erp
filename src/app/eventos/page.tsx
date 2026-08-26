@@ -19,7 +19,7 @@ function fmtFecha(iso?: string | null) {
   }
 }
 function fmtMoney(n?: number) {
-  return `€ ${(n ?? 0).toLocaleString("es-PY")}`;
+  return `€ ${(n ?? 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const ESTADO_TONE: Record<string, "neutral" | "primary" | "info" | "warning" | "success" | "danger"> = {

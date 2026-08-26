@@ -41,12 +41,12 @@ function buildQuery(
 }
 
 function formatGs(n: number) {
-  return `${n.toLocaleString("es-PY")} ₲`;
+  return `${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₲`;
 }
 
 function formatFecha(iso: string) {
   try {
-    return new Date(iso).toLocaleString("es-PY", {
+    return new Date(iso).toLocaleString("es-ES", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",

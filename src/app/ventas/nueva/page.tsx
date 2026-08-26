@@ -28,7 +28,7 @@ const ES_GASTRONOMIA =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_NEURA_VERTICAL?.trim().toLowerCase()) === "gastronomia";
 
 function formatGs(valor: number) {
-  return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 /** Alícuota a partir del código de IVA (admite formatos PY y ES). */
@@ -96,9 +96,9 @@ export default function NuevaVentaPage() {
   // Modal de partida manual (solo presupuesto)
   const [partidaManualOpen, setPartidaManualOpen] = useState(false);
 
-  // ── Condiciones de la venta (fijas para En lo de Mari) ────────────────────
-  // Instancia dedicada: siempre Guaraníes + Contado.
-  const moneda: MonedaVenta = "GS";
+  // ── Condiciones de la venta (fijas para NCG Eventos) ────────────────────
+  // Instancia dedicada: siempre Euros + Contado.
+  const moneda: MonedaVenta = "GS"; // Nota: valor interno legacy; se muestra como EUR (€) en toda la UI.
   const tipoVenta: TipoVenta = "CONTADO";
 
   // Pedidos (gastronomía): modalidad obligatoria en instancia En lo de Mari

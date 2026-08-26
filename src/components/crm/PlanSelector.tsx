@@ -54,7 +54,7 @@ export default function PlanSelector({
               >
                 {plan.nombre}
                 <span className="text-xs text-gray-500">
-                  {plan.precio.toLocaleString("es-PY")} ₲
+                  {plan.precio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                 </span>
                 {!disabled && (
                   <button
@@ -116,7 +116,7 @@ export default function PlanSelector({
                     >
                       <span className="truncate">{plan.nombre}</span>
                       <span className="text-xs font-mono text-gray-500 shrink-0">
-                        {plan.precio.toLocaleString("es-PY")} ₲
+                        {plan.precio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
                       </span>
                     </button>
                   </li>

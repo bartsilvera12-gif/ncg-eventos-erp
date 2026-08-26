@@ -30,13 +30,13 @@ export async function GET(request: Request) {
 
     let periodoEtiqueta: string;
     try {
-      periodoEtiqueta = new Intl.DateTimeFormat("es-PY", {
+      periodoEtiqueta = new Intl.DateTimeFormat("es-ES", {
         month: "long",
         year: "numeric",
         timeZone: tz,
       }).format(new Date());
     } catch {
-      periodoEtiqueta = new Intl.DateTimeFormat("es-PY", {
+      periodoEtiqueta = new Intl.DateTimeFormat("es-ES", {
         month: "long",
         year: "numeric",
         timeZone: TZ_DEFAULT,

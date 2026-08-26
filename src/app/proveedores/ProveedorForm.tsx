@@ -188,7 +188,7 @@ export default function ProveedorForm({
             disabled={disabled}
           >
             <option value="">—</option>
-            <option value="GS">Guaraníes (GS)</option>
+            <option value="EUR">Euros (€)</option>
             <option value="USD">Dólares (USD)</option>
           </select>
         </div>

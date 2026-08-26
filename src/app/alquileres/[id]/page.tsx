@@ -9,13 +9,13 @@ import { getAlquilerDetalle, updateAlquilerEstado } from "@/lib/alquileres/stora
 import type { Alquiler, AlquilerItem, EstadoAlquiler } from "@/lib/alquileres/types";
 
 function fmtMoney(n: number) {
-  return `€ ${n.toLocaleString("es-PY")}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtFecha(iso: string) {
   try {
     const d = new Date(iso);
-    return d.toLocaleString("es-PY");
+    return d.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   } catch {
     return iso;
   }

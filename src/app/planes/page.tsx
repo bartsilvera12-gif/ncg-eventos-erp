@@ -8,7 +8,7 @@ import type { Plan } from "@/lib/planes/types";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatGs(n: number) {
-  return n.toLocaleString("es-PY");
+  return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatPrecio(p: Plan) {
@@ -17,7 +17,7 @@ function formatPrecio(p: Plan) {
 }
 
 function limiteLabel(v: number | null) {
-  return v === null ? "Ilimitado" : v.toLocaleString("es-PY");
+  return v === null ? "Ilimitado" : v.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 // ── Badges ────────────────────────────────────────────────────────────────────

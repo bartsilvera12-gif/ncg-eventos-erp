@@ -25,7 +25,7 @@ type RentabilidadData = {
 };
 
 function fmt(n: number): string {
-  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function fmtPct(n: number): string {

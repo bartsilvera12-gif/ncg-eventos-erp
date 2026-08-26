@@ -41,7 +41,7 @@ function badgeSifen(e: string | null) {
 }
 
 function formatGs(n: number, moneda: string) {
-  return moneda === "USD" ? n.toLocaleString("en-US") : n.toLocaleString("es-PY");
+  return moneda === "USD" ? n.toLocaleString("en-US") : n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 const ERP_OPTS = [
@@ -296,7 +296,7 @@ export default function NotasCreditoListClient() {
                 items.map((nc) => (
                   <tr key={nc.id} className="hover:bg-slate-50/80">
                     <td className="px-3 py-2 whitespace-nowrap text-slate-600">
-                      {new Date(nc.created_at).toLocaleString("es-PY", { dateStyle: "short", timeStyle: "short" })}
+                      {new Date(nc.created_at).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })}
                     </td>
                     <td className="px-3 py-2 max-w-[160px]">
                       <Link href={`/clientes/${nc.cliente_id}`} className="text-[#0EA5E9] font-medium hover:underline truncate block">

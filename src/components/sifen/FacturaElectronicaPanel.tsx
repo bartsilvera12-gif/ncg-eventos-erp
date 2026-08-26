@@ -136,7 +136,7 @@ async function readApiError(res: Response): Promise<string> {
 function formatLimiteCancelacion(iso: string | null): string {
   if (iso == null || !iso.trim()) return "—";
   try {
-    return new Date(iso).toLocaleString("es-PY", {
+    return new Date(iso).toLocaleString("es-ES", {
       dateStyle: "short",
       timeStyle: "short",
     });

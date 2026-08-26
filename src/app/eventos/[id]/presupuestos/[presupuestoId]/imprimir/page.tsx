@@ -14,12 +14,12 @@ interface EmpresaCabecera {
 }
 
 function fmtMoney(n?: number) {
-  return `€ ${(n ?? 0).toLocaleString("es-PY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `€ ${(n ?? 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function fmtFecha(iso?: string | null) {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleDateString("es-PY", {
+    return new Date(iso).toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -249,7 +249,7 @@ export default function PresupuestoImprimirPage() {
                   {items.map((it) => (
                     <tr key={it.id} style={{ borderTop: "1px solid #e2e8f0" }}>
                       <td>{it.descripcion}</td>
-                      <td className="right">{Number(it.cantidad).toLocaleString("es-PY")}</td>
+                      <td className="right">{Number(it.cantidad).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td>{it.unidad}</td>
                       <td className="right">{fmtMoney(it.precio_unitario)}</td>
                       <td className="right">{it.descuento_pct ? `${it.descuento_pct}%` : "—"}</td>

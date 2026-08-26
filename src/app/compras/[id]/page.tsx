@@ -8,7 +8,7 @@ import { getCompraDetalle, getFacturaSignedUrl } from "@/lib/compras/storage";
 import type { CompraDetalle } from "@/lib/compras/types";
 
 function formatGs(valor: number) {
-  return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatFecha(iso: string) {
@@ -164,7 +164,7 @@ export default function CompraDetallePage() {
               </Badge>
             }
           />
-          <DatoItem label="Moneda" value={esUSD ? `USD (TC ${compra.tipo_cambio.toLocaleString("es-PY")})` : "Guaraníes"} />
+          <DatoItem label="Moneda" value={esUSD ? `USD (TC ${compra.tipo_cambio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })})` : "Euros"} />
           <DatoItem label="Timbrado" value={compra.nro_timbrado || "—"} />
           <DatoItem label="Líneas" value={String(items.length > 0 ? items.length : 1)} />
         </div>

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 export function formatMontoDisplay(value: number | string, decimals = true): string {
   const n = typeof value === "string" ? parseMontoInput(value) : value;
   if (isNaN(n) || (typeof value === "number" && isNaN(value))) return "";
-  return n.toLocaleString("es-PY", {
+  return n.toLocaleString("es-ES", {
     minimumFractionDigits: 0,
     maximumFractionDigits: decimals ? 2 : 0,
   });

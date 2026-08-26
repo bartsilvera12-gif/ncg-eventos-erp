@@ -168,7 +168,7 @@ export default function PaquetesPanel() {
           <div className="flex items-center justify-between border-t border-slate-100 pt-3">
             <span className="text-sm text-slate-500">Total estimado</span>
             <span className="text-lg font-bold text-slate-800">
-              € {totalCalc.toLocaleString("es-PY")}
+              € {totalCalc.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
 
@@ -211,7 +211,7 @@ export default function PaquetesPanel() {
                     <td className="px-4 py-3 font-medium text-slate-800">{p.nombre}</td>
                     <td className="px-4 py-3 text-slate-600">{p.descripcion ?? "—"}</td>
                     <td className="px-4 py-3 text-right font-semibold text-slate-800">
-                      € {p.precio_total.toLocaleString("es-PY")}
+                      € {p.precio_total.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3 text-xs">{p.activo ? "activo" : "inactivo"}</td>
                   </tr>

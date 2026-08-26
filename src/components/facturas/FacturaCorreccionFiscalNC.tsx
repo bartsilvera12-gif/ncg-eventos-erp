@@ -133,7 +133,7 @@ function nextNcSifenPasoTestOverride(
 }
 
 function formatGs(n: number, moneda: string) {
-  return moneda === "USD" ? n.toLocaleString("en-US") : n.toLocaleString("es-PY");
+  return moneda === "USD" ? n.toLocaleString("en-US") : n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function FacturaCorreccionFiscalNC({
@@ -475,7 +475,7 @@ export function FacturaCorreccionFiscalNC({
                         <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Nota de crédito</p>
                         <p className="text-xs text-slate-800">
                           <span className="text-slate-500">Creada</span>{" "}
-                          {new Date(nc.created_at).toLocaleString("es-PY", {
+                          {new Date(nc.created_at).toLocaleString("es-ES", {
                             dateStyle: "short",
                             timeStyle: "short",
                           })}{" "}

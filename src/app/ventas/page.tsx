@@ -15,7 +15,7 @@ import PresupuestoActions from "@/components/ventas/PresupuestoActions";
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatGs(valor: number) {
-  return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatFecha(iso: string) {
@@ -216,14 +216,14 @@ export default function VentasPage() {
       <div>
         <p className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-3">
           Resumen de hoy —{" "}
-          {new Date().toLocaleDateString("es-PY", {
+          {new Date().toLocaleDateString("es-ES", {
             weekday: "long", day: "numeric", month: "long", year: "numeric",
           })}
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             label="Facturación de hoy"
-            value={`€ ${metricas.facturacion.toLocaleString("es-PY")}`}
+            value={`€ ${metricas.facturacion.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             sub="Total incl. IVA"
             accent
           />
@@ -236,7 +236,7 @@ export default function VentasPage() {
             label="Ticket promedio"
             value={
               metricas.ticketPromedio > 0
-                ? `€ ${metricas.ticketPromedio.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`
+                ? `€ ${metricas.ticketPromedio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : "—"
             }
             sub="Por orden de venta"

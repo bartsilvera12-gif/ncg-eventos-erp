@@ -116,12 +116,12 @@ function getRangoFechas(periodo: Periodo): { desde: Date; hasta: Date } {
  * reintroducir el compact selectivamente.
  */
 function formatGs(n: number): string {
-  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatTime(iso: string): string {
   try {
-    return new Date(iso).toLocaleTimeString("es-PY", {
+    return new Date(iso).toLocaleTimeString("es-ES", {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -132,7 +132,7 @@ function formatTime(iso: string): string {
 
 function formatFecha(iso: string): string {
   try {
-    return new Date(iso).toLocaleDateString("es-PY", {
+    return new Date(iso).toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",
     });
@@ -719,7 +719,7 @@ export default function MobileDashboard({
           </p>
           <p className="text-xs opacity-90 mt-1">
             {inventarioMetrics.totalProductos} productos ·{" "}
-            {inventarioMetrics.totalUnidades.toLocaleString("es-PY")} unidades
+            {inventarioMetrics.totalUnidades.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} unidades
           </p>
         </div>
 

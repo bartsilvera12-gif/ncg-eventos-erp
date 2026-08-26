@@ -157,7 +157,7 @@ export function formatMontoPyg(value: unknown): string {
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n)) return "—";
   try {
-    return new Intl.NumberFormat("es-PY", {
+    return new Intl.NumberFormat("es-ES", {
       style: "currency",
       currency: "PYG",
       minimumFractionDigits: 0,
@@ -172,7 +172,7 @@ export function formatFechaPyFull(iso?: string | null): string {
   if (!iso) return "—";
   const d = new Date(iso);
   if (!Number.isFinite(d.getTime())) return "—";
-  return new Intl.DateTimeFormat("es-PY", {
+  return new Intl.DateTimeFormat("es-ES", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

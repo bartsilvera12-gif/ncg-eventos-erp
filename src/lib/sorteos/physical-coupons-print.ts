@@ -75,7 +75,7 @@ function normalizeWhatsapp(raw: string | null | undefined): string | null {
 
 function formatFechaDisplay(d: Date): string {
   try {
-    return d.toLocaleString("es-PY", {
+    return d.toLocaleString("es-ES", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",

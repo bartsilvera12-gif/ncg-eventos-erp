@@ -22,7 +22,7 @@ function modoLabel(m: ModoCambioPlan) {
 }
 
 function formatGs(n: number) {
-  return n.toLocaleString("es-PY");
+  return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function ModalCambioPlanGestion({

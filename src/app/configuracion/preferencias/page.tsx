@@ -47,7 +47,6 @@ export default function ConfiguracionPreferenciasPage() {
               <label className={F_LABEL}>Moneda base del sistema</label>
               <select name="moneda_base" value={form.moneda_base} onChange={handleChange} className={F_SELECT}>
                 <option value="EUR">Euros (€)</option>
-                <option value="GS">Guaraníes (GS)</option>
                 <option value="USD">Dólares (USD)</option>
                 <option value="BRL">Reales (BRL)</option>
                 <option value="ARS">Pesos argentinos (ARS)</option>

@@ -113,7 +113,7 @@ export default function RecetasListPage() {
                     </span>
                   </td>
                   <td className="px-4 py-2 text-xs text-gray-500 hidden md:table-cell">
-                    {new Date(r.updated_at).toLocaleString("es-PY")}
+                    {new Date(r.updated_at).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td className="px-4 py-2 text-right">
                     <Link

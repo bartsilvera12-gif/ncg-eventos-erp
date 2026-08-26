@@ -245,13 +245,13 @@ const PEDIDO_MODALIDAD_BADGE: Record<
 function fmtPedidoTotal(n: number | string | null | undefined): string {
   if (n == null) return "—";
   const v = typeof n === "string" ? Number(n) : n;
-  return "€ " + (v || 0).toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  return "€ " + (v || 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function fmtPedidoHora(s: string | null | undefined): string {
   if (!s) return "—";
   try {
-    return new Date(s).toLocaleTimeString("es-PY", { hour: "2-digit", minute: "2-digit" });
+    return new Date(s).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
   } catch {
     return "—";
   }

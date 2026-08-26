@@ -559,7 +559,7 @@ export default function PhysicalCouponsPrintClient({
               <p className="mt-2 text-xs text-emerald-900">
                 Impresión ya registrada{" "}
                 {entradaContext.cupones_impresos_at
-                  ? new Date(entradaContext.cupones_impresos_at).toLocaleString("es-PY")
+                  ? new Date(entradaContext.cupones_impresos_at).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                   : ""}
                 .
               </p>

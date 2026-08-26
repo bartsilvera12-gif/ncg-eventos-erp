@@ -28,7 +28,7 @@ type FlowRow = {
 
 function fmt(iso: string) {
   try {
-    return new Date(iso).toLocaleString("es-PY", {
+    return new Date(iso).toLocaleString("es-ES", {
       day: "2-digit",
       month: "short",
       hour: "2-digit",

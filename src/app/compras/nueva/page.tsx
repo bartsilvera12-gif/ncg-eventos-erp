@@ -18,7 +18,7 @@ import type { MetodoValuacion, Producto } from "@/lib/inventario/types";
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function formatEur(valor: number) {
-  return `€ ${valor.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function ivaRate(t: TipoIva) {

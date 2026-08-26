@@ -104,7 +104,7 @@ type TabDash = DashboardTabSlug;
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatGs(n: number): string {
-  return n.toLocaleString("es-PY");
+  return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /**
@@ -120,7 +120,7 @@ function formatGsFull(n: number): string {
     const b = num / 1_000_000_000;
     return `${b.toFixed(2).replace(".", ",")} MM`;
   }
-  return num.toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  return num.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /** Formato abreviado (mantengo para charts/ejes donde el espacio es limitado). */
@@ -136,7 +136,7 @@ function formatGsM(n: number): string {
     return m % 1 === 0 ? `${m}M` : `${m.toFixed(1)}M`;
   }
   if (num >= 1_000) return `${Math.round(num / 1_000)}K`;
-  return num.toLocaleString("es-PY");
+  return num.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatFecha(s: string): string {
@@ -147,7 +147,7 @@ function formatFecha(s: string): string {
   }
   const dt = new Date(s);
   if (isNaN(dt.getTime())) return "—";
-  return dt.toLocaleDateString("es-PY", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return dt.toLocaleDateString("es-ES", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 function getRango(periodo: Periodo): { desde: Date; hasta: Date } {

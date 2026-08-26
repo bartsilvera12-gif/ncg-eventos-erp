@@ -27,7 +27,7 @@ const metodoTone: Record<MetodoValuacion, BadgeTone> = {
 };
 
 function formatGs(valor: number) {
-  return `€ ${valor.toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function foldText(s: string): string {
@@ -258,7 +258,7 @@ export default function InventarioPage() {
       const t = filtroPorCosto.trim();
       const coincide =
         String(p.costo_promedio).includes(t) ||
-        p.costo_promedio.toLocaleString("es-PY").includes(t);
+        p.costo_promedio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).includes(t);
       if (!coincide) return false;
     }
 
@@ -267,7 +267,7 @@ export default function InventarioPage() {
       const t = filtroPorPrecio.trim();
       const coincide =
         String(p.precio_venta).includes(t) ||
-        p.precio_venta.toLocaleString("es-PY").includes(t);
+        p.precio_venta.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).includes(t);
       if (!coincide) return false;
     }
 

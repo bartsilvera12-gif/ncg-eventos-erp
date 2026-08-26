@@ -67,12 +67,12 @@ const TABS: { key: TabKey; label: string }[] = [
 ];
 
 function fmtMoney(n?: number) {
-  return `€ ${(n ?? 0).toLocaleString("es-PY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `€ ${(n ?? 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function fmtFecha(iso?: string | null) {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleDateString("es-PY");
+    return new Date(iso).toLocaleDateString("es-ES");
   } catch {
     return iso;
   }

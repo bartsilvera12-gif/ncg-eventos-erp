@@ -106,9 +106,9 @@ function formatMonto(nStr: string, moneda: string): string {
   const n = Number.parseFloat(String(nStr).replace(",", "."));
   if (!Number.isFinite(n)) return String(nStr);
   if (moneda === "PYG" || moneda === "GS") {
-    return Math.round(n).toLocaleString("es-PY");
+    return Math.round(n).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
-  return n.toLocaleString("es-PY", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function readLogoBytes(): Uint8Array | null {

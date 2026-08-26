@@ -834,13 +834,13 @@ export default function EditarProductoPage() {
                     <div>
                       <p className="text-slate-500">Invertido en compras</p>
                       <p className="font-semibold text-slate-800">
-                        € {recupero.costo_total_invertido.toLocaleString("es-PY")}
+                        € {recupero.costo_total_invertido.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div>
                       <p className="text-slate-500">Ingresos por alquiler</p>
                       <p className="font-semibold text-emerald-700">
-                        € {recupero.ingreso_real_alquiler.toLocaleString("es-PY")}
+                        € {recupero.ingreso_real_alquiler.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <div>
@@ -852,7 +852,7 @@ export default function EditarProductoPage() {
                     <div>
                       <p className="text-slate-500">Falta para recuperar</p>
                       <p className="font-semibold text-red-700">
-                        € {recupero.monto_faltante.toLocaleString("es-PY")}
+                        € {recupero.monto_faltante.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                   </div>

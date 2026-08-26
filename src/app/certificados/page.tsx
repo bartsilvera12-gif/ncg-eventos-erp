@@ -47,7 +47,7 @@ const initial: FormState = {
 function fmtFecha(iso?: string | null) {
   if (!iso) return "—";
   try {
-    return new Date(iso).toLocaleDateString("es-PY");
+    return new Date(iso).toLocaleDateString("es-ES");
   } catch {
     return iso;
   }

@@ -13,13 +13,13 @@ import Badge from "@/components/ui/Badge";
 import ImputarObraSelect from "@/components/proyectos/ImputarObraSelect";
 
 function formatGs(valor: number) {
-  return `€ ${valor.toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatFecha(fecha: string) {
   try {
     const d = new Date(fecha);
-    return d.toLocaleDateString("es-PY", {
+    return d.toLocaleDateString("es-ES", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",

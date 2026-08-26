@@ -25,7 +25,7 @@ function nombreCliente(c: Cliente): string {
 }
 
 function fmtMoney(n: number) {
-  return `€ ${n.toLocaleString("es-PY")}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const inputClass =

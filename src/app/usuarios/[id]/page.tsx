@@ -81,7 +81,7 @@ function labelArea(a: string | null | undefined): string {
 
 function fmtGs(n: number | null | undefined): string {
   if (n == null || !Number.isFinite(Number(n))) return "—";
-  return Number(n).toLocaleString("es-PY");
+  return Number(n).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function labelNivelDisplay(rol: string | null): string {

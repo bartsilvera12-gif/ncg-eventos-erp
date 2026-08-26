@@ -37,7 +37,7 @@ const fLabelClass = "mb-0.5 block text-[11px] font-medium text-slate-500";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatGs(n: number) {
-  return n.toLocaleString("es-PY");
+  return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatFecha(str: string) {
@@ -345,7 +345,7 @@ function ModalFacturacion({
           <p className="text-sm text-gray-500 mt-0.5">{nombreCliente}</p>
           {data?.suscripcion && (
             <p className="text-sm font-medium text-gray-700 mt-2">
-              Suscripción mensual — {data.suscripcion.moneda === "USD" ? "USD" : "€"} {data.suscripcion.precio.toLocaleString("es-PY")}
+              Suscripción mensual — {data.suscripcion.moneda === "USD" ? "USD" : "€"} {data.suscripcion.precio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           )}
         </div>
@@ -380,7 +380,7 @@ function ModalFacturacion({
                       </span>
                     </div>
                     <div className="shrink-0 text-sm font-semibold text-gray-700 tabular-nums">
-                      {data.suscripcion?.moneda === "USD" ? "USD" : "€"} {(data.suscripcion?.precio ?? 0).toLocaleString("es-PY")}
+                      {data.suscripcion?.moneda === "USD" ? "USD" : "€"} {(data.suscripcion?.precio ?? 0).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                     <div className="shrink-0">
                       {item.estado === "proyectada" && (

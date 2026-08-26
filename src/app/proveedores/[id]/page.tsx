@@ -11,7 +11,7 @@ import { getProveedor, getProveedorDetalleCompras } from "@/lib/proveedores/stor
 import type { Proveedor, ProveedorDetalleCompras } from "@/lib/proveedores/types";
 
 function formatGs(v: number) {
-  return `€ ${(v).toLocaleString("es-PY", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  return `€ ${(v).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function formatFecha(iso: string | null): string {
   if (!iso) return "—";

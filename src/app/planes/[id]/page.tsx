@@ -18,7 +18,7 @@ const fSelectClass =
   "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] bg-white disabled:bg-slate-50 disabled:text-slate-500";
 
 function formatGs(n: number) {
-  return n.toLocaleString("es-PY");
+  return n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatPrecio(p: Plan) {
@@ -28,7 +28,7 @@ function formatPrecio(p: Plan) {
 }
 
 function limiteLabel(v: number | null) {
-  return v === null ? "Ilimitado" : v.toLocaleString("es-PY");
+  return v === null ? "Ilimitado" : v.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {

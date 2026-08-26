@@ -18,7 +18,7 @@ const inputFilterClass =
   "border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9] focus:outline-none bg-white";
 
 function formatGs(valor: number) {
-  return `€ ${valor.toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatFecha(iso: string) {
@@ -265,7 +265,7 @@ export default function ComprasPage() {
                     <td className="py-4 pr-4 text-right tabular-nums text-gray-600 text-xs hidden lg:table-cell">
                       {c.moneda === "USD" && c.costo_unitario_original != null ? (
                         <span>
-                          USD {c.costo_unitario_original.toLocaleString("es-PY")}
+                          USD {c.costo_unitario_original.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           <br />
                           <span className="text-gray-400">≈ {formatGs(c.costo_unitario)}</span>
                         </span>

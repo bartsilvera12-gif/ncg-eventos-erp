@@ -207,14 +207,14 @@ function FacturaDetalleInner() {
             <dt className="text-slate-400 text-xs">Monto</dt>
             <dd className="font-semibold text-slate-900 tabular-nums">
               {monedaLabel}{" "}
-              {factura.monto.toLocaleString(factura.moneda === "USD" ? "en-US" : "es-PY")}
+              {factura.monto.toLocaleString(factura.moneda === "USD" ? "en-US" : "es-ES")}
             </dd>
           </div>
           <div>
             <dt className="text-slate-400 text-xs">Saldo</dt>
             <dd className="font-semibold text-slate-900 tabular-nums">
               {monedaLabel}{" "}
-              {factura.saldo.toLocaleString(factura.moneda === "USD" ? "en-US" : "es-PY")}
+              {factura.saldo.toLocaleString(factura.moneda === "USD" ? "en-US" : "es-ES")}
             </dd>
           </div>
           <div>

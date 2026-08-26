@@ -1105,8 +1105,8 @@ export default function ClienteDetailPage() {
             <div className="bg-amber-100/50 border border-amber-200 rounded-lg p-3">
               <p className="text-sm text-amber-900 font-medium mb-2">
                 {bajaPreview.facturas_pendientes_count != null && bajaPreview.facturas_pendientes_count > 1
-                  ? `Este cliente tiene ${bajaPreview.facturas_pendientes_count} facturas con saldo pendiente (ej.: ${bajaPreview.factura_pendiente_mes.numero_factura} — € ${bajaPreview.factura_pendiente_mes.monto?.toLocaleString("es-PY")}).`
-                  : `Este cliente tiene factura pendiente (${bajaPreview.factura_pendiente_mes.numero_factura} — € ${bajaPreview.factura_pendiente_mes.monto?.toLocaleString("es-PY")}).`}
+                  ? `Este cliente tiene ${bajaPreview.facturas_pendientes_count} facturas con saldo pendiente (ej.: ${bajaPreview.factura_pendiente_mes.numero_factura} — € ${bajaPreview.factura_pendiente_mes.monto?.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}).`
+                  : `Este cliente tiene factura pendiente (${bajaPreview.factura_pendiente_mes.numero_factura} — € ${bajaPreview.factura_pendiente_mes.monto?.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}).`}
               </p>
               <p className="text-xs text-amber-800 mb-2">
                 ¿Deseas anularlas al dar de baja? (quedarán en estado Anulado y no sumarán en cobranzas)
@@ -1267,7 +1267,7 @@ export default function ClienteDetailPage() {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-sm text-red-900 font-medium mb-2">
                     {eliminarPreview.facturas_pendientes_count === 1 && eliminarPreview.factura_ejemplo
-                      ? `Factura con saldo pendiente (${eliminarPreview.factura_ejemplo.numero_factura} — € ${eliminarPreview.factura_ejemplo.monto?.toLocaleString("es-PY")}).`
+                      ? `Factura con saldo pendiente (${eliminarPreview.factura_ejemplo.numero_factura} — € ${eliminarPreview.factura_ejemplo.monto?.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}).`
                       : `Hay ${eliminarPreview.facturas_pendientes_count} facturas con saldo pendiente${eliminarPreview.factura_ejemplo ? ` (ej.: ${eliminarPreview.factura_ejemplo.numero_factura})` : ""}.`}
                   </p>
                   <p className="text-xs text-red-800 mb-2">
@@ -1565,7 +1565,7 @@ export default function ClienteDetailPage() {
                       </span>
                       {" · "}
                       {suscripcionActiva.moneda === "USD" ? "U$S " : "€ "}
-                      {suscripcionActiva.precio.toLocaleString("es-PY")}
+                      {suscripcionActiva.precio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       {" · facturación día "}
                       {suscripcionActiva.dia_facturacion}
                       {" · vencimiento día "}
@@ -1649,7 +1649,7 @@ export default function ClienteDetailPage() {
                           >
                             <option value="">— Seleccionar plan —</option>
                             {planes.filter((p) => p.estado === "activo").map((p) => (
-                              <option key={p.id} value={p.id}>{p.nombre} — € {p.precio.toLocaleString("es-PY")}</option>
+                              <option key={p.id} value={p.id}>{p.nombre} — € {p.precio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</option>
                             ))}
                           </select>
                         </div>
@@ -1826,7 +1826,7 @@ export default function ClienteDetailPage() {
                           </td>
                           <td className="px-4 py-3 text-slate-600">{formatFecha(f.fecha)}</td>
                           <td className="px-4 py-3 text-slate-600">{formatFecha(f.fecha_vencimiento)}</td>
-                          <td className="px-4 py-3 font-semibold text-slate-800">€ {f.monto.toLocaleString("es-PY")}</td>
+                          <td className="px-4 py-3 font-semibold text-slate-800">€ {f.monto.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           <td className="px-4 py-3">
                             {(() => {
                               const estUi = estadoFacturaParaUi(f, hoyYmdFactura);
@@ -1899,7 +1899,7 @@ export default function ClienteDetailPage() {
                           <td className="px-4 py-3 font-medium text-slate-800">
                             {planes.find((p) => p.id === s.plan_id)?.nombre ?? s.plan_nombre ?? "—"}
                           </td>
-                          <td className="px-4 py-3 text-slate-600">{s.precio.toLocaleString("es-PY")}</td>
+                          <td className="px-4 py-3 text-slate-600">{s.precio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           <td className="px-4 py-3 text-slate-600">{s.moneda}</td>
                           <td className="px-4 py-3 text-slate-600">{formatFecha(s.fecha_inicio)}</td>
                           <td className="px-4 py-3 text-slate-600">{s.duracion_meses}</td>
@@ -2177,7 +2177,7 @@ export default function ClienteDetailPage() {
                 >
                   <option value="">— Seleccionar —</option>
                   {planes.filter((p) => p.estado === "activo").map((p) => (
-                    <option key={p.id} value={p.id}>{p.nombre} — € {p.precio.toLocaleString("es-PY")}</option>
+                    <option key={p.id} value={p.id}>{p.nombre} — € {p.precio.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</option>
                   ))}
                 </select>
               </div>
@@ -2303,7 +2303,7 @@ export default function ClienteDetailPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={() => setModalPago(false)}>
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-gray-800 mb-4">Registrar pago</h3>
-            {facturaPago && <p className="text-sm text-slate-600 mb-4">Factura {facturaPago.numero_factura} — Saldo: € {facturaPago.saldo.toLocaleString("es-PY")}</p>}
+            {facturaPago && <p className="text-sm text-slate-600 mb-4">Factura {facturaPago.numero_factura} — Saldo: € {facturaPago.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>}
             <form onSubmit={async (e) => {
               e.preventDefault();
               const fid = facturaPago?.id ?? formPago.factura_id;
@@ -2334,7 +2334,7 @@ export default function ClienteDetailPage() {
                   >
                     <option value="">— Seleccionar —</option>
                     {facturas.filter((f) => f.saldo > 0).map((f) => (
-                      <option key={f.id} value={f.id}>{f.numero_factura} — Saldo € {f.saldo.toLocaleString("es-PY")}</option>
+                      <option key={f.id} value={f.id}>{f.numero_factura} — Saldo € {f.saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</option>
                     ))}
                   </select>
                 </div>

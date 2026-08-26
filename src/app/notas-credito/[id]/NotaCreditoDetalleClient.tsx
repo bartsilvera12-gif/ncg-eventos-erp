@@ -119,7 +119,7 @@ export default function NotaCreditoDetalleClient() {
           <div>
             <dt className="text-slate-400 text-xs">Monto NC</dt>
             <dd className="font-bold text-amber-900 tabular-nums">
-              {moneda === "USD" ? "USD" : "€"} {Number(nc.monto).toLocaleString(moneda === "USD" ? "en-US" : "es-PY")}
+              {moneda === "USD" ? "USD" : "€"} {Number(nc.monto).toLocaleString(moneda === "USD" ? "en-US" : "es-ES")}
             </dd>
           </div>
           <div>
@@ -200,7 +200,7 @@ export default function NotaCreditoDetalleClient() {
                 <div className="flex flex-wrap items-baseline gap-2">
                   <span className="text-sm font-bold text-slate-800">{labelTipoEvento(ev.tipo_evento)}</span>
                   <span className="text-xs text-slate-400">
-                    {new Date(ev.created_at).toLocaleString("es-PY", { dateStyle: "short", timeStyle: "medium" })}
+                    {new Date(ev.created_at).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "medium" })}
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500 mt-0.5">Actor: {ev.actor_user_id ?? "—"}</p>

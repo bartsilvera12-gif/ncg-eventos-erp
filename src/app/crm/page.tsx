@@ -12,7 +12,7 @@ import type { Prospecto } from "@/lib/crm/types";
 function formatGs(valor: number) {
   if (valor >= 1_000_000) return `${(valor / 1_000_000).toFixed(1)}M`;
   if (valor >= 1_000) return `${(valor / 1_000).toFixed(0)}k`;
-  return valor.toLocaleString("es-PY");
+  return valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatFecha(iso: string) {
@@ -141,7 +141,7 @@ function ProspectoCard({
         </div>
       </div>
       <p className="text-[10px] text-gray-500 line-clamp-1 mb-0.5">{prospecto.servicio}</p>
-      <p className="text-xs font-bold text-gray-900 tabular-nums mb-1">€ {prospecto.valor_estimado.toLocaleString("es-PY")}</p>
+      <p className="text-xs font-bold text-gray-900 tabular-nums mb-1">€ {prospecto.valor_estimado.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
       <div className="text-[10px] text-gray-600 truncate mb-1">👤 {prospecto.contacto}</div>
       {prospecto.proxima_accion && (
         <div className="flex items-start gap-0.5 bg-amber-50 border border-amber-100 rounded px-1.5 py-0.5 mb-1">

@@ -9,7 +9,7 @@ import { getAlquileres } from "@/lib/alquileres/storage";
 import type { Alquiler, EstadoAlquiler } from "@/lib/alquileres/types";
 
 function formatMoney(n: number) {
-  return `€ ${n.toLocaleString("es-PY")}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatFecha(iso: string) {

@@ -63,7 +63,7 @@ export default function ConfiguracionPage() {
           <div className="shrink-0 text-right">
             <p className="text-xs text-slate-400">Última actualización</p>
             <p className="mt-0.5 text-xs font-medium text-slate-600">
-              {new Date(meta.updated_at).toLocaleString("es-PY")}
+              {new Date(meta.updated_at).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             {meta.updated_by && <p className="mt-0.5 text-xs text-slate-400">por {meta.updated_by}</p>}
           </div>

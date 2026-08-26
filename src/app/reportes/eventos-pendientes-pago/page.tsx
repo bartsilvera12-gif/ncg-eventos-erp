@@ -53,7 +53,7 @@ export default function ReportePendientesPagoPage() {
         />
 
         <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          Saldo total pendiente: <strong>€ {totalSaldo.toLocaleString("es-PY")}</strong>
+          Saldo total pendiente: <strong>€ {totalSaldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
         </div>
 
         <div className="mt-4 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -92,13 +92,13 @@ export default function ReportePendientesPagoPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-600">{evento.fecha_evento ?? "—"}</td>
                     <td className="px-4 py-3 text-right text-slate-600">
-                      € {presupuesto.toLocaleString("es-PY")}
+                      € {presupuesto.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3 text-right text-emerald-700">
-                      € {cobrado.toLocaleString("es-PY")}
+                      € {cobrado.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3 text-right font-bold text-red-700">
-                      € {saldo.toLocaleString("es-PY")}
+                      € {saldo.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3">
                       <Badge tone="warning">{evento.estado_codigo ?? "—"}</Badge>

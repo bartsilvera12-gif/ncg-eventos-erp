@@ -33,7 +33,7 @@ const origenBadge: Record<OrigenMovimiento, string> = {
 };
 
 function formatGs(valor: number) {
-  return `€ ${valor.toLocaleString("es-PY")}`;
+  return `€ ${valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function formatFecha(iso: string) {

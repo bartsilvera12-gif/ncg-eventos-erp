@@ -29,7 +29,7 @@ function nombreCliente(c: Cliente): string {
   return c.tipo_cliente === "empresa" && c.empresa ? c.empresa : c.nombre_contacto;
 }
 function fmtEur(n: number) {
-  return `€ ${n.toLocaleString("es-PY", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 interface LineaDraft {

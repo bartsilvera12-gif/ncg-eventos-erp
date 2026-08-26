@@ -20,7 +20,7 @@ type Fichaje = {
 };
 
 function fmtFecha(iso: string): string {
-  try { return new Date(iso).toLocaleDateString("es-PY"); } catch { return iso.slice(0, 10); }
+  try { return new Date(iso).toLocaleDateString("es-ES"); } catch { return iso.slice(0, 10); }
 }
 
 export default function ControlHorarioPage() {
