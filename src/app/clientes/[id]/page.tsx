@@ -79,11 +79,9 @@ type TabId = "informacion" | "estado_cuenta" | "suscripciones" | "marketing" | "
 const TABS: { id: TabId; label: string; showWhen?: (c: Cliente) => boolean }[] = [
   { id: "informacion",   label: "Información"      },
   { id: "estado_cuenta", label: "Estado de cuenta" },
-  { id: "suscripciones", label: "Suscripciones"    },
-  { id: "marketing",     label: "Marketing",        showWhen: (c) => c.tipo_servicio_cliente === "marketing" },
   { id: "proyectos",     label: "Proyectos"         },
-  { id: "actividad",     label: "Actividad"         },
   { id: "notas",         label: "Notas"             },
+  // NCG Eventos: tabs 'Suscripciones', 'Marketing' y 'Actividad' ocultos (no aplican al negocio).
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1048,47 +1046,16 @@ export default function ClienteDetailPage() {
               )}
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-slate-200 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setFormFacturaContado({ monto: "", descripcion: "Venta al contado", iva_tipo: "iva_10" });
-                setErrorFacturaContado(null);
-                setModalFacturaContado(true);
-              }}
-              className="text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Factura al contado
-            </button>
-            <button
-              type="button"
-              onClick={abrirRegistrarPago}
-              className="text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Registrar pago
-            </button>
-          </div>
+          {/* NCG Eventos: botones 'Factura al contado' y 'Registrar pago' del header ocultados por no aplicar. */}
         </div>
 
         {/* Estadísticas rápidas */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 border-t border-gray-100">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 border-t border-gray-100">
           {(
             [
               { label: "Origen", value: cliente.origen },
               { label: "Condición", value: cliente.condicion_pago ?? "—" },
               { label: "Moneda", value: cliente.moneda_preferida ?? "EUR" },
-              {
-                label: "Vendedor",
-                value: (() => {
-                  const uid = cliente.vendedor_usuario_id?.trim();
-                  if (uid) {
-                    const u = usuariosEmpresa.find((x) => x.id === uid);
-                    const nom = (u?.nombre ?? "").trim() || u?.email?.trim();
-                    if (nom) return nom;
-                  }
-                  return cliente.vendedor_asignado ?? "—";
-                })(),
-              },
               { label: "Creado por", value: cliente.created_by_nombre?.trim() || "—" },
             ] as { label: string; value: ReactNode }[]
           ).map((item) => (
@@ -1463,23 +1430,7 @@ export default function ClienteDetailPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className={labelClass}>Tipo de servicio</label>
-                  <select
-                    name="tipo_servicio_cliente"
-                    value={form.tipo_servicio_cliente}
-                    onChange={handleChange}
-                    className={inputClass}
-                  >
-                    <option value="">— Ninguno —</option>
-                    {opcionesTipoServicio.map((f) => (
-                      <option key={f.slug} value={f.slug}>
-                        {f.nombre}
-                        {!f.activo && (form.tipo_servicio_cliente || "").trim() === f.slug ? " (inactivo)" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {/* NCG Eventos: 'Tipo de servicio' oculto (no aplica). */}
 
                 {form.tipo_cliente === "empresa" && (
                   <div>
@@ -1659,29 +1610,7 @@ export default function ClienteDetailPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>Vendedor responsable (usuario ERP)</label>
-                    <select
-                      name="vendedor_usuario_id"
-                      value={form.vendedor_usuario_id}
-                      onChange={(e) => setForm((p) => ({ ...p, vendedor_usuario_id: e.target.value }))}
-                      className={inputClass}
-                    >
-                      <option value="">— Sin asignar —</option>
-                      {usuariosEmpresa.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {(u.nombre ?? "").trim() || u.email}
-                        </option>
-                      ))}
-                    </select>
-                    {usuariosEmpresaError ? (
-                      <p className="mt-1 text-xs text-red-600">{usuariosEmpresaError}</p>
-                    ) : usuariosEmpresa.length === 0 ? (
-                      <p className="mt-1 text-xs text-slate-500">No hay usuarios activos disponibles para asignar.</p>
-                    ) : null}
-                  </div>
-                </div>
+                {/* NCG Eventos: 'Vendedor responsable' oculto (no aplica). */}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
