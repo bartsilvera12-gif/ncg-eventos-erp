@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import { apiCreateCliente } from "@/lib/api/client";
 import { filasTiposDesdeSistemaEstatico, fetchTiposFormCliente } from "@/lib/clientes/fetch-tipos-servicio-form";
 import type { ClienteTipoServicioRow } from "@/lib/clientes/tipo-servicio-catalogo";
+import { REGIMEN_FISCAL_OPTS, FORMA_PAGO_OPTS } from "@/lib/clientes/opciones-es";
 
 const inputCls =
   "w-full border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#4FAEB2]/40 focus:border-[#4FAEB2] bg-white text-sm";
@@ -19,28 +20,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-const REGIMEN_FISCAL_OPTS = [
-  { value: "",                          label: "—" },
-  { value: "regimen_general",           label: "Régimen general" },
-  { value: "recargo_equivalencia",      label: "Recargo de equivalencia" },
-  { value: "regimen_simplificado",      label: "Régimen simplificado (módulos)" },
-  { value: "exento_iva",                label: "Exento de IVA (art. 20 LIVA)" },
-  { value: "intracomunitario",          label: "Intracomunitario (NIF-IVA)" },
-  { value: "extracomunitario",          label: "Extracomunitario / exportación" },
-  { value: "inversion_sujeto_pasivo",   label: "Inversión del sujeto pasivo (ISP)" },
-  { value: "no_sujeto",                 label: "No sujeto" },
-  { value: "otro",                      label: "Otro" },
-];
-const FORMA_PAGO_OPTS = [
-  { value: "",              label: "—" },
-  { value: "transferencia", label: "Transferencia" },
-  { value: "efectivo",      label: "Efectivo" },
-  { value: "tarjeta",       label: "Tarjeta" },
-  { value: "cheque",        label: "Cheque" },
-  { value: "giro",          label: "Giro / domiciliación" },
-  { value: "otro",          label: "Otro" },
-];
 
 function NuevoClienteForm() {
   const router = useRouter();

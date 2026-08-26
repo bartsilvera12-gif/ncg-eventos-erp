@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { REGIMEN_FISCAL_OPTS, FORMA_PAGO_OPTS } from "@/lib/clientes/opciones-es";
 import {
   addNotaCliente,
   clienteNombre,
@@ -361,8 +362,8 @@ export default function ClienteDetailPage() {
         codigo_postal:       c.codigo_postal       ?? "",
         provincia:           c.provincia           ?? "",
         contacto_persona:    c.contacto_persona    ?? "",
-        fecha_alta:          c.fecha_alta          ?? "",
-        fecha_baja:          c.fecha_baja          ?? "",
+        fecha_alta:          (c.fecha_alta          ?? "").slice(0, 10),
+        fecha_baja:          (c.fecha_baja          ?? "").slice(0, 10),
         regimen_fiscal:      c.regimen_fiscal      ?? "",
         forma_pago:          c.forma_pago          ?? "",
         iban:                c.iban                ?? "",
@@ -1572,23 +1573,17 @@ export default function ClienteDetailPage() {
                   <div>
                     <label className={labelClass}>Régimen fiscal</label>
                     <select name="regimen_fiscal" value={form.regimen_fiscal} onChange={handleChange} className={inputClass}>
-                      <option value="">— sin definir —</option>
-                      <option value="regimen_general">Régimen general</option>
-                      <option value="autonomo_modulos">Autónomo — módulos</option>
-                      <option value="autonomo_estimacion">Autónomo — estimación directa</option>
-                      <option value="recargo_equivalencia">Recargo de equivalencia</option>
-                      <option value="exento">Exento</option>
+                      {REGIMEN_FISCAL_OPTS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
                     <label className={labelClass}>Forma de pago</label>
                     <select name="forma_pago" value={form.forma_pago} onChange={handleChange} className={inputClass}>
-                      <option value="">— sin definir —</option>
-                      <option value="transferencia">Transferencia</option>
-                      <option value="giro_domiciliado">Giro / domiciliación</option>
-                      <option value="tarjeta">Tarjeta</option>
-                      <option value="efectivo">Efectivo</option>
-                      <option value="cheque">Cheque</option>
+                      {FORMA_PAGO_OPTS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
                     </select>
                   </div>
                   <div className="md:col-span-2">
