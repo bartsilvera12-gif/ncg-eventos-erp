@@ -144,6 +144,64 @@ tbody tr:not(.no-teal-hover):hover {
   background-color: rgba(79, 174, 178, 0.05);
 }
 
+/* =============================================================================
+   Inputs: hover con border teal sutil + transicion suave. No cambia el layout,
+   solo agrega "vida" al pasar el mouse.
+   ============================================================================= */
+input:not(:disabled):not(:focus):not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover,
+textarea:not(:disabled):not(:focus):hover,
+select:not(:disabled):not(:focus):hover {
+  border-color: rgba(79, 174, 178, 0.45);
+}
+
+input, textarea, select {
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+/* =============================================================================
+   Utilidades de formulario (opt-in).
+   .form-label       → label pequeña uppercase tracking + color slate.
+   .form-section     → seccion con separador teal a la izquierda.
+   .form-section-title → titulo de seccion consistente.
+   ============================================================================= */
+.form-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgb(100 116 139);
+  margin-bottom: 0.375rem;
+}
+
+.form-section {
+  position: relative;
+  border-radius: 1rem;
+  border: 1px solid rgb(226 232 240);
+  background: linear-gradient(to bottom, #ffffff, rgba(248, 250, 252, 0.4));
+  padding: 1.25rem 1.5rem;
+}
+
+.form-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgb(241 245 249);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(30 41 59);
+}
+.form-section-title::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 1rem;
+  border-radius: 9999px;
+  background: linear-gradient(to bottom, #4FAEB2, #3F8E91);
+}
+
 /**
  * Impresión cupones físicos (/sorteos/[id]/imprimir-cupones): el AppShell usa h-svh + overflow
  * oculto en ancestros; en @media print eso suele dejar casi en blanco la hoja salvo cabecera/pie del navegador.

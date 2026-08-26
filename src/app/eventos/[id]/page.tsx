@@ -470,7 +470,7 @@ export default function EventoDetallePage() {
 
         <div className="mt-5">
           {tab === "resumen" && (
-            <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm md:grid-cols-2">
               <Field label="Tipo de evento" value={evento.tipo_evento} />
               <Field label="Cantidad de invitados" value={evento.cantidad_invitados?.toString()} />
               <Field label="Salón / recurso" value={evento.recurso_nombre} />
@@ -506,7 +506,7 @@ export default function EventoDetallePage() {
               </div>
 
               {ppFormAbierto && (
-                <div className="rounded-xl border border-slate-200 bg-white p-5">
+                <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
                   <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
                     Nuevo presupuesto
                   </h3>
@@ -762,7 +762,7 @@ export default function EventoDetallePage() {
                 </div>
               )}
 
-              <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
                 {presupuestos.length === 0 ? (
                   <p className="py-6 text-center text-sm text-slate-400">
                     Sin presupuestos todavía.
@@ -898,7 +898,7 @@ export default function EventoDetallePage() {
           )}
 
           {tab === "servicios" && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
               {servicios.length === 0 ? (
                 <p className="py-6 text-center text-sm text-slate-400">
                   Sin servicios contratados.
@@ -947,7 +947,7 @@ export default function EventoDetallePage() {
               </div>
 
               {resFormAbierto && (
-                <div className="rounded-xl border border-slate-200 bg-white p-5">
+                <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
                   <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
                     Nueva reserva
                   </h3>
@@ -1019,7 +1019,7 @@ export default function EventoDetallePage() {
                 </div>
               )}
 
-              <div className="rounded-xl border border-slate-200 bg-white p-5">
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
                 {reservas.length === 0 ? (
                   <p className="py-6 text-center text-sm text-slate-400">
                     Sin insumos reservados.
@@ -1112,7 +1112,7 @@ export default function EventoDetallePage() {
           )}
 
           {tab === "pagos" && pagos && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <SummaryCard label="Presupuesto" value={fmtMoney(pagos.total_presupuesto)} />
                 <SummaryCard label="Cobrado" value={fmtMoney(pagos.total_cobrado)} tone="success" />
@@ -1145,7 +1145,7 @@ export default function EventoDetallePage() {
           )}
 
           {tab === "rentabilidad" && rent && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 <SummaryCard label="Cobrado" value={fmtMoney(rent.total_cobrado)} tone="success" />
                 <SummaryCard label="Costos" value={fmtMoney(rent.total_costos)} tone="danger" />
@@ -1163,7 +1163,7 @@ export default function EventoDetallePage() {
           )}
 
           {tab === "galeria" && (
-            <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <p className="text-sm text-slate-500">
                   {fotos.length} foto{fotos.length !== 1 ? "s" : ""}

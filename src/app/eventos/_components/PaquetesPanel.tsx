@@ -67,7 +67,7 @@ export default function PaquetesPanel() {
       </div>
 
       {modo === "nuevo" ? (
-        <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="space-y-4 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <input
               type="text"

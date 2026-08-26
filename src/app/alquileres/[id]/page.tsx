@@ -88,7 +88,7 @@ export default function AlquilerDetallePage() {
           actions={<Badge tone={ESTADO_COLOR[alquiler.estado]}>{alquiler.estado}</Badge>}
         />
 
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
             Items
           </h2>

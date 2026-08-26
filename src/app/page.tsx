@@ -2189,14 +2189,20 @@ export default function DashboardPage() {
       className="hidden md:block zentra-dashboard-shell space-y-8 rounded-2xl border border-slate-200 px-4 py-8 sm:px-6 md:px-8"
       style={{ color: Z.muted }}
     >
-      <header className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+      <header className="relative overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-white to-teal-50/50 p-5 shadow-sm sm:p-6">
+        <span aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#4FAEB2]/10 blur-3xl" />
+        <span aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-[#4FAEB2] to-transparent opacity-70" />
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex items-start gap-4">
           <ZentraMark />
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: Z.accent }}>
-              Zentra
-            </p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: Z.text }}>
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#E5F4F4] px-2.5 py-1 ring-1 ring-[#4FAEB2]/15">
+              <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-[#4FAEB2] animate-pulse" style={{ boxShadow: "0 0 0 3px rgba(79,174,178,0.18)" }} />
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#3F8E91]">
+                Zentra
+              </p>
+            </div>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl" style={{ color: Z.text }}>
               Dashboard
             </h1>
             <p className="mt-1 max-w-md text-sm leading-relaxed" style={{ color: Z.muted }}>
@@ -2242,6 +2248,7 @@ export default function DashboardPage() {
               </button>
             ))}
           </div>
+        </div>
         </div>
       </header>
 

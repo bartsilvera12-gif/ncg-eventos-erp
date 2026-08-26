@@ -87,7 +87,7 @@ export default function NuevoEventoPage() {
           backHref="/eventos"
         />
 
-        <div className="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-5 md:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm md:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm md:col-span-2">
             <span className="font-medium text-slate-700">Nombre del evento</span>
             <input

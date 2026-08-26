@@ -131,7 +131,7 @@ function NuevoClienteForm() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Datos del cliente */}
-        <section className="rounded-xl border border-slate-200 bg-white p-5">
+        <section className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
           <SectionTitle>Datos del cliente</SectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div className="md:col-span-2">
@@ -224,7 +224,7 @@ function NuevoClienteForm() {
         </section>
 
         {/* Datos bancarios */}
-        <section className="rounded-xl border border-slate-200 bg-white p-5">
+        <section className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
           <SectionTitle>Datos bancarios</SectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             <div className="md:col-span-4">

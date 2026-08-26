@@ -147,7 +147,7 @@ export default function NuevoAlquilerPage() {
           backHref="/alquileres"
         />
 
-        <div className="mt-6 grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-5 md:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-4 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm md:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-medium text-slate-700">Cliente</span>
             <select
@@ -196,7 +196,7 @@ export default function NuevoAlquilerPage() {
           </label>
         </div>
 
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
               Insumos a alquilar

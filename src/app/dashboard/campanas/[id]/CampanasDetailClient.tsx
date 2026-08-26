@@ -494,7 +494,7 @@ export default function CampanasDetailClient({ campaignId }: { campaignId: strin
         ))}
       </div>
 
-      <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="space-y-3 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm shadow-sm">
         <h2 className="text-sm font-semibold text-slate-900">Importación (.xlsx / .csv)</h2>
         <input
           type="file"
@@ -517,7 +517,7 @@ export default function CampanasDetailClient({ campaignId }: { campaignId: strin
       </section>
 
       {placeholderSlots.length > 0 ? (
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="space-y-4 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm shadow-sm">
           <div>
             <h2 className="text-sm font-semibold text-slate-900">Mapeo de variables</h2>
             <p className="mt-1 text-xs text-slate-600">
@@ -612,7 +612,7 @@ export default function CampanasDetailClient({ campaignId }: { campaignId: strin
       ) : null}
 
       {quickReplyTemplateButtons.length > 0 ? (
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="space-y-4 rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm shadow-sm">
           <h2 className="text-sm font-semibold text-slate-900">Acciones de botones</h2>
           <p className="text-xs text-slate-600">
             Configurá qué hace cada respuesta rápida de la plantilla cuando el cliente la toca. El valor{" "}
