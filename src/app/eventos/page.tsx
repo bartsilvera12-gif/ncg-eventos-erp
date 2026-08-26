@@ -152,6 +152,12 @@ export default function EventosPage() {
                         >
                           Ver
                         </Link>
+                        <Link
+                          href={`/eventos/${e.id}/editar`}
+                          className="text-sm font-medium text-slate-500 hover:text-slate-700 hover:underline"
+                        >
+                          Editar
+                        </Link>
                         <button
                           type="button"
                           onClick={async () => {
