@@ -95,6 +95,7 @@ export default function EventoDetallePage() {
   const [rent, setRent] = useState<RentabilidadEvento | null>(null);
   const [fotos, setFotos] = useState<FotoEvento[]>([]);
   const [subiendo, setSubiendo] = useState(false);
+  const [galeriaError, setGaleriaError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(true);
 
   // Form de nueva reserva (solo cuando se abre)
@@ -147,6 +148,8 @@ export default function EventoDetallePage() {
   const subirFotos = async (files: FileList | null) => {
     if (!id || !files || files.length === 0) return;
     setSubiendo(true);
+    setGaleriaError(null);
+    const errores: string[] = [];
     try {
       for (const file of Array.from(files)) {
         const ext = file.name.split(".").pop() ?? "jpg";
@@ -155,20 +158,34 @@ export default function EventoDetallePage() {
           .from("proyectos")
           .upload(path, file, { cacheControl: "3600", upsert: false });
         if (upErr) {
-          console.error("[galeria] upload:", upErr.message);
+          const msg = upErr.message ?? "Error al subir.";
+          console.error("[galeria] upload:", msg);
+          if (/bucket.*not.*found|404|not.*exist/i.test(msg)) {
+            errores.push(`Bucket 'proyectos' no existe en Supabase. Crealo en Storage o corré la migración de galería.`);
+          } else if (/policy|permission|denied|401|403/i.test(msg)) {
+            errores.push(`Sin permisos para subir. Revisá las policies del bucket 'proyectos'.`);
+          } else {
+            errores.push(`${file.name}: ${msg}`);
+          }
           continue;
         }
-        await registrarFoto(id, {
+        const registro = await registrarFoto(id, {
           nombre: file.name,
           storage_path: path,
           storage_bucket: "proyectos",
           mime_type: file.type,
           size_bytes: file.size,
         });
+        if (!registro) {
+          errores.push(`${file.name}: se subió al bucket pero no se pudo registrar en la galería.`);
+        }
       }
       setFotos(await getGaleria(id));
+    } catch (e) {
+      errores.push(e instanceof Error ? e.message : "Error inesperado al subir.");
     } finally {
       setSubiendo(false);
+      if (errores.length > 0) setGaleriaError(errores.join(" · "));
     }
   };
 
@@ -1154,6 +1171,12 @@ export default function EventoDetallePage() {
                   />
                 </label>
               </div>
+
+              {galeriaError && (
+                <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                  {galeriaError}
+                </div>
+              )}
 
               {fotos.length === 0 ? (
                 <p className="py-10 text-center text-sm text-slate-400">
