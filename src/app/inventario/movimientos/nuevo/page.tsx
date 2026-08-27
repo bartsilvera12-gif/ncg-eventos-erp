@@ -7,12 +7,14 @@ import PageHeader from "@/components/ui/PageHeader";
 import { getProductos, saveMovimiento } from "@/lib/inventario/storage";
 import type { Producto, TipoMovimiento, OrigenMovimiento } from "@/lib/inventario/types";
 
-type ProyectoLite = { id: string; titulo: string };
+type EventoLite = { id: string; titulo: string };
 
 export default function NuevoMovimientoPage() {
   const router = useRouter();
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [proyectos, setProyectos] = useState<ProyectoLite[]>([]);
+  const [eventos, setEventos] = useState<EventoLite[]>([]);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     producto_id: "",
@@ -28,15 +30,17 @@ export default function NuevoMovimientoPage() {
     getProductos().then((data) => {
       if (!cancelled) setProductos(data);
     });
-    // Cargar obras activas para el selector. Si falla, el campo queda vacío y opcional.
-    fetch("/api/proyectos", { credentials: "include", cache: "no-store" })
+    // Cargar eventos activos para el selector (opcional). En NCG Eventos los
+    // 'proyectos' son eventos (bodas, cumpleaños, corporativos…).
+    fetch("/api/eventos", { credentials: "include", cache: "no-store" })
       .then((r) => r.json())
-      .then((j: { success?: boolean; data?: { id: string; titulo: string }[] }) => {
-        if (!cancelled && j.success && Array.isArray(j.data)) {
-          setProyectos(j.data.map((p) => ({ id: p.id, titulo: p.titulo })));
+      .then((j: { success?: boolean; data?: { eventos?: { id: string; titulo: string }[] } }) => {
+        if (!cancelled && j.success) {
+          const arr = j.data?.eventos ?? [];
+          setEventos(arr.map((p) => ({ id: p.id, titulo: p.titulo })));
         }
       })
-      .catch(() => { /* sin proyectos: el select queda vacío */ });
+      .catch(() => { /* sin eventos: el select queda vacío */ });
     return () => { cancelled = true; };
   }, []);
 
@@ -65,28 +69,45 @@ export default function NuevoMovimientoPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
 
     const productoSeleccionado = productos.find((p) => p.id === form.producto_id);
-    if (!productoSeleccionado) return;
+    if (!productoSeleccionado) {
+      setError("Elegí un producto de la lista.");
+      return;
+    }
+    const rawCant = parseFloat(form.cantidad);
+    if (!Number.isFinite(rawCant) || rawCant === 0) {
+      setError("La cantidad no puede quedar vacía ni ser 0.");
+      return;
+    }
 
-    const cantidadNum =
-      form.tipo === "AJUSTE"
-        ? parseFloat(form.cantidad)
-        : Math.abs(parseFloat(form.cantidad));
+    const cantidadNum = form.tipo === "AJUSTE" ? rawCant : Math.abs(rawCant);
 
-    const guardado = await saveMovimiento({
-      producto_id: productoSeleccionado.id,
-      producto_nombre: productoSeleccionado.nombre,
-      producto_sku: productoSeleccionado.sku,
-      tipo: form.tipo,
-      cantidad: cantidadNum,
-      costo_unitario: parseFloat(form.costo_unitario) || 0,
-      origen: form.origen,
-      fecha: new Date().toISOString(),
-      proyecto_id: form.proyecto_id || null,
-    });
+    setGuardando(true);
+    try {
+      const guardado = await saveMovimiento({
+        producto_id: productoSeleccionado.id,
+        producto_nombre: productoSeleccionado.nombre,
+        producto_sku: productoSeleccionado.sku,
+        tipo: form.tipo,
+        cantidad: cantidadNum,
+        costo_unitario: parseFloat(form.costo_unitario) || 0,
+        origen: form.origen,
+        fecha: new Date().toISOString(),
+        proyecto_id: form.proyecto_id || null,
+      });
 
-    if (guardado) router.push("/inventario/movimientos");
+      if (guardado) {
+        router.push("/inventario/movimientos");
+      } else {
+        setError("No se pudo guardar el movimiento. Revisá la consola del navegador para ver el error exacto de Supabase (probable: columna faltante en 'movimientos_inventario' o RLS bloqueando el insert).");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error inesperado al guardar.");
+    } finally {
+      setGuardando(false);
+    }
   }
 
   const productoSeleccionado = productos.find((p) => p.id === form.producto_id);
@@ -159,14 +180,14 @@ export default function NuevoMovimientoPage() {
             </div>
           </div>
 
-          {/* Obra / Proyecto al que se imputa el movimiento (opcional, recomendado
-              en SALIDAS para que el costo y materiales se sumen por obra). */}
+          {/* Evento al que se imputa el movimiento (opcional, recomendado en
+              SALIDAS para que el costo y materiales se sumen por evento). */}
           <div>
             <label className={labelClass}>
-              Obra / Proyecto
+              Evento
               {form.tipo === "SALIDA" && (
                 <span className="ml-2 text-xs text-amber-600 font-normal">
-                  (recomendado para imputar materiales a la obra)
+                  (recomendado para imputar materiales al evento)
                 </span>
               )}
             </label>
@@ -176,8 +197,8 @@ export default function NuevoMovimientoPage() {
               onChange={handleChange}
               className={inputClass}
             >
-              <option value="">Sin obra asociada</option>
-              {proyectos.map((p) => (
+              <option value="">Sin evento asociado</option>
+              {eventos.map((p) => (
                 <option key={p.id} value={p.id}>{p.titulo}</option>
               ))}
             </select>
@@ -267,18 +288,27 @@ export default function NuevoMovimientoPage() {
             </div>
           )}
 
+          {/* Error visible */}
+          {error && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           {/* Acciones */}
           <div className="flex gap-4 pt-2">
             <button
               type="submit"
-              className="bg-gray-900 text-white px-5 py-3 rounded-lg text-sm hover:bg-gray-700 transition-colors"
+              disabled={guardando}
+              className="bg-gray-900 text-white px-5 py-3 rounded-lg text-sm hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Guardar movimiento
+              {guardando ? "Guardando…" : "Guardar movimiento"}
             </button>
             <button
               type="button"
               onClick={() => router.push("/inventario/movimientos")}
-              className="border border-gray-300 px-5 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+              disabled={guardando}
+              className="border border-gray-300 px-5 py-3 rounded-lg text-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
             >
               Cancelar
             </button>
