@@ -19,10 +19,10 @@ import { getTenantSupabaseFromAuth } from "@/lib/supabase/tenant-api";
 
 /**
  * Nombre del negocio que aparece en la cabecera del ticket impreso.
- * Lee de NEURA_CLIENT_NAME (env de instancia monocliente). Se pasa a
- * MAYÚSCULAS para el look ticket-de-térmica. Fallback "NEGOCIO".
+ * Instancia dedicada NCG Eventos: nombre fijo (no depende de env vars).
+ * Se pasa a MAYÚSCULAS para el look ticket-de-térmica.
  */
-const NEGOCIO = (process.env.NEURA_CLIENT_NAME?.trim() || "Negocio").toUpperCase();
+const NEGOCIO = "NCG EVENTOS";
 
 // ── Clasificación PIZZERÍA / PLANCHA ───────────────────────────────────────
 // Primary: categoría hija del producto. Fallback: prefijo de SKU.
