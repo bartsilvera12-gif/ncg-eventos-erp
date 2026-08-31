@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
+import { DescargarExcelBtn } from "@/components/reportes/FiltrosFecha";
 
 export const dynamic = "force-dynamic";
 
@@ -57,9 +58,12 @@ export default function IvaMensualPage() {
         backHref="/libros"
         backLabel="Libros"
         actions={
-          <input type="number" min={2000} max={9999} value={anio}
-            onChange={(e) => setAnio(parseInt(e.target.value, 10) || new Date().getFullYear())}
-            className="w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm tabular-nums" />
+          <div className="flex items-center gap-2">
+            <input type="number" min={2000} max={9999} value={anio}
+              onChange={(e) => setAnio(parseInt(e.target.value, 10) || new Date().getFullYear())}
+              className="w-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm tabular-nums" />
+            <DescargarExcelBtn href={`/api/finanzas/iva-mensual/export?anio=${anio}`} />
+          </div>
         }
       />
 

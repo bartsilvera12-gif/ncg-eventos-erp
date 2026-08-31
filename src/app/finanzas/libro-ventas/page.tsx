@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import PageHeader from "@/components/ui/PageHeader";
 import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
+import { DescargarExcelBtn } from "@/components/reportes/FiltrosFecha";
 
 export const dynamic = "force-dynamic";
 
@@ -76,8 +77,11 @@ export default function LibroVentasPage() {
         backHref="/libros"
         backLabel="Libros"
         actions={
-          <input type="month" value={mes} onChange={(e) => setMes(e.target.value)}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" />
+          <div className="flex items-center gap-2">
+            <input type="month" value={mes} onChange={(e) => setMes(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm" />
+            <DescargarExcelBtn href={`/api/finanzas/libro-ventas/export?mes=${mes}`} />
+          </div>
         }
       />
 
