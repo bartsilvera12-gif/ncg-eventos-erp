@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import MontoInput from "@/components/ui/MontoInput";
 import PageHeader from "@/components/ui/PageHeader";
-import { getProductos, saveMovimiento } from "@/lib/inventario/storage";
+import { getProductos } from "@/lib/inventario/storage";
+import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
 import type { Producto, TipoMovimiento, OrigenMovimiento } from "@/lib/inventario/types";
 
 type EventoLite = { id: string; titulo: string };
@@ -86,22 +87,23 @@ export default function NuevoMovimientoPage() {
 
     setGuardando(true);
     try {
-      const guardado = await saveMovimiento({
-        producto_id: productoSeleccionado.id,
-        producto_nombre: productoSeleccionado.nombre,
-        producto_sku: productoSeleccionado.sku,
-        tipo: form.tipo,
-        cantidad: cantidadNum,
-        costo_unitario: parseFloat(form.costo_unitario) || 0,
-        origen: form.origen,
-        fecha: new Date().toISOString(),
-        proyecto_id: form.proyecto_id || null,
+      const r = await fetchWithSupabaseSession("/api/inventario/movimientos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          producto_id: productoSeleccionado.id,
+          tipo: form.tipo,
+          cantidad: cantidadNum,
+          costo_unitario: parseFloat(form.costo_unitario) || 0,
+          origen: form.origen,
+          proyecto_id: form.proyecto_id || null,
+        }),
       });
-
-      if (guardado) {
+      const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
+      if (r.ok && j.success) {
         router.push("/inventario/movimientos");
       } else {
-        setError("No se pudo guardar el movimiento. Revisá la consola del navegador para ver el error exacto de Supabase (probable: columna faltante en 'movimientos_inventario' o RLS bloqueando el insert).");
+        setError(j.error ?? `Error ${r.status}: no se pudo guardar el movimiento.`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error inesperado al guardar.");
