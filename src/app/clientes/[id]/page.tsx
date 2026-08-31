@@ -1461,23 +1461,12 @@ export default function ClienteDetailPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className={labelClass}>Teléfono principal</label>
+                    <label className={labelClass}>Teléfono</label>
                     <input type="text" name="telefono" value={form.telefono} onChange={handleChange} className={inputClass} />
                   </div>
                   <div>
-                    <label className={labelClass}>Teléfono secundario</label>
-                    <input type="text" name="telefono_secundario" value={form.telefono_secundario} onChange={handleChange} className={inputClass} />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>Email principal</label>
+                    <label className={labelClass}>Email</label>
                     <input type="email" name="email" value={form.email} onChange={handleChange} className={inputClass} />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Email secundario</label>
-                    <input type="email" name="email_secundario" value={form.email_secundario} onChange={handleChange} className={inputClass} />
                   </div>
                 </div>
 
