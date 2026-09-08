@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session";
 
-type Empleado = { id: string; nombre: string; cargo: string | null; costo_hora: number };
+type Empleado = { id: string; nombre: string; cargo: string | null; costo_hora: number; tipo_empleado?: string | null };
 
 type Asignacion = {
   id: string;
@@ -53,7 +53,16 @@ export default function PersonalObra({ projectId }: { projectId: string }) {
       ]);
       const jE = (await rE.json().catch(() => ({}))) as { success?: boolean; data?: { empleados?: Empleado[] } };
       const jA = (await rA.json().catch(() => ({}))) as { success?: boolean; data?: { asignaciones?: Asignacion[] }; error?: string };
-      if (rE.ok && jE.success) setEmpleados(jE.data?.empleados ?? []);
+      if (rE.ok && jE.success) {
+        // NCG Eventos: filtrar solo empleados 'ocasionales' (tipo=OCASIONAL o JORNALERO,
+        // que son los que se contratan por evento). Si no viene tipo, mostramos todos como fallback.
+        const raw = jE.data?.empleados ?? [];
+        const filtrados = raw.filter((e) => {
+          const t = (e.tipo_empleado ?? "").toUpperCase();
+          return t === "OCASIONAL" || t === "JORNALERO" || !t;
+        });
+        setEmpleados(filtrados);
+      }
       if (rA.ok && jA.success) {
         setAsignaciones(jA.data?.asignaciones ?? []);
         setErr(null);
@@ -109,8 +118,9 @@ export default function PersonalObra({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-4">
       <p className="text-xs text-slate-500">
-        Registra horas trabajadas por empleado en esta obra. El costo se calcula automáticamente
-        según el costo por hora del empleado y se suma al costo real de la obra.
+        Registrá las horas trabajadas por empleado ocasional en este evento. El costo se calcula
+        automáticamente según el costo por hora del empleado y se suma al costo real del evento.
+        Podés sobrescribir el costo manualmente si acordaste un monto fijo por el evento.
       </p>
 
       {err ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div> : null}
@@ -118,7 +128,9 @@ export default function PersonalObra({ projectId }: { projectId: string }) {
       {/* Formulario de asignación */}
       {empleados.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-          No hay empleados cargados. Primero cargá empleados en <Link href="/rrhh/empleados" className="font-medium text-[#3F8E91] underline">RRHH → Empleados</Link>.
+          No hay empleados ocasionales cargados. Primero dá de alta empleados con tipo{" "}
+          <strong>OCASIONAL</strong> o <strong>JORNALERO</strong> en{" "}
+          <Link href="/rrhh/empleados" className="font-medium text-[#3F8E91] underline">RRHH → Empleados</Link>.
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-4">
@@ -145,10 +157,13 @@ export default function PersonalObra({ projectId }: { projectId: string }) {
                 onChange={(e) => setForm({ ...form, horas: e.target.value })} />
             </div>
             <div>
-              <label className={lblCls}>Costo (opcional)</label>
-              <input type="number" className={inputCls} value={form.costo_total}
-                placeholder={costoSugerido > 0 ? fmtGs(costoSugerido) : "auto"}
+              <label className={lblCls}>Total a pagar (€)</label>
+              <input type="number" step="0.01" min="0" className={inputCls} value={form.costo_total}
+                placeholder={costoSugerido > 0 ? fmtGs(costoSugerido) : "0,00"}
                 onChange={(e) => setForm({ ...form, costo_total: e.target.value })} />
+              <p className="mt-1 text-[10px] text-slate-400">
+                Si lo dejás vacío se calcula automáticamente (horas × costo/hora del empleado).
+              </p>
             </div>
           </div>
           <div className="mt-3">

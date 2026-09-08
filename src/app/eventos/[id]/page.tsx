@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import PersonalObra from "@/app/dashboard/proyectos/components/PersonalObra";
 import {
   borrarFoto,
   borrarReservaStock,
@@ -54,13 +55,14 @@ interface PresupuestoLineaDraft {
   iva_pct: IvaPresupuesto;
 }
 
-type TabKey = "resumen" | "presupuestos" | "servicios" | "reservas" | "pagos" | "rentabilidad" | "galeria";
+type TabKey = "resumen" | "presupuestos" | "servicios" | "reservas" | "personal" | "pagos" | "rentabilidad" | "galeria";
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: "resumen", label: "Resumen" },
   { key: "presupuestos", label: "Presupuestos" },
   { key: "servicios", label: "Servicios" },
   { key: "reservas", label: "Insumos reservados" },
+  { key: "personal", label: "Personal" },
   { key: "pagos", label: "Pagos" },
   { key: "rentabilidad", label: "Rentabilidad" },
   { key: "galeria", label: "Galería" },
@@ -1108,6 +1110,12 @@ export default function EventoDetallePage() {
                   </table>
                 )}
               </div>
+            </div>
+          )}
+
+          {tab === "personal" && id && (
+            <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
+              <PersonalObra projectId={id} />
             </div>
           )}
 

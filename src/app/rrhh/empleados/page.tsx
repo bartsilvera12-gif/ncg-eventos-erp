@@ -89,7 +89,7 @@ const FORM_INICIAL = {
 const ESTADO_CIVIL_OPTS = ["soltero/a", "casado/a", "divorciado/a", "viudo/a", "unión libre"];
 const GRUPO_SANG_OPTS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const TIPO_DOC_OPTS = ["DNI", "NIE", "NIF", "Pasaporte", "Otro"];
-const TIPO_EMP_OPTS = ["CONTRATADO", "PERMANENTE", "JORNALERO", "PASANTE"];
+const TIPO_EMP_OPTS = ["OCASIONAL", "CONTRATADO", "PERMANENTE", "JORNALERO", "PASANTE"];
 const TIPO_PERIODO_OPTS = [
   { value: "mensual",   label: "Mensual" },
   { value: "quincenal", label: "Quincenal" },
