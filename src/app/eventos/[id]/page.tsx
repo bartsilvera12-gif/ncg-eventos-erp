@@ -1119,15 +1119,33 @@ export default function EventoDetallePage() {
             </div>
           )}
 
-          {tab === "pagos" && pagos && (
+          {tab === "pagos" && (
             <div className="rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50/40 p-5 shadow-sm">
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                <SummaryCard label="Presupuesto" value={fmtMoney(pagos.total_presupuesto)} />
-                <SummaryCard label="Cobrado" value={fmtMoney(pagos.total_cobrado)} tone="success" />
-                <SummaryCard label="Saldo" value={fmtMoney(pagos.saldo_pendiente)} tone={pagos.saldo_pendiente > 0 ? "danger" : "neutral"} />
-                <SummaryCard label="Estado" value={pagos.esta_pagado ? "Pagado ✓" : "Pendiente"} tone={pagos.esta_pagado ? "success" : "warning"} />
-              </div>
-              {pagos.pagos.length > 0 && (
+              {!pagos ? (
+                <div className="py-10 text-center">
+                  <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-slate-100 text-slate-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
+                      <path fillRule="evenodd" d="M2.25 8.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v.75H2.25v-.75Zm0 3v6.75a3 3 0 0 0 3 3h13.5a3 3 0 0 0 3-3V11.25H2.25ZM4.5 14.25A.75.75 0 0 1 5.25 15h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-700">Aún no hay pagos registrados</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Cuando el cliente pague total o parcialmente el presupuesto aprobado, los cobros van a aparecer acá.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                    <SummaryCard label="Presupuesto" value={fmtMoney(pagos.total_presupuesto)} />
+                    <SummaryCard label="Cobrado" value={fmtMoney(pagos.total_cobrado)} tone="success" />
+                    <SummaryCard label="Saldo" value={fmtMoney(pagos.saldo_pendiente)} tone={pagos.saldo_pendiente > 0 ? "danger" : "neutral"} />
+                    <SummaryCard label="Estado" value={pagos.esta_pagado ? "Pagado ✓" : "Pendiente"} tone={pagos.esta_pagado ? "success" : "warning"} />
+                  </div>
+                  {pagos.pagos.length === 0 ? (
+                    <p className="mt-4 text-center text-sm text-slate-400 py-8">
+                      No hay cobros registrados para este evento todavía.
+                    </p>
+                  ) : (
                 <table className="mt-4 w-full text-sm">
                   <thead className="text-left text-xs uppercase tracking-wider text-slate-500">
                     <tr>
@@ -1148,6 +1166,8 @@ export default function EventoDetallePage() {
                     ))}
                   </tbody>
                 </table>
+                  )}
+                </>
               )}
             </div>
           )}
