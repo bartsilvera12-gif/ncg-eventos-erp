@@ -28,9 +28,9 @@ const UNIDADES_OPCIONES = [
 ] as const;
 
 const TIPO_SUMMARY = {
-  material:    { titulo: "Material",    descripcion: "Materiales que se consumen en cada evento. Controlan stock.",                 icono: "🔩" },
-  herramienta: { titulo: "Herramienta", descripcion: "Activos de la empresa. No descuentan stock ni se facturan al cliente.",     icono: "🛠️" },
-  consumible:  { titulo: "Consumible",  descripcion: "Insumos que se gastan seguido. Controlan stock para alerta de reposición.", icono: "🛢️" },
+  material:    { titulo: "Artículo de alquiler",  descripcion: "Mantelería, muebles, juguetería y demás artículos que se alquilan al cliente por evento.",             icono: "🎪" },
+  herramienta: { titulo: "Equipamiento propio",   descripcion: "Sonido, luces, mobiliario propio y otros activos de la empresa. No descuentan stock.",                 icono: "🔊" },
+  consumible:  { titulo: "Consumible",            descripcion: "Insumos que se gastan seguido. Controlan stock para alerta de reposición.",                             icono: "🛢️" },
 } as const;
 
 interface CatRow { id: string; nombre: string }
