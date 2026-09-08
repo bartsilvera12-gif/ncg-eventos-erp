@@ -463,33 +463,26 @@ export default function NuevoProductoPage() {
       <div className="space-y-8">
         <PageHeader
           eyebrow="NCG · Stock"
-          title="Nuevo material"
+          title="Nuevo ítem de inventario"
           description="¿Qué tipo de ítem vas a cargar?"
           backHref="/inventario"
           backLabel="Inventario"
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
           {([
             {
               tipo: "material" as const,
-              titulo: "Material",
-              icono: "🔩",
-              descripcion: "Materiales que se consumen en cada obra. Controlan stock y se imputan a la obra al usarlos.",
-              acento: "border-sky-300 bg-sky-50/40 hover:border-sky-500",
+              titulo: "Artículo de alquiler",
+              icono: "🎪",
+              descripcion: "Mantelería, muebles, juguetería y demás artículos que se alquilan al cliente por evento.",
+              acento: "border-[#4FAEB2]/60 bg-teal-50/40 hover:border-[#4FAEB2]",
             },
             {
               tipo: "herramienta" as const,
-              titulo: "Herramienta",
-              icono: "🛠️",
-              descripcion: "Equipos y activos de la empresa. No descuentan stock ni se facturan al cliente.",
-              acento: "border-rose-300 bg-rose-50/40 hover:border-rose-500",
-            },
-            {
-              tipo: "consumible" as const,
-              titulo: "Consumible",
-              icono: "🛢️",
-              descripcion: "Insumos que se gastan seguido. Controlan stock con alerta de reposición.",
-              acento: "border-emerald-300 bg-emerald-50/40 hover:border-emerald-500",
+              titulo: "Equipamiento propio",
+              icono: "🔊",
+              descripcion: "Sonido, luces, mobiliario propio y otros activos de la empresa. No descuentan stock.",
+              acento: "border-violet-300 bg-violet-50/40 hover:border-violet-500",
             },
           ]).map((opt) => (
             <button
