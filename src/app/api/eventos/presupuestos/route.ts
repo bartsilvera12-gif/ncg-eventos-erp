@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     .select(
       `id, version, estado, fecha, total, observaciones, aprobado_at, created_at,
        proyecto_id, cliente_id, titulo_evento, tipo_evento, fecha_evento_aprox,
-       cantidad_invitados,
+       cantidad_invitados, foto_urls,
        cliente_nombre_snapshot, cliente_telefono_snapshot, cliente_email_snapshot,
        proyectos:proyecto_id(titulo, fecha_evento, cliente_id,
          clientes:cliente_id(empresa, nombre_contacto)),
@@ -87,6 +87,7 @@ export async function GET(request: Request) {
       cliente_nombre: clienteNombre,
       tipo_evento: r.tipo_evento,
       cantidad_invitados: r.cantidad_invitados,
+      foto_urls: Array.isArray(r.foto_urls) ? (r.foto_urls as string[]) : [],
     };
   });
 

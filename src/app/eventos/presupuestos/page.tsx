@@ -6,6 +6,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import NuevaCotizacionModal from "./_components/NuevaCotizacionModal";
+import { supabase } from "@/lib/supabase";
 import type { EstadoPresupuesto } from "@/lib/eventos/types";
 
 interface PresupuestoGlobal {
@@ -24,6 +25,7 @@ interface PresupuestoGlobal {
   cliente_nombre: string | null;
   tipo_evento?: string | null;
   cantidad_invitados?: number | null;
+  foto_urls?: string[];
 }
 
 const ESTADO_TONE: Record<EstadoPresupuesto, "neutral" | "info" | "success" | "danger"> = {
@@ -112,6 +114,50 @@ export default function PresupuestosGlobalPage() {
       return;
     }
     await recargar();
+  };
+
+  const subirFotos = async (id: string, files: FileList | null, existentes: string[]) => {
+    if (!files || files.length === 0) return;
+    const urls: string[] = [...existentes];
+    const errores: string[] = [];
+    for (const file of Array.from(files)) {
+      const ext = (file.name.split(".").pop() ?? "jpg").toLowerCase();
+      const path = `presupuestos/${id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("proyectos")
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+      if (upErr) { errores.push(`${file.name}: ${upErr.message}`); continue; }
+      const { data: pub } = supabase.storage.from("proyectos").getPublicUrl(path);
+      if (pub?.publicUrl) urls.push(pub.publicUrl);
+    }
+    if (urls.length === existentes.length) {
+      if (errores.length) alert(errores.join("\n"));
+      return;
+    }
+    const r = await fetch(`/api/eventos/presupuestos/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ foto_urls: urls }),
+    });
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      alert(`No se pudieron guardar las fotos: ${(j as { error?: string }).error ?? r.status}`);
+      return;
+    }
+    if (errores.length) alert("Algunas fotos no subieron:\n" + errores.join("\n"));
+    await recargar();
+  };
+
+  const quitarFoto = async (id: string, url: string, actuales: string[]) => {
+    const urls = actuales.filter((u) => u !== url);
+    const r = await fetch(`/api/eventos/presupuestos/${id}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ foto_urls: urls }),
+    });
+    if (r.ok) await recargar();
   };
 
   const eliminar = async (id: string) => {
@@ -252,16 +298,58 @@ export default function PresupuestosGlobalPage() {
                         </button>
                       )}
                       {p.proyecto_id && (
-                        <Link
-                          href={`/eventos/${p.proyecto_id}`}
-                          className="rounded-md bg-[#4FAEB2]/10 px-2.5 py-1 text-xs font-medium text-[#3F8E91] transition-colors hover:bg-[#4FAEB2]/20"
-                        >
-                          Ver evento
-                        </Link>
+                        <>
+                          <Link
+                            href={`/eventos/${p.proyecto_id}`}
+                            className="rounded-md bg-[#4FAEB2]/10 px-2.5 py-1 text-xs font-medium text-[#3F8E91] transition-colors hover:bg-[#4FAEB2]/20"
+                          >
+                            Ver evento
+                          </Link>
+                          <Link
+                            href={`/eventos/${p.proyecto_id}/presupuestos/${p.id}/imprimir`}
+                            target="_blank"
+                            className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
+                          >
+                            Imprimir
+                          </Link>
+                        </>
                       )}
+                      <label className="cursor-pointer rounded-md bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-100">
+                        📷 Foto
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => { void subirFotos(p.id, e.target.files, p.foto_urls ?? []); e.target.value = ""; }}
+                        />
+                      </label>
                     </div>
                   </div>
                 </div>
+
+                {(p.foto_urls?.length ?? 0) > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                    {(p.foto_urls ?? []).map((url) => (
+                      <div key={url} className="group/foto relative">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt="Foto del presupuesto"
+                          className="h-16 w-16 rounded-lg border border-slate-200 object-cover shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => void quitarFoto(p.id, url, p.foto_urls ?? [])}
+                          className="absolute -right-1 -top-1 hidden h-5 w-5 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow group-hover/foto:grid"
+                          title="Quitar foto"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))
           )}

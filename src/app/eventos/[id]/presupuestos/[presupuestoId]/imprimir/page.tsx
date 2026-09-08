@@ -122,6 +122,10 @@ export default function PresupuestoImprimirPage() {
         @media print {
           .no-print { display: none !important; }
           body { background: #fff !important; }
+          .doc .brand-bar, .doc .th, .doc .row-cat td, .doc .total-cell {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
         }
         .doc {
           font-family: Arial, Helvetica, sans-serif;
@@ -131,13 +135,20 @@ export default function PresupuestoImprimirPage() {
         }
         .doc h1, .doc h2, .doc h3 { margin: 0; padding: 0; }
         .doc table { border-collapse: collapse; width: 100%; }
-        .doc .box { border: 1px solid #94a3b8; }
-        .doc th, .doc td { padding: 6px 8px; }
-        .doc .th { background: #e2e8f0; font-weight: 600; text-align: left; text-transform: uppercase; font-size: 11px; letter-spacing: .03em; }
-        .doc .row-cat td { background: #f1f5f9; font-weight: 700; text-transform: uppercase; font-size: 11px; color: #334155; }
+        .doc .box { border: 1px solid #4FAEB2; border-radius: 4px; overflow: hidden; }
+        .doc th, .doc td { padding: 7px 9px; }
+        .doc .th { background: linear-gradient(90deg, #4FAEB2 0%, #3F8E91 100%); color: #ffffff; font-weight: 700; text-align: left; text-transform: uppercase; font-size: 11px; letter-spacing: .05em; }
+        .doc .row-cat td { background: #E5F4F4; font-weight: 700; text-transform: uppercase; font-size: 11px; color: #2F6F72; border-left: 4px solid #4FAEB2; }
         .doc .right { text-align: right; }
         .doc .center { text-align: center; }
         .doc .muted { color: #64748b; }
+        .doc .brand-bar { height: 6px; background: linear-gradient(90deg, #4FAEB2 0%, #3F8E91 60%, #2F6F72 100%); border-radius: 3px; margin-bottom: 12px; }
+        .doc .brand-title { color: #2F6F72; letter-spacing: .04em; }
+        .doc .chip { background: #E5F4F4; color: #2F6F72; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+        .doc .total-cell { background: linear-gradient(135deg, #E5F4F4 0%, #ffffff 100%); color: #2F6F72; }
+        .doc .zebra tbody tr:nth-child(even) td { background: #FBFCFC; }
+        .doc .foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+        .doc .foto-grid img { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; }
       `}</style>
       <div className="min-h-screen bg-slate-100 p-6 print:bg-white print:p-0">
         <div className="no-print mx-auto mb-4 flex max-w-[210mm] justify-end gap-2">
@@ -156,11 +167,20 @@ export default function PresupuestoImprimirPage() {
         </div>
 
         <div className="doc mx-auto max-w-[210mm] bg-white p-8 shadow print:shadow-none">
+          <div className="brand-bar" />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+            <div>
+              <h1 className="brand-title" style={{ fontSize: 22, fontWeight: 800 }}>PRESUPUESTO</h1>
+              <div className="muted" style={{ fontSize: 11 }}>{nroPresupuesto(presupuesto)}</div>
+            </div>
+            <span className="chip">{presupuesto.estado.toUpperCase()}</span>
+          </div>
+
           {/* Cabecera: emisor + receptor */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 700 }}>
-                {empresa?.razon_social || "Configurar razón social en SIFEN"}
+              <h2 style={{ fontSize: 14, fontWeight: 700, color: "#2F6F72" }}>
+                {empresa?.razon_social || "NCG Eventos"}
               </h2>
               {empresa?.direccion_fiscal && (
                 <div>{empresa.direccion_fiscal}</div>
@@ -168,7 +188,7 @@ export default function PresupuestoImprimirPage() {
               {empresa?.ruc && <div>R.U.C. {empresa.ruc}</div>}
             </div>
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 700 }}>{clienteRazon}</h2>
+              <h2 style={{ fontSize: 14, fontWeight: 700, color: "#2F6F72" }}>{clienteRazon}</h2>
               {cliente?.direccion && <div>{cliente.direccion}</div>}
               {cliente?.ciudad && <div>{cliente.ciudad}</div>}
               {cliente?.ruc && <div>R.U.C. {cliente.ruc}</div>}
@@ -226,7 +246,7 @@ export default function PresupuestoImprimirPage() {
           </div>
 
           {/* Tabla de líneas */}
-          <table className="box" style={{ marginTop: 12 }}>
+          <table className="box zebra" style={{ marginTop: 12 }}>
             <thead>
               <tr>
                 <th className="th">Descripción</th>
@@ -283,12 +303,27 @@ export default function PresupuestoImprimirPage() {
                     {fmtMoney(v.iva)}
                   </td>
                 ))}
-                <td className="center" style={{ fontSize: 14, fontWeight: 700 }}>
+                <td className="center total-cell" style={{ fontSize: 16, fontWeight: 800 }}>
                   {fmtMoney(presupuesto.total)}
                 </td>
               </tr>
             </tbody>
           </table>
+
+          {/* Fotos adjuntas */}
+          {presupuesto.foto_urls && presupuesto.foto_urls.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <div className="th" style={{ padding: "6px 9px", borderRadius: 4, display: "inline-block" }}>
+                Fotos de referencia
+              </div>
+              <div className="foto-grid">
+                {presupuesto.foto_urls.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={i} src={url} alt={`Foto ${i + 1}`} />
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Pie: condiciones + validez + observaciones */}
           <div style={{ marginTop: 16, fontSize: 11, color: "#334155" }}>

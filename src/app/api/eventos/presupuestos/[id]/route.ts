@@ -155,11 +155,34 @@ export async function PATCH(
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const estadoRaw = typeof body.estado === "string" ? body.estado : "";
-  if (!ESTADOS_OK.has(estadoRaw)) {
+  const fotoUrlsRaw = Array.isArray(body.foto_urls) ? body.foto_urls.filter((x): x is string => typeof x === "string") : null;
+
+  // Si solo viene foto_urls (sin cambio de estado) permitimos el PATCH sin validar estado.
+  const soloFotos = !estadoRaw && fotoUrlsRaw !== null;
+  if (!soloFotos && !ESTADOS_OK.has(estadoRaw)) {
     return NextResponse.json(errorResponse("Estado inválido."), { status: 400 });
   }
 
   const sb = await getChatServiceClientForEmpresa(auth.empresaId);
+
+  // Fast-path: actualizacion solo de fotos.
+  if (soloFotos) {
+    const { data: existe, error: eE } = await sb
+      .from("evento_presupuestos")
+      .select("id")
+      .eq("empresa_id", auth.empresaId)
+      .eq("id", presupuestoId)
+      .maybeSingle();
+    if (eE) return NextResponse.json(errorResponse(eE.message), { status: 500 });
+    if (!existe) return NextResponse.json(errorResponse("Cotización no encontrada."), { status: 404 });
+    const { error: eFotos } = await sb
+      .from("evento_presupuestos")
+      .update({ foto_urls: fotoUrlsRaw, updated_at: new Date().toISOString() })
+      .eq("empresa_id", auth.empresaId)
+      .eq("id", presupuestoId);
+    if (eFotos) return NextResponse.json(errorResponse(eFotos.message), { status: 500 });
+    return NextResponse.json(successResponse({ ok: true, foto_urls: fotoUrlsRaw }));
+  }
 
   const { data: pres, error: eGet } = await sb
     .from("evento_presupuestos")

@@ -183,6 +183,8 @@ export interface EventoPresupuesto {
   /** Venta generada al aprobar el presupuesto (si corresponde). */
   venta_id?: string | null;
   aprobado_at?: string | null;
+  /** URLs publicas de fotos adjuntas (bucket 'proyectos'). Se renderizan al imprimir. */
+  foto_urls?: string[];
   items?: EventoPresupuestoItem[];
   created_at?: string;
   updated_at?: string;
