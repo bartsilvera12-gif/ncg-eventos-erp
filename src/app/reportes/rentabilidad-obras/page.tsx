@@ -49,7 +49,7 @@ export default function RentabilidadObrasPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchWithSupabaseSession("/api/reportes/rentabilidad-obras", { cache: "no-store" })
+    fetchWithSupabaseSession("/api/reportes/rentabilidad-eventos", { cache: "no-store" })
       .then(async (r) => {
         const j = (await r.json().catch(() => ({}))) as { success?: boolean; data?: Data; error?: string };
         if (cancelled) return;
@@ -80,8 +80,8 @@ export default function RentabilidadObrasPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="NCG · Reportes"
-        title="Rentabilidad por obra"
-        description="Comparativo de presupuesto, facturación, costo real y margen para todas las obras activas."
+        title="Rentabilidad por evento"
+        description="Comparativo de presupuesto, facturación, costo real y margen para todas los eventos activos."
         backHref="/reportes"
         backLabel="Reportes"
       />
@@ -90,7 +90,7 @@ export default function RentabilidadObrasPage() {
 
       {data && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Kpi label="Obras" value={String(data.cantidad)} />
+          <Kpi label="Eventos" value={String(data.cantidad)} />
           <Kpi label="Presupuestado total" value={fmtGs(data.totales.presupuestado)} />
           <Kpi label="Facturado total" value={fmtGs(data.totales.facturado)} />
           <Kpi label="Margen consolidado" value={fmtGs(data.totales.margen)}
@@ -102,7 +102,7 @@ export default function RentabilidadObrasPage() {
         <table className="w-full min-w-[1000px] text-left text-sm">
           <thead className="bg-slate-50 text-slate-600">
             <tr>
-              <Th k="titulo" label="Obra" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
+              <Th k="titulo" label="Evento" sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
               <th className="px-4 py-3 font-semibold">Estado</th>
               <Th k="presupuestado" label="Presupuestado" right sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
               <Th k="facturado" label="Facturado" right sortKey={sortKey} sortDir={sortDir} onClick={toggleSort} />
@@ -115,7 +115,7 @@ export default function RentabilidadObrasPage() {
             {loading ? (
               <tr><td colSpan={7} className="py-10 text-center text-gray-400">Calculando…</td></tr>
             ) : filas.length === 0 ? (
-              <tr><td colSpan={7} className="py-10 text-center text-gray-400">Sin obras activas</td></tr>
+              <tr><td colSpan={7} className="py-10 text-center text-gray-400">Sin eventos activos</td></tr>
             ) : (
               filas.map((f) => (
                 <tr key={f.id} className="hover:bg-[#4FAEB2]/[0.04]">
@@ -153,7 +153,7 @@ export default function RentabilidadObrasPage() {
       </div>
 
       <p className="text-xs text-slate-500">
-        Click en el nombre de una obra para ver el detalle. Click en los headers para reordenar.
+        Click en el nombre de un evento para ver el detalle. Click en los headers para reordenar.
       </p>
     </div>
   );

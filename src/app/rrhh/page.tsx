@@ -7,10 +7,10 @@ type Seccion = { titulo: string; descripcion: string; href?: string };
 
 const SECCIONES: Seccion[] = [
   { titulo: "Empleados", descripcion: "Alta de personal, cargos, salarios, tipo(s) de empleado y datos de chofer.", href: "/rrhh/empleados" },
-  { titulo: "Personal por obra", descripcion: "Asignación de empleados a obras desde la pestaña Personal de cada obra.", href: "/dashboard/proyectos" },
+  { titulo: "Personal por evento", descripcion: "Asignación de empleados a eventos desde la pestaña Personal de cada evento.", href: "/dashboard/proyectos" },
   { titulo: "Control horario", descripcion: "Fichajes de entrada y salida diarios. Calcula horas automáticamente.", href: "/rrhh/control-horario" },
   { titulo: "Vacaciones", descripcion: "Solicitudes y aprobación de vacaciones por empleado.", href: "/rrhh/vacaciones" },
-  { titulo: "Nómina", descripcion: "Liquidación mensual: salario base + costo de horas en obras del mes.", href: "/rrhh/nomina" },
+  { titulo: "Nómina", descripcion: "Liquidación mensual: salario base + costo de horas en eventos del mes.", href: "/rrhh/nomina" },
 ];
 
 export default function RrhhPage() {
@@ -19,7 +19,7 @@ export default function RrhhPage() {
       <PageHeader
         eyebrow="NCG · Personal"
         title="Recursos Humanos"
-        description="Gestión de empleados y asignación de mano de obra a obras."
+        description="Gestión de empleados y asignación de mano de obra a eventos."
       />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {SECCIONES.map((s) => {
@@ -48,8 +48,8 @@ export default function RrhhPage() {
         })}
       </div>
       <p className="text-xs text-slate-500">
-        El costo por hora del empleado se usa para imputar mano de obra a cada obra y se suma
-        automáticamente al costo real (visible en el tab Rentabilidad de la obra).
+        El costo por hora del empleado se usa para imputar mano de obra a cada evento y se suma
+        automáticamente al costo real (visible en el tab Rentabilidad de el evento).
       </p>
     </div>
   );

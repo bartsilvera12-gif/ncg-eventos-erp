@@ -178,7 +178,7 @@ export default function EmpleadosPage() {
       <PageHeader
         eyebrow="NCG · RRHH"
         title="Empleados"
-        description="Personal de la constructora. El costo por hora se usa para imputar mano de obra a las obras."
+        description="Personal de NCG Eventos. El costo por hora se usa para imputar mano de obra al costo de cada evento."
         backHref="/rrhh"
         backLabel="RRHH"
         actions={
@@ -318,7 +318,7 @@ export default function EmpleadosPage() {
       )}
 
       <p className="text-xs text-slate-500">
-        Para asignar un empleado a una obra y registrar horas trabajadas, andá a la obra y abrí el tab <Link href="/dashboard/proyectos" className="underline">Personal</Link>.
+        Para asignar un empleado a un evento y registrar horas trabajadas, andá a el evento y abrí el tab <Link href="/dashboard/proyectos" className="underline">Personal</Link>.
       </p>
     </div>
   );
@@ -734,7 +734,7 @@ function EmpleadoFormFields({
           <MontoInput className={inputCls} decimals value={form.salario_complementario}
             onChange={(n) => set("salario_complementario", String(n))} placeholder="0" />
         </Field>
-        <Field label="Costo por hora (€)" hint="Se usa para imputar mano de obra a las obras.">
+        <Field label="Costo por hora (€)" hint="Se usa para imputar mano de obra a los eventos.">
           <MontoInput className={inputCls} decimals value={form.costo_hora}
             onChange={(n) => set("costo_hora", String(n))} placeholder="0" />
         </Field>
@@ -771,7 +771,7 @@ function EmpleadoFormFields({
               Empleado activo
             </label>
             <p className="ml-6 mt-1 text-xs text-slate-500">
-              Los inactivos no aparecen en asignación a obras ni en nómina.
+              Los inactivos no aparecen en asignación a eventos ni en nómina.
             </p>
           </div>
         )}
@@ -967,7 +967,7 @@ function ComisionesSection({
               <Field label="Observación interna" hint="Opcional. Solo visible internamente.">
                 <input className={inputCls} value={form.comision_observacion}
                   onChange={(e) => setField("comision_observacion", e.target.value)}
-                  placeholder="Ej. comisión solo sobre obras > 5.000€" />
+                  placeholder="Ej. comisión solo sobre eventos > 5.000€" />
               </Field>
             </div>
             <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800">

@@ -94,7 +94,7 @@ export default function GastosPage() {
                 <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Descripción</th>
                 <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Monto</th>
                 <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3 hidden md:table-cell">Tipo</th>
-                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3 hidden lg:table-cell">Obra</th>
+                <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3 hidden lg:table-cell">Evento</th>
                 <th className="text-left text-sm font-semibold text-slate-600 px-5 py-3">Acciones</th>
               </tr>
             </thead>

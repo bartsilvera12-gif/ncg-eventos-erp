@@ -675,7 +675,7 @@ const DashComercial = memo(function DashComercial({
   const totalLeadsPeriodo = prospectosFilt.filter((p) => enRango(p.fecha_creacion, desde, hasta)).length;
   const tasaConversion = totalLeadsPeriodo > 0 ? (clientesGanados / totalLeadsPeriodo) * 100 : 0;
 
-  /** Misma fuente que el CRM Funnel: columnas = etapas activas en `crm_etapas` (orden + nombre a mostrar). */
+  /** Misma fuente que el CRM Funnel: columnas = etapas activos en `crm_etapas` (orden + nombre a mostrar). */
   const pipeline: PipelineBarRowZ[] = useMemo(() => {
     const inFil = (cod: string) =>
       prospectosFilt.filter((p) => normalizeEtapaCodigo(p.etapa) === normalizeEtapaCodigo(cod));
@@ -893,7 +893,7 @@ const DashComercial = memo(function DashComercial({
             <p className="mt-2 max-w-2xl text-sm leading-relaxed" style={{ color: Z.muted }}>
               Altas con <strong style={{ color: Z.text }}>fecha de creación</strong> en el rango del filtro. Valor: suma de{" "}
               <strong style={{ color: Z.text }}>facturas emitidas en el período</strong> por cliente (neto de{" "}
-              <strong style={{ color: Z.text }}>notas de crédito aprobadas</strong> por SET vinculadas a esas facturas; se excluyen
+              <strong style={{ color: Z.text }}>notas de crédito aprobadas</strong> por SET vinculados a esas facturas; se excluyen
               anuladas y corregidas por NC); si no hay, suma de{" "}
               <strong style={{ color: Z.text }}>precio de suscripción</strong> con alta o inicio en el período.
             </p>
@@ -1035,7 +1035,7 @@ function FinMontoGs({
 /**
  * Partición del saldo pendiente por modalidad, facturas con emisión en el rango (Σ saldo por `tipo` factura):
  * - Contado: `tipo` factura = contado
- * - Mensual / suscripción: resto (p. ej. crédito / cuotas vinculadas a suscripción en el producto)
+ * - Mensual / suscripción: resto (p. ej. crédito / cuotas vinculados a suscripción en el producto)
  * Cada factura del período entra en exactamente un bucket (sin doble conteo).
  */
 function composicionFacturacionPorModalidad(facturasPeriodo: FacturaRaw[]) {

@@ -637,7 +637,7 @@ export default function ProyectosKanbanClient() {
       </DndContext>
 
       <p className="text-center text-xs text-slate-400">
-        Arrastrá tarjetas entre columnas activas o usá el selector “Mover a” como alternativa.
+        Arrastrá tarjetas entre columnas activos o usá el selector “Mover a” como alternativa.
       </p>
 
       <ProyectoDetalleModal

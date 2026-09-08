@@ -114,7 +114,7 @@ export default function MonitoreoPage() {
           <p className="text-sm text-slate-400">Cargando métricas…</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <MetricTile label="Colas activas" value={dash.active_queues} tone="slate" />
+            <MetricTile label="Colas activos" value={dash.active_queues} tone="slate" />
             <MetricTile label="Agentes asignados" value={dash.agents_assigned} tone="slate" />
             <MetricTile label="Chats sin asignar" value={dash.unassigned_chats} tone="amber" />
             <MetricTile label="Pend. 1ª respuesta" value={dash.awaiting_first_response} tone="amber" />

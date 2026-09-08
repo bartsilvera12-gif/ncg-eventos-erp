@@ -61,7 +61,7 @@ export default function NominaPage() {
       <PageHeader
         eyebrow="NCG · RRHH"
         title="Nómina mensual"
-        description="Resumen calculado desde salarios base, horas trabajadas en obras y vacaciones aprobadas."
+        description="Resumen calculado desde salarios base, horas trabajadas en eventos y vacaciones aprobadas."
         backHref="/rrhh"
         backLabel="RRHH"
         actions={
@@ -75,7 +75,7 @@ export default function NominaPage() {
       {data && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <Kpi label="Salario base" value={fmtGs(data.totales.salario_base)} />
-          <Kpi label="Costo horas obra" value={fmtGs(data.totales.costo_horas_obras)} hint={`${data.totales.horas_obras.toFixed(1)} h`} />
+          <Kpi label="Costo horas evento" value={fmtGs(data.totales.costo_horas_obras)} hint={`${data.totales.horas_obras.toFixed(1)} h`} />
           <Kpi label="Horas fichaje" value={data.totales.horas_fichaje.toFixed(1)} hint="control horario" />
           <Kpi label="Total devengado" value={fmtGs(data.totales.total_devengado)} highlight />
         </div>
@@ -88,8 +88,8 @@ export default function NominaPage() {
               <th className="px-4 py-3 font-semibold">Empleado</th>
               <th className="px-4 py-3 font-semibold hidden md:table-cell">Cargo</th>
               <th className="px-4 py-3 font-semibold text-right">Salario base</th>
-              <th className="px-4 py-3 font-semibold text-right hidden md:table-cell">Horas obra</th>
-              <th className="px-4 py-3 font-semibold text-right">Costo obra</th>
+              <th className="px-4 py-3 font-semibold text-right hidden md:table-cell">Horas evento</th>
+              <th className="px-4 py-3 font-semibold text-right">Costo evento</th>
               <th className="px-4 py-3 font-semibold text-right hidden lg:table-cell">Horas fichaje</th>
               <th className="px-4 py-3 font-semibold text-right hidden lg:table-cell">Días vacaciones</th>
               <th className="px-4 py-3 font-semibold text-right">Total</th>
@@ -131,9 +131,9 @@ export default function NominaPage() {
       </div>
 
       <p className="text-xs text-slate-500">
-        El total devengado suma <strong>salario base + costo de horas imputadas a obras</strong> en el mes.
+        El total devengado suma <strong>salario base + costo de horas imputadas a eventos</strong> en el mes.
         Si querés que las horas extras o nocturnas se paguen distinto, ajustá <code>costo_hora</code> por empleado
-        y reasignalas en las obras correspondientes.
+        y reasignalas en los eventos correspondientes.
       </p>
     </div>
   );

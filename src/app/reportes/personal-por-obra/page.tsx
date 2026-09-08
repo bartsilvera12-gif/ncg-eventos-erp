@@ -8,14 +8,14 @@ import { fetchWithSupabaseSession } from "@/lib/api/fetch-with-supabase-session"
 export const dynamic = "force-dynamic";
 
 type Empleado = { empleado_nombre: string; empleado_cargo: string | null; horas: number; costo: number };
-type Obra = {
+type Evento = {
   proyecto_id: string;
   titulo: string;
   total_horas: number;
   total_costo: number;
   empleados: Empleado[];
 };
-type Data = { obras: Obra[]; totales: { horas: number; costo: number }; cantidad: number };
+type Data = { eventos: Evento[]; totales: { horas: number; costo: number }; cantidad: number };
 
 function fmtGs(n: number): string {
   return `€ ${n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -30,7 +30,7 @@ export default function PersonalPorObraPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchWithSupabaseSession("/api/reportes/personal-por-obra", { cache: "no-store" })
+    fetchWithSupabaseSession("/api/reportes/personal-por-evento", { cache: "no-store" })
       .then(async (r) => {
         const j = (await r.json().catch(() => ({}))) as { success?: boolean; data?: Data; error?: string };
         if (cancelled) return;
@@ -46,8 +46,8 @@ export default function PersonalPorObraPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="NCG · Reportes"
-        title="Personal por obra"
-        description="Mano de obra consolidada: horas y costo por obra, con desglose por empleado."
+        title="Personal por evento"
+        description="Mano de evento consolidada: horas y costo por evento, con desglose por empleado."
         backHref="/reportes"
         backLabel="Reportes"
       />
@@ -56,7 +56,7 @@ export default function PersonalPorObraPage() {
 
       {data && (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          <Kpi label="Obras con personal" value={String(data.cantidad)} />
+          <Kpi label="Eventos con personal" value={String(data.cantidad)} />
           <Kpi label="Horas totales" value={data.totales.horas.toFixed(1)} />
           <Kpi label="Costo MO total" value={fmtGs(data.totales.costo)} highlight />
         </div>
@@ -64,11 +64,11 @@ export default function PersonalPorObraPage() {
 
       {loading ? (
         <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-gray-400">Cargando…</div>
-      ) : !data || data.obras.length === 0 ? (
+      ) : !data || data.eventos.length === 0 ? (
         <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-gray-400">Sin asignaciones registradas</div>
       ) : (
         <div className="space-y-3">
-          {data.obras.map((o) => {
+          {data.eventos.map((o) => {
             const abierto = expandido[o.proyecto_id] ?? false;
             return (
               <div key={o.proyecto_id} className="rounded-xl border border-slate-200 bg-white">

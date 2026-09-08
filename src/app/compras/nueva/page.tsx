@@ -54,7 +54,7 @@ const DOC_NUM_META: Record<TipoDocumentoCompra, { label: string; placeholder: st
 
 const ALMACEN_OPTS: { value: AlmacenDestino; label: string }[] = [
   { value: "deposito", label: "Depósito principal" },
-  { value: "obra", label: "Obra" },
+  { value: "evento", label: "Evento" },
   { value: "vehiculo", label: "Vehículo" },
   { value: "taller", label: "Taller" },
 ];
@@ -446,7 +446,7 @@ export default function NuevaCompraPage() {
       <PageHeader
         eyebrow="NCG · Adquisiciones"
         title="Nueva compra de materiales"
-        description="Cargá uno o varios materiales del mismo proveedor. Al guardar impacta el inventario y, si lo imputás, la rentabilidad de la obra."
+        description="Cargá uno o varios materiales del mismo proveedor. Al guardar impacta el inventario y, si lo imputás, la rentabilidad de el evento."
         backHref="/compras"
         backLabel="Compras de materiales"
       />
@@ -634,19 +634,19 @@ export default function NuevaCompraPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className={labelClass}>Obra / proyecto asociado</label>
+                <label className={labelClass}>Evento / proyecto asociado</label>
                 <select
                   value={header.proyecto_id}
                   onChange={(e) => setHeader((p) => ({ ...p, proyecto_id: e.target.value }))}
                   className={inputClass}
                 >
-                  <option value="">— Sin obra —</option>
+                  <option value="">— Sin evento —</option>
                   {proyectos.map((p) => (
                     <option key={p.id} value={p.id}>{p.titulo}</option>
                   ))}
                 </select>
                 <p className="mt-1 text-[11px] text-slate-400">
-                  Imputar la compra a una obra alimenta la rentabilidad del proyecto.
+                  Imputar la compra a un evento alimenta la rentabilidad del proyecto.
                 </p>
               </div>
               <div>

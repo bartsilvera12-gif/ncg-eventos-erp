@@ -28,7 +28,7 @@ const UNIDADES_OPCIONES = [
 ] as const;
 
 const TIPO_SUMMARY = {
-  material:    { titulo: "Material",    descripcion: "Materiales que se consumen en cada obra. Controlan stock.",                 icono: "🔩" },
+  material:    { titulo: "Material",    descripcion: "Materiales que se consumen en cada evento. Controlan stock.",                 icono: "🔩" },
   herramienta: { titulo: "Herramienta", descripcion: "Activos de la empresa. No descuentan stock ni se facturan al cliente.",     icono: "🛠️" },
   consumible:  { titulo: "Consumible",  descripcion: "Insumos que se gastan seguido. Controlan stock para alerta de reposición.", icono: "🛢️" },
 } as const;
@@ -77,7 +77,7 @@ export default function NuevoProductoPage() {
   function aplicarTipoInventario(tipo: Exclude<TipoInventario, null>) {
     setTipoInventario(tipo);
     if (tipo === "material") {
-      // Material de obra: controla stock, no es insumo gastronómico.
+      // Material de evento: controla stock, no es insumo gastronómico.
       setEsVendible(true);
       setEsInsumo(false);
       setControlaStock(true);
@@ -87,7 +87,7 @@ export default function NuevoProductoPage() {
       setEsInsumo(false);
       setControlaStock(false);
     } else {
-      // Consumible: se gasta seguido durante la obra. Controla stock para alerta de reposición.
+      // Consumible: se gasta seguido durante el evento. Controla stock para alerta de reposición.
       setEsVendible(false);
       setEsInsumo(true);
       setControlaStock(true);
@@ -513,7 +513,7 @@ export default function NuevoProductoPage() {
   const summary = TIPO_SUMMARY[tipoInventario];
   const showStock = (tipoInventario === "material" || tipoInventario === "consumible" || tipoInventario === "herramienta");
   const esConsumible = tipoInventario === "consumible";
-  // Para consumibles no aplica precio de venta (se gastan en obra, no se facturan al cliente).
+  // Para consumibles no aplica precio de venta (se gastan en evento, no se facturan al cliente).
   const showPrecioVenta = tipoInventario !== "materia" && !esConsumible;
 
   return (

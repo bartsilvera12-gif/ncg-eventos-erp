@@ -83,7 +83,7 @@ export default function NuevaVentaPage() {
   const [items, setItems]           = useState<LineaVenta[]>([]);
   const [errorVenta, setErrorVenta] = useState<string | null>(null);
 
-  // ── Datos de la obra (solo presupuesto) ──────────────────────────────────
+  // ── Datos de el evento (solo presupuesto) ──────────────────────────────────
   const [obraMeta, setObraMeta] = useState<ObraMeta>({
     titulo_obra: "",
     tipo_obra_id: "",
@@ -118,7 +118,7 @@ export default function NuevaVentaPage() {
   // Arranca abierto: al entrar a "Nueva venta" el buscador ya aparece desplegado
   // (un solo paso desde Ventas → Nueva venta → cargar productos).
   // En modo presupuesto no abrir automáticamente: el usuario debe completar
-  // primero "Datos de la obra" antes de cargar partidas.
+  // primero "Datos de el evento" antes de cargar partidas.
   const [pickerOpen, setPickerOpen] = useState(!((searchParams?.get("tipo") ?? "") === "presupuesto"));
 
   // ── Popup de detalle de pago (transferencia / tarjeta) ───────────────────────
@@ -203,7 +203,7 @@ export default function NuevaVentaPage() {
    */
   function buildPedidoCocina() {
     // NCG (constructora): no aplica el concepto de "pedido cocina" / tarjeta
-    // automática en kanban. Las obras son proyectos largos imputados a mano,
+    // automática en kanban. Las eventos son proyectos largos imputados a mano,
     // no una tarjeta por venta. Devolver undefined evita el INSERT en
     // proyectos y el error "Tipo de proyecto 'pedido' no configurado".
     if (!ES_GASTRONOMIA) return undefined;
@@ -302,7 +302,7 @@ export default function NuevaVentaPage() {
 
       {esPresupuesto && (
         <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
-          <strong>Modo presupuesto de obra:</strong> esta operación se guarda como presupuesto
+          <strong>Modo presupuesto de evento:</strong> esta operación se guarda como presupuesto
           pendiente de aprobación. No afecta el stock ni genera ticket de cobro.
         </div>
       )}
@@ -725,7 +725,7 @@ export default function NuevaVentaPage() {
   );
 }
 
-// ── Datos de la obra (sección del presupuesto) ─────────────────────────────
+// ── Datos de el evento (sección del presupuesto) ─────────────────────────────
 
 type ObraMeta = {
   titulo_obra: string;
@@ -762,16 +762,16 @@ function DatosObraSection({ meta, setMeta }: { meta: ObraMeta; setMeta: React.Di
   const setField = <K extends keyof ObraMeta>(k: K, v: ObraMeta[K]) => setMeta((p) => ({ ...p, [k]: v }));
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-4 sm:p-6 max-w-7xl">
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Datos de la obra</p>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">Datos de el evento</p>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Título de la obra <span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Título de el evento <span className="text-red-500">*</span></label>
           <input value={meta.titulo_obra} onChange={(e) => setField("titulo_obra", e.target.value)}
             placeholder="Ej. Impermeabilización cubierta vivienda Pérez"
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1.5">Tipo de obra</label>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">Tipo de evento</label>
           <select value={meta.tipo_obra_id} onChange={(e) => setField("tipo_obra_id", e.target.value)}
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0EA5E9]">
             <option value="">— Tipo por defecto —</option>

@@ -762,8 +762,8 @@ export default function ClienteDetailPage() {
       setErrorBaja("El motivo es obligatorio");
       return;
     }
-    if (bajaPreview && bajaPreview.suscripciones_activas > 0 && !bajaCancelarSuscripciones) {
-      setErrorBaja("Debe confirmar cancelar las suscripciones activas para dar de baja.");
+    if (bajaPreview && bajaPreview.suscripciones_activos > 0 && !bajaCancelarSuscripciones) {
+      setErrorBaja("Debe confirmar cancelar las suscripciones activos para dar de baja.");
       return;
     }
     setBajaProcesando(true);
@@ -788,8 +788,8 @@ export default function ClienteDetailPage() {
         setErrorEliminar("No se puede eliminar: el cliente tiene ventas o tipificaciones asociadas.");
         return;
       }
-      if (eliminarPreview.suscripciones_activas > 0 && !eliminarCancelarSusc) {
-        setErrorEliminar("Debe confirmar la cancelación de las suscripciones activas para continuar.");
+      if (eliminarPreview.suscripciones_activos > 0 && !eliminarCancelarSusc) {
+        setErrorEliminar("Debe confirmar la cancelación de las suscripciones activos para continuar.");
         return;
       }
       if (eliminarPreview.facturas_pendientes_count > 0 && !eliminarAnularFacturas) {
@@ -1071,14 +1071,14 @@ export default function ClienteDetailPage() {
       {modalBajaOperativa && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
           <p className="text-sm text-amber-800 font-medium">
-            Dar de baja operativa: el cliente pasará a inactivo y no se generarán facturas futuras. Confirme abajo si cancela suscripciones activas y si anula facturas con saldo pendiente.
+            Dar de baja operativa: el cliente pasará a inactivo y no se generarán facturas futuras. Confirme abajo si cancela suscripciones activos y si anula facturas con saldo pendiente.
           </p>
-          {bajaPreview != null && bajaPreview.suscripciones_activas > 0 && (
+          {bajaPreview != null && bajaPreview.suscripciones_activos > 0 && (
             <div className="bg-amber-100/50 border border-amber-200 rounded-lg p-3">
               <p className="text-sm text-amber-900 font-medium mb-2">
-                Este cliente tiene {bajaPreview.suscripciones_activas} suscripción
-                {bajaPreview.suscripciones_activas === 1 ? "" : "es"} activa
-                {bajaPreview.suscripciones_activas === 1 ? "" : "s"}.
+                Este cliente tiene {bajaPreview.suscripciones_activos} suscripción
+                {bajaPreview.suscripciones_activos === 1 ? "" : "es"} activa
+                {bajaPreview.suscripciones_activos === 1 ? "" : "s"}.
               </p>
               <p className="text-xs text-amber-800 mb-2">
                 ¿Desea cancelarlas al dar de baja? (quedarán en estado cancelada)
@@ -1089,14 +1089,14 @@ export default function ClienteDetailPage() {
                   onClick={() => setBajaCancelarSuscripciones(true)}
                   className={`text-xs px-3 py-1.5 rounded-lg font-medium ${bajaCancelarSuscripciones ? "bg-amber-600 text-white" : "bg-white border border-amber-300 text-amber-800 hover:bg-amber-100"}`}
                 >
-                  Sí, cancelar suscripciones activas
+                  Sí, cancelar suscripciones activos
                 </button>
                 <button
                   type="button"
                   onClick={() => setBajaCancelarSuscripciones(false)}
                   className={`text-xs px-3 py-1.5 rounded-lg font-medium ${!bajaCancelarSuscripciones ? "bg-amber-600 text-white" : "bg-white border border-amber-300 text-amber-800 hover:bg-amber-100"}`}
                 >
-                  No, conservar suscripciones activas
+                  No, conservar suscripciones activos
                 </button>
               </div>
             </div>
@@ -1218,11 +1218,11 @@ export default function ClienteDetailPage() {
                     <li>
                       Suscripciones asociadas (total):{" "}
                       <span className="font-semibold">{eliminarPreview.suscripciones_total ?? 0}</span>
-                      {eliminarPreview.suscripciones_activas > 0 && (
+                      {eliminarPreview.suscripciones_activos > 0 && (
                         <span className="text-slate-600">
                           {" "}
-                          ({eliminarPreview.suscripciones_activas} activa
-                          {eliminarPreview.suscripciones_activas === 1 ? "" : "s"})
+                          ({eliminarPreview.suscripciones_activos} activa
+                          {eliminarPreview.suscripciones_activos === 1 ? "" : "s"})
                         </span>
                       )}
                     </li>
@@ -1237,12 +1237,12 @@ export default function ClienteDetailPage() {
                   </p>
                 </div>
               )}
-              {eliminarPreview?.puede_eliminar && eliminarPreview.suscripciones_activas > 0 && (
+              {eliminarPreview?.puede_eliminar && eliminarPreview.suscripciones_activos > 0 && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                   <p className="text-sm text-red-900 font-medium mb-2">
-                    Hay {eliminarPreview.suscripciones_activas} suscripción
-                    {eliminarPreview.suscripciones_activas === 1 ? "" : "es"} activa
-                    {eliminarPreview.suscripciones_activas === 1 ? "" : "s"}.
+                    Hay {eliminarPreview.suscripciones_activos} suscripción
+                    {eliminarPreview.suscripciones_activos === 1 ? "" : "es"} activa
+                    {eliminarPreview.suscripciones_activos === 1 ? "" : "s"}.
                   </p>
                   <p className="text-xs text-red-800 mb-2">¿Cancelarlas al eliminar el cliente?</p>
                   <div className="flex gap-3 flex-wrap">

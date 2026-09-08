@@ -356,7 +356,7 @@ export default function ConfiguracionProyectosPage() {
     >
       <div className="grid gap-3 sm:grid-cols-3">
         <ConfigMetricCard label="Tabla origen" value="proyecto_estados" sub="Una configuración por empresa" />
-        <ConfigMetricCard label="Columnas activas" value={activeCount} sub="Visibles en el Kanban" />
+        <ConfigMetricCard label="Columnas activos" value={activeCount} sub="Visibles en el Kanban" />
         <ConfigMetricCard label="Inicial activa" value={activeInitialCount} sub="Debe existir exactamente una" />
       </div>
 
@@ -830,7 +830,7 @@ function TiposProyectoSection() {
   return (
     <ConfigFormCard
       title="Tipos de proyecto"
-      description="Categorías que clasifican las obras. Editables, agregables y eliminables (si no hay obras vinculadas)."
+      description="Categorías que clasifican los eventos. Editables, agregables y eliminables (si no hay eventos vinculados)."
     >
       {err && <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div>}
 

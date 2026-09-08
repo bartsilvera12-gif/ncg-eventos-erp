@@ -229,7 +229,7 @@ export default function ComprasPage() {
                 <th className="py-3 pr-4 font-medium hidden md:table-cell">Pago</th>
                 <th className="py-3 pr-4 font-medium">Factura</th>
                 <th className="py-3 pr-4 font-medium">Fecha</th>
-                <th className="py-3 pr-4 font-medium hidden lg:table-cell">Obra</th>
+                <th className="py-3 pr-4 font-medium hidden lg:table-cell">Evento</th>
                 <th className="py-3 font-medium text-right">Acción</th>
               </tr>
             </thead>

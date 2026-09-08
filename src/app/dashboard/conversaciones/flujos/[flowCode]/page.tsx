@@ -1307,7 +1307,7 @@ export default function FlowEditorPage() {
       <div className="text-sm text-sky-900 bg-sky-50 border border-sky-200 rounded-lg px-4 py-3 space-y-1">
         <p className="font-medium">Edición del grafo del flujo</p>
         <p className="text-sky-800/90">
-          Este flujo puede tener conversaciones activas. Insertar pasos o cambiar destinos puede afectar las próximas
+          Este flujo puede tener conversaciones activos. Insertar pasos o cambiar destinos puede afectar las próximas
           respuestas del bot en conversaciones que pasen por ese punto.
         </p>
       </div>

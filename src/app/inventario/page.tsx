@@ -69,7 +69,7 @@ export default function InventarioPage() {
   const [toast,            setToast]            = useState<string | null>(null);
   // Herramientas: estado de modales y resumen de "última asignación" por producto.
   const [herrModal, setHerrModal] = useState<{ tipo: "asignar" | "devolver" | "finmant" | "baja"; herr: HerramientaResumen } | null>(null);
-  const [ultAsign,  setUltAsign]  = useState<Map<string, { responsable: string | null; obra: string | null }>>(new Map());
+  const [ultAsign,  setUltAsign]  = useState<Map<string, { responsable: string | null; evento: string | null }>>(new Map());
 
   async function handleEliminarProducto(id: string, nombre: string) {
     if (eliminandoId) return; // evitar doble click
@@ -120,19 +120,19 @@ export default function InventarioPage() {
     return () => { cancelled = true; };
   }, [refreshKey]);
 
-  // Estado vigente por herramienta (responsable, obra).
+  // Estado vigente por herramienta (responsable, evento).
   //
-  // Algoritmo: por cada producto, mantiene saldos por par (responsable|obra)
+  // Algoritmo: por cada producto, mantiene saldos por par (responsable|evento)
   // procesando movimientos en orden cronológico ASC.
-  //   - ASIGNACION suma al bucket de su (responsable, obra).
-  //   - DEVOLUCION con responsable/obra resta de ese bucket; si no alcanza,
+  //   - ASIGNACION suma al bucket de su (responsable, evento).
+  //   - DEVOLUCION con responsable/evento resta de ese bucket; si no alcanza,
   //     derrama con FIFO sobre las otras asignaciones abiertas más viejas.
-  //   - DEVOLUCION sin responsable/obra → FIFO puro.
+  //   - DEVOLUCION sin responsable/evento → FIFO puro.
   //   - BAJA NO cierra asignaciones (la rotura ya viene con DEVOLUCION).
   // Al final, por producto:
   //   - 0 buckets con saldo>0 → "—"
-  //   - 1 responsable o 1 obra única → ese valor
-  //   - varios → "Varios" / "Varias obras"
+  //   - 1 responsable o 1 evento única → ese valor
+  //   - varios → "Varios" / "Varias eventos"
   useEffect(() => {
     if (tab !== "herramienta") return;
     let cancel = false;
@@ -146,11 +146,11 @@ export default function InventarioPage() {
         const movsAsc = [...movsDesc].reverse();
 
         // Por producto, buckets: key segura via JSON.stringify.
-        type Bucket = { responsable: string | null; obra: string | null; saldo: number; primeraFecha: string };
+        type Bucket = { responsable: string | null; evento: string | null; saldo: number; primeraFecha: string };
         const buckets = new Map<string, Map<string, Bucket>>();
 
-        const keyOf = (resp: string | null, obra: string | null) =>
-          JSON.stringify([resp ?? "", obra ?? ""]);
+        const keyOf = (resp: string | null, evento: string | null) =>
+          JSON.stringify([resp ?? "", evento ?? ""]);
 
         // FIFO sobre buckets abiertos del producto (saldo > 0), ordenados por primeraFecha ASC.
         const drenarFifo = (pid: string, cantidad: number) => {
@@ -183,7 +183,7 @@ export default function InventarioPage() {
             } else {
               map.set(k, {
                 responsable: m.usuario_nombre,
-                obra: m.proyecto_titulo,
+                evento: m.proyecto_titulo,
                 saldo: cant,
                 primeraFecha: m.fecha,
               });
@@ -211,7 +211,7 @@ export default function InventarioPage() {
         }
 
         // Resumir por producto.
-        const ult = new Map<string, { responsable: string | null; obra: string | null }>();
+        const ult = new Map<string, { responsable: string | null; evento: string | null }>();
         for (const [pid, map] of buckets) {
           const abiertos = Array.from(map.values()).filter((b) => b.saldo > 0);
           if (abiertos.length === 0) continue;
@@ -219,11 +219,11 @@ export default function InventarioPage() {
           const obraSet = new Set<string>();
           for (const b of abiertos) {
             if (b.responsable) respSet.add(b.responsable);
-            if (b.obra) obraSet.add(b.obra);
+            if (b.evento) obraSet.add(b.evento);
           }
           ult.set(pid, {
             responsable: respSet.size === 0 ? null : respSet.size === 1 ? Array.from(respSet)[0] : "Varios",
-            obra:        obraSet.size === 0 ? null : obraSet.size === 1 ? Array.from(obraSet)[0] : "Varias obras",
+            evento:        obraSet.size === 0 ? null : obraSet.size === 1 ? Array.from(obraSet)[0] : "Varias eventos",
           });
         }
         setUltAsign(ult);
@@ -377,7 +377,7 @@ export default function InventarioPage() {
           <Link
             href="/inventario/movimientos"
             className="whitespace-nowrap border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 transition-colors hover:border-gray-300 hover:text-gray-700"
-            title="Entradas, salidas y trazabilidad por obra"
+            title="Entradas, salidas y trazabilidad por evento"
           >
             Movimientos →
           </Link>
@@ -528,7 +528,7 @@ export default function InventarioPage() {
                 <th className={`py-3 pr-4 font-medium ${tab === "herramienta" ? "" : "hidden"}`}>Estado</th>
                 <th className={`py-3 pr-4 font-medium hidden md:table-cell ${tab === "herramienta" ? "" : ""}`}>{tab === "herramienta" ? "Responsable" : "Unidad"}</th>
                 <th className={`py-3 pr-4 font-medium hidden lg:table-cell`}>
-                  {tab === "herramienta" ? "Obra asignada" : tab === "consumible" ? "Valor (€)" : "Valuación"}
+                  {tab === "herramienta" ? "Evento asignada" : tab === "consumible" ? "Valor (€)" : "Valuación"}
                 </th>
                 <th className={`py-3 pr-6 font-medium text-right hidden md:table-cell ${tab === "consumible" || tab === "herramienta" ? "md:hidden" : ""}`}>
                   <span title="(precio - costo) / precio × 100">Margen s/venta</span>
@@ -643,7 +643,7 @@ export default function InventarioPage() {
                         <td className="py-4 pr-4">
                           <div className="flex flex-col gap-0.5 text-[11px]">
                             {disp > 0 && <span className="font-semibold text-emerald-700">Disponible · {disp}</span>}
-                            {asignada > 0 && <span className="text-amber-700">En obra · {asignada}</span>}
+                            {asignada > 0 && <span className="text-amber-700">En evento · {asignada}</span>}
                             {mant > 0 && <span className="text-sky-700">Mant. · {mant}</span>}
                             {disp <= 0 && asignada <= 0 && mant <= 0 && <span className="text-slate-400">—</span>}
                           </div>
@@ -659,7 +659,7 @@ export default function InventarioPage() {
                     )}
                     <td className="py-4 pr-4 hidden lg:table-cell">
                       {tab === "herramienta" ? (
-                        <span className="text-xs text-gray-700">{ultAsign.get(p.id)?.obra ?? <span className="text-gray-300">—</span>}</span>
+                        <span className="text-xs text-gray-700">{ultAsign.get(p.id)?.evento ?? <span className="text-gray-300">—</span>}</span>
                       ) : tab === "consumible" ? (
                         <span className="tabular-nums font-semibold text-gray-800">
                           {formatGs(p.stock_actual * p.costo_promedio)}

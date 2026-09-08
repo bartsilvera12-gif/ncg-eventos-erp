@@ -20,7 +20,7 @@ const origenLabel: Record<OrigenMovimiento, string> = {
 };
 
 const MOTIVO_LABEL: Record<string, string> = {
-  uso_obra: "Uso en obra",
+  uso_obra: "Uso en evento",
   consumo_interno: "Consumo interno",
   rotura: "Rotura / pérdida",
   ajuste: "Ajuste de inventario",

@@ -68,7 +68,7 @@ export default function RentabilidadObra({ projectId }: { projectId: string }) {
     <div className="space-y-4">
       <p className="text-xs text-slate-500">
         Resumen calculado automáticamente desde ventas, compras, gastos y movimientos de inventario
-        imputados a esta obra.
+        imputados a esta evento.
       </p>
 
       {/* KPIs principales */}
@@ -104,7 +104,7 @@ export default function RentabilidadObra({ projectId }: { projectId: string }) {
               value={data.costo_gastos}
             />
             <Row
-              label="Mano de obra"
+              label="Mano de evento"
               hint={`${data.cantidades.asignaciones} asignación(es) · ${data.total_horas.toFixed(1)} h`}
               value={data.costo_mano_obra}
             />
