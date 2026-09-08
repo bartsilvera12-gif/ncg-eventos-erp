@@ -4,6 +4,7 @@ import { Fragment, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { getEvento, getPresupuestos } from "@/lib/eventos/storage";
 import { getCliente } from "@/lib/clientes/storage";
+import { getProductos } from "@/lib/inventario/storage";
 import type { Cliente } from "@/lib/clientes/types";
 import type { Evento, EventoPresupuesto, EventoPresupuestoItem } from "@/lib/eventos/types";
 
@@ -42,6 +43,7 @@ export default function PresupuestoImprimirPage() {
   const [presupuesto, setPresupuesto] = useState<EventoPresupuesto | null>(null);
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [empresa, setEmpresa] = useState<EmpresaCabecera | null>(null);
+  const [productoImgs, setProductoImgs] = useState<Map<string, string>>(new Map());
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -57,6 +59,23 @@ export default function PresupuestoImprimirPage() {
       setEvento(ev);
       const p = ps.find((x) => x.id === presupuestoId) ?? null;
       setPresupuesto(p);
+
+      // Mapa producto_id → imagen_url (para renderizar thumbnail en las líneas).
+      const productoIds = new Set<string>();
+      for (const it of p?.items ?? []) {
+        if (it.tipo === "producto" && it.ref_id) productoIds.add(it.ref_id);
+      }
+      if (productoIds.size > 0) {
+        try {
+          const prods = await getProductos();
+          const m = new Map<string, string>();
+          for (const pr of prods) {
+            if (productoIds.has(pr.id) && pr.imagen_url) m.set(pr.id, pr.imagen_url);
+          }
+          setProductoImgs(m);
+        } catch { /* si falla, seguimos sin imágenes */ }
+      }
+
       if (ev?.cliente_id) {
         setCliente(await getCliente(ev.cliente_id));
       }
@@ -266,9 +285,25 @@ export default function PresupuestoImprimirPage() {
                       <td colSpan={7}>{cat}</td>
                     </tr>
                   )}
-                  {items.map((it) => (
+                  {items.map((it) => {
+                    const img = it.ref_id ? productoImgs.get(it.ref_id) : undefined;
+                    return (
                     <tr key={it.id} style={{ borderTop: "1px solid #e2e8f0" }}>
-                      <td>{it.descripcion}</td>
+                      <td>
+                        {img ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={img}
+                              alt={it.descripcion}
+                              style={{ width: 44, height: 44, objectFit: "cover", borderRadius: 4, border: "1px solid #cbd5e1", flexShrink: 0 }}
+                            />
+                            <span>{it.descripcion}</span>
+                          </div>
+                        ) : (
+                          it.descripcion
+                        )}
+                      </td>
                       <td className="right">{Number(it.cantidad).toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td>{it.unidad}</td>
                       <td className="right">{fmtMoney(it.precio_unitario)}</td>
@@ -276,7 +311,8 @@ export default function PresupuestoImprimirPage() {
                       <td className="right">{it.iva_pct === 0 ? "Ex." : `${it.iva_pct}%`}</td>
                       <td className="right"><strong>{fmtMoney(it.subtotal)}</strong></td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </Fragment>
               ))}
             </tbody>
