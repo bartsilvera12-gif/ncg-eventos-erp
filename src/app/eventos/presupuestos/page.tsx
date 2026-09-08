@@ -333,7 +333,22 @@ export default function PresupuestosGlobalPage() {
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={url}
-                          alt="Foto del presupuesto"
+                          alt=""
+                          onError={(e) => {
+                            const el = e.currentTarget as HTMLImageElement;
+                            el.style.display = "none";
+                            const wrap = el.parentElement;
+                            if (wrap && !wrap.querySelector(".foto-broken")) {
+                              const ph = document.createElement("a");
+                              ph.href = url;
+                              ph.target = "_blank";
+                              ph.rel = "noopener";
+                              ph.className = "foto-broken flex h-16 w-16 flex-col items-center justify-center rounded-lg border border-dashed border-amber-300 bg-amber-50 text-[10px] font-semibold text-amber-700 text-center";
+                              ph.innerHTML = "⚠️<br/>abrir";
+                              ph.title = "No se pudo mostrar la imagen. Click para abrirla.";
+                              wrap.appendChild(ph);
+                            }
+                          }}
                           className="h-16 w-16 rounded-lg border border-slate-200 object-cover shadow-sm"
                         />
                         <button
