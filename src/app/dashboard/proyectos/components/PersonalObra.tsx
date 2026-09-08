@@ -36,8 +36,10 @@ export default function PersonalObra({ projectId }: { projectId: string }) {
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  const [modo, setModo] = useState<"ad_hoc" | "registrado">("ad_hoc");
   const [form, setForm] = useState({
     empleado_id: "",
+    nombre_ad_hoc: "",
     fecha: new Date().toISOString().slice(0, 10),
     horas: "",
     costo_total: "",
@@ -86,23 +88,34 @@ export default function PersonalObra({ projectId }: { projectId: string }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.empleado_id || !form.horas) return;
+    if (modo === "registrado" && !form.empleado_id) return;
+    if (modo === "ad_hoc" && !form.nombre_ad_hoc.trim()) return;
     setSaving(true);
     try {
+      const payload = modo === "registrado"
+        ? {
+            empleado_id: form.empleado_id,
+            fecha: form.fecha,
+            horas: Number(form.horas) || 0,
+            costo_total: Number(form.costo_total) || undefined,
+            observacion: form.observacion.trim() || undefined,
+          }
+        : {
+            nombre_ad_hoc: form.nombre_ad_hoc.trim(),
+            fecha: form.fecha,
+            horas: Number(form.horas) || 0,
+            costo_total: Number(form.costo_total) || 0,
+            observacion: form.observacion.trim() || undefined,
+          };
       const r = await fetchWithSupabaseSession(`/api/proyectos/${projectId}/personal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          empleado_id: form.empleado_id,
-          fecha: form.fecha,
-          horas: Number(form.horas),
-          costo_total: Number(form.costo_total) || undefined, // server calcula si está vacío
-          observacion: form.observacion.trim() || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const j = (await r.json().catch(() => ({}))) as { success?: boolean; error?: string };
       if (r.ok && j.success) {
-        setForm({ empleado_id: "", fecha: new Date().toISOString().slice(0, 10), horas: "", costo_total: "", observacion: "" });
+        setForm({ empleado_id: "", nombre_ad_hoc: "", fecha: new Date().toISOString().slice(0, 10), horas: "", costo_total: "", observacion: "" });
+        setErr(null);
         await load();
       } else {
         setErr(j.error ?? "No se pudo asignar el empleado");
@@ -126,16 +139,55 @@ export default function PersonalObra({ projectId }: { projectId: string }) {
       {err ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{err}</div> : null}
 
       {/* Formulario de asignación */}
-      {empleados.length === 0 ? (
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-          No hay empleados ocasionales cargados. Primero dá de alta empleados con tipo{" "}
-          <strong>OCASIONAL</strong> o <strong>JORNALERO</strong> en{" "}
-          <Link href="/rrhh/empleados" className="font-medium text-[#3F8E91] underline">RRHH → Empleados</Link>.
+      <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-slate-700">Agregar personal al evento</h3>
+          <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-xs">
+            <button type="button" onClick={() => setModo("ad_hoc")}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${modo === "ad_hoc" ? "bg-white text-[#3F8E91] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+              Ocasional (rápido)
+            </button>
+            <button type="button" onClick={() => setModo("registrado")}
+              className={`rounded-md px-2.5 py-1 font-medium transition ${modo === "registrado" ? "bg-white text-[#3F8E91] shadow-sm" : "text-slate-500 hover:text-slate-700"}`}>
+              Registrado en RRHH
+            </button>
+          </div>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-4">
-          <h3 className="text-sm font-semibold text-slate-700">Registrar horas</h3>
-          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-5">
+
+        {modo === "ad_hoc" ? (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <div className="md:col-span-2">
+              <label className={lblCls}>Nombre del empleado</label>
+              <input type="text" className={inputCls} value={form.nombre_ad_hoc} required
+                placeholder="Ej. Juan Pérez"
+                onChange={(e) => setForm({ ...form, nombre_ad_hoc: e.target.value })} />
+              <p className="mt-1 text-[10px] text-slate-400">
+                No hace falta que esté cargado en RRHH — se guarda solo para este evento.
+              </p>
+            </div>
+            <div>
+              <label className={lblCls}>Fecha</label>
+              <input type="date" className={inputCls} value={form.fecha}
+                onChange={(e) => setForm({ ...form, fecha: e.target.value })} />
+            </div>
+            <div>
+              <label className={lblCls}>Total a pagar (€) *</label>
+              <input type="number" step="0.01" min="0" className={inputCls} value={form.costo_total} required
+                placeholder="0,00"
+                onChange={(e) => setForm({ ...form, costo_total: e.target.value })} />
+            </div>
+          </div>
+        ) : empleados.length === 0 ? (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+            No hay empleados ocasionales cargados en RRHH. Podés cargar uno rápido con el modo{" "}
+            <button type="button" onClick={() => setModo("ad_hoc")} className="font-medium text-[#3F8E91] underline">
+              Ocasional (rápido)
+            </button>{" "}
+            o dar de alta uno permanente en{" "}
+            <Link href="/rrhh/empleados" className="font-medium text-[#3F8E91] underline">RRHH → Empleados</Link>.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
             <div className="md:col-span-2">
               <label className={lblCls}>Empleado</label>
               <select className={inputCls} value={form.empleado_id} required
@@ -162,24 +214,25 @@ export default function PersonalObra({ projectId }: { projectId: string }) {
                 placeholder={costoSugerido > 0 ? fmtGs(costoSugerido) : "0,00"}
                 onChange={(e) => setForm({ ...form, costo_total: e.target.value })} />
               <p className="mt-1 text-[10px] text-slate-400">
-                Si lo dejás vacío se calcula automáticamente (horas × costo/hora del empleado).
+                Vacío = horas × costo/hora del empleado.
               </p>
             </div>
           </div>
-          <div className="mt-3">
-            <label className={lblCls}>Observación</label>
-            <input className={inputCls} value={form.observacion}
-              placeholder="Ej. Avance de cubierta, día completo, ½ jornada"
-              onChange={(e) => setForm({ ...form, observacion: e.target.value })} />
-          </div>
-          <div className="mt-3 flex justify-end">
-            <button type="submit" disabled={saving}
-              className="rounded-lg bg-[#4FAEB2] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
-              {saving ? "Guardando…" : "Asignar"}
-            </button>
-          </div>
-        </form>
-      )}
+        )}
+
+        <div className="mt-3">
+          <label className={lblCls}>Observación</label>
+          <input className={inputCls} value={form.observacion}
+            placeholder="Ej. Mesero, media jornada, refuerzo cocina…"
+            onChange={(e) => setForm({ ...form, observacion: e.target.value })} />
+        </div>
+        <div className="mt-3 flex justify-end">
+          <button type="submit" disabled={saving}
+            className="rounded-lg bg-[#4FAEB2] px-3 py-2 text-sm font-medium text-white disabled:opacity-50">
+            {saving ? "Guardando…" : "Agregar"}
+          </button>
+        </div>
+      </form>
 
       {/* Resumen + tabla */}
       <div className="rounded-xl border border-slate-200 bg-white p-4">
