@@ -499,6 +499,13 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
             </button>
             <button
               type="button"
+              onClick={() => addLinea("producto")}
+              className="group/add inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-amber-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-amber-400 hover:bg-amber-50 hover:shadow-md"
+            >
+              <span className="text-sm leading-none transition-transform group-hover/add:rotate-90">+</span> Producto
+            </button>
+            <button
+              type="button"
               onClick={() => addLinea("texto")}
               className="group/add inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-800 hover:shadow-md"
             >
