@@ -298,22 +298,20 @@ export default function PresupuestosGlobalPage() {
                         </button>
                       )}
                       {p.proyecto_id && (
-                        <>
-                          <Link
-                            href={`/eventos/${p.proyecto_id}`}
-                            className="rounded-md bg-[#4FAEB2]/10 px-2.5 py-1 text-xs font-medium text-[#3F8E91] transition-colors hover:bg-[#4FAEB2]/20"
-                          >
-                            Ver evento
-                          </Link>
-                          <Link
-                            href={`/eventos/${p.proyecto_id}/presupuestos/${p.id}/imprimir`}
-                            target="_blank"
-                            className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
-                          >
-                            Imprimir
-                          </Link>
-                        </>
+                        <Link
+                          href={`/eventos/${p.proyecto_id}`}
+                          className="rounded-md bg-[#4FAEB2]/10 px-2.5 py-1 text-xs font-medium text-[#3F8E91] transition-colors hover:bg-[#4FAEB2]/20"
+                        >
+                          Ver evento
+                        </Link>
                       )}
+                      <Link
+                        href={`/eventos/presupuestos/${p.id}/imprimir`}
+                        target="_blank"
+                        className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100"
+                      >
+                        🖨️ Imprimir
+                      </Link>
                       <label className="cursor-pointer rounded-md bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-100">
                         📷 Foto
                         <input

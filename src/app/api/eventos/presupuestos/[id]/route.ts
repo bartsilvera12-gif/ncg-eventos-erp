@@ -8,6 +8,31 @@ const ESTADOS_OK = new Set(["borrador", "enviado", "aprobado", "rechazado"]);
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Sb = any;
 
+/** GET /api/eventos/presupuestos/[id] — devuelve el presupuesto con items + snapshot cliente para impresion. */
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const auth = await requireProyectosApiAccess(request);
+  if (!auth.ok) return NextResponse.json(errorResponse(auth.message), { status: auth.status });
+  const { id: presupuestoId } = await params;
+
+  const sb = await getChatServiceClientForEmpresa(auth.empresaId);
+  const { data, error } = await sb
+    .from("evento_presupuestos")
+    .select(
+      `*, items:evento_presupuesto_items(*),
+       clientes:cliente_id(empresa, nombre_contacto, ruc, direccion, ciudad, telefono, email, documento),
+       proyectos:proyecto_id(titulo, tipo_evento, fecha_evento, hora_inicio, hora_fin, lugar_evento, cantidad_invitados)`
+    )
+    .eq("empresa_id", auth.empresaId)
+    .eq("id", presupuestoId)
+    .maybeSingle();
+  if (error) return NextResponse.json(errorResponse(error.message), { status: 500 });
+  if (!data) return NextResponse.json(errorResponse("Presupuesto no encontrado."), { status: 404 });
+  return NextResponse.json(successResponse({ presupuesto: data }));
+}
+
 /**
  * Al aprobar una cotización standalone (proyecto_id null):
  *   - Crea un evento nuevo con los datos snapshot del presupuesto
