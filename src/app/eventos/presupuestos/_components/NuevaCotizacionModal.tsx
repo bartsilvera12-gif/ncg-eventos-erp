@@ -5,6 +5,8 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { getEventos, getPaquetes, getServicios } from "@/lib/eventos/storage";
 import { getClientes } from "@/lib/clientes/storage";
+import { getProductos } from "@/lib/inventario/storage";
+import type { Producto } from "@/lib/inventario/types";
 import type { Cliente } from "@/lib/clientes/types";
 import type {
   Evento,
@@ -71,6 +73,7 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [servicios, setServicios] = useState<ServicioCatalogo[]>([]);
   const [paquetes, setPaquetes] = useState<Paquete[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
   const [catCargado, setCatCargado] = useState(false);
 
   // Cabecera.
@@ -97,12 +100,13 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
 
   useEffect(() => {
     if (!open || catCargado) return;
-    Promise.all([getClientes(), getEventos(), getServicios(), getPaquetes()]).then(
-      ([cs, es, ss, ps]) => {
+    Promise.all([getClientes(), getEventos(), getServicios(), getPaquetes(), getProductos()]).then(
+      ([cs, es, ss, ps, pr]) => {
         setClientes(cs);
         setEventos(es);
         setServicios(ss);
         setPaquetes(ps);
+        setProductos(pr);
         setCatCargado(true);
       }
     );
@@ -154,6 +158,13 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
             if (p) {
               if (!m.descripcion) m.descripcion = p.nombre;
               if (!m.precio_unitario) m.precio_unitario = p.precio_total;
+            }
+          } else if (m.tipo === "producto") {
+            const pr = productos.find((x) => x.id === patch.ref_id);
+            if (pr) {
+              if (!m.descripcion) m.descripcion = pr.nombre;
+              if (!m.precio_unitario) m.precio_unitario = pr.precio_venta ?? pr.costo_promedio ?? 0;
+              if (!m.unidad || m.unidad === "servicio") m.unidad = pr.unidad_medida ?? "u";
             }
           }
         }
@@ -538,31 +549,52 @@ export default function NuevaCotizacionModal({ open, onClose, onSaved }: NuevaCo
                         <option value="texto">Texto</option>
                       </select>
                     </div>
-                    {l.tipo === "servicio" || l.tipo === "paquete" ? (
+                    {l.tipo === "servicio" || l.tipo === "paquete" || l.tipo === "producto" ? (
                       <div className="md:col-span-3">
                         <span className={labelCls}>
-                          Elegir del catálogo (opcional)
+                          {l.tipo === "producto" ? "Elegir del inventario" : "Elegir del catálogo"} (opcional)
                         </span>
-                        {(l.tipo === "servicio" ? servicios : paquetes).length === 0 ? (
-                          <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-500">
-                            Sin {l.tipo === "servicio" ? "servicios" : "paquetes"} cargados.
-                            Podés dejar la descripción a mano o cargarlos en{" "}
-                            <span className="font-medium">Eventos → Catálogo</span>.
-                          </div>
-                        ) : (
-                          <select
-                            value={l.ref_id ?? ""}
-                            onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
-                            className={inputSm}
-                          >
-                            <option value="">— Elegir para autocompletar —</option>
-                            {(l.tipo === "servicio" ? servicios : paquetes).map((x) => (
-                              <option key={x.id} value={x.id}>
-                                {x.nombre}
-                              </option>
-                            ))}
-                          </select>
-                        )}
+                        {(() => {
+                          const opts: { id: string; nombre: string; imagen_url?: string | null }[] =
+                            l.tipo === "servicio" ? servicios
+                            : l.tipo === "paquete" ? paquetes
+                            : productos.map((p) => ({ id: p.id, nombre: `${p.nombre} — ${p.sku}`, imagen_url: p.imagen_url }));
+                          const label = l.tipo === "servicio" ? "servicios" : l.tipo === "paquete" ? "paquetes" : "productos en inventario";
+                          const dondeCargar = l.tipo === "producto" ? "Inventario" : "Eventos → Catálogo";
+                          if (opts.length === 0) {
+                            return (
+                              <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] text-slate-500">
+                                Sin {label} cargados.
+                                Podés dejar la descripción a mano o cargarlos en{" "}
+                                <span className="font-medium">{dondeCargar}</span>.
+                              </div>
+                            );
+                          }
+                          const sel = l.ref_id ? opts.find((o) => o.id === l.ref_id) : null;
+                          return (
+                            <div className="space-y-1">
+                              <select
+                                value={l.ref_id ?? ""}
+                                onChange={(e) => updateLinea(idx, { ref_id: e.target.value || null })}
+                                className={inputSm}
+                              >
+                                <option value="">— Elegir para autocompletar —</option>
+                                {opts.map((x) => (
+                                  <option key={x.id} value={x.id}>
+                                    {x.nombre}
+                                  </option>
+                                ))}
+                              </select>
+                              {sel?.imagen_url && (
+                                <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-1.5">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img src={sel.imagen_url} alt={sel.nombre} className="h-10 w-10 rounded object-cover" />
+                                  <span className="text-[10px] text-slate-500">Se imprime en el presupuesto</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     ) : (
                       <div className="md:col-span-3">
