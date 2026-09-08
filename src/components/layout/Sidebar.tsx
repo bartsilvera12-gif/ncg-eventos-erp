@@ -108,6 +108,7 @@ const MENU_STRUCTURE: MenuItem[] = [
       { label: "Lista",         href: "/eventos", exactMatch: true },
       { label: "Calendario",    href: "/eventos/calendario" },
       { label: "Presupuestos",  href: "/eventos/presupuestos" },
+      { label: "Catálogo",      href: "/eventos/catalogo" },
     ],
   },
 
