@@ -166,8 +166,8 @@ export default function PresupuestoImprimirPage() {
         .doc .chip { background: #E5F4F4; color: #2F6F72; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
         .doc .total-cell { background: linear-gradient(135deg, #E5F4F4 0%, #ffffff 100%); color: #2F6F72; }
         .doc .zebra tbody tr:nth-child(even) td { background: #FBFCFC; }
-        .doc .foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
-        .doc .foto-grid img { width: 100%; height: 130px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; }
+        .doc .foto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+        .doc .foto-grid img { width: 100%; height: 180px; object-fit: contain; background: #f8fafc; border-radius: 6px; border: 1px solid #cbd5e1; padding: 4px; }
       `}</style>
       <div className="min-h-screen bg-slate-100 p-6 print:bg-white print:p-0">
         <div className="no-print mx-auto mb-4 flex max-w-[210mm] justify-end gap-2">
