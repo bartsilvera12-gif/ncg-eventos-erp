@@ -289,12 +289,13 @@ export default function PresupuestosGlobalPage() {
                           </button>
                         </>
                       )}
-                      {p.estado === "rechazado" && (
+                      {p.estado !== "aprobado" && (
                         <button
                           onClick={() => eliminar(p.id)}
-                          className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200"
+                          className="rounded-md bg-red-50 px-2.5 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-100"
+                          title="Eliminar presupuesto"
                         >
-                          Eliminar
+                          🗑️ Eliminar
                         </button>
                       )}
                       {p.proyecto_id && (
